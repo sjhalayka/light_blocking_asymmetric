@@ -1,0 +1,99 @@
+#version 430
+
+layout(local_size_x = 1, local_size_y = 1) in;
+
+layout(binding = 0, rgba32f) writeonly uniform image2D output_image;
+layout(binding = 1, rgba32f) readonly uniform image2D input_image;
+layout(binding = 2, rgba32f) readonly uniform image2D input_light_image;
+layout(binding = 3, rgba32f) readonly uniform image2D input_light_blocking_image;
+
+uniform ivec2 u_size;
+
+
+
+
+void main()
+{
+	const ivec2 per_compute_pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+	float lighting = 0.0;
+
+	// https://forum.gamemaker.io/index.php?threads/loop-over-all-pixels-in-a-shader-to-calculate-an-average.101905/
+
+
+	for(int i = 0; i < u_size.x; i++) 
+	{
+		for(int j = 0; j < u_size.y; j++) 
+		{
+			ivec2 per_image_pixel_coords;
+			per_image_pixel_coords.x = int(i);
+			per_image_pixel_coords.y = int(j);
+
+			vec4 light_image_sample = imageLoad(input_light_image, per_image_pixel_coords);
+
+			// Not a light
+			if(light_image_sample.x == 0 && light_image_sample.y == 0 && light_image_sample.z == 0)
+				continue;
+
+			vec4 light_blocking_image_sample = imageLoad(input_light_blocking_image, per_image_pixel_coords);
+
+			// A light blocker doesn't receive light
+			if(light_blocking_image_sample.x != 0 || light_blocking_image_sample.y != 0 || light_blocking_image_sample.z != 0)
+				continue;
+
+
+			int num_steps = 0;
+
+			vec2 pixel_diff;
+			pixel_diff.x = distance(per_compute_pixel_coords.x, per_image_pixel_coords.x);
+			pixel_diff.y = distance(per_compute_pixel_coords.y, per_image_pixel_coords.y);
+
+			if(pixel_diff.x > pixel_diff.y)
+			{
+				num_steps = int(pixel_diff.x);
+			}
+			else
+			{
+				num_steps = int(pixel_diff.y);
+			}
+
+
+			vec2 light_pos = per_image_pixel_coords;		
+
+			ivec2 start = per_compute_pixel_coords;
+			ivec2 end = per_image_pixel_coords;
+
+			bool found_light_blocker = false;
+			vec2 curr_uv;
+
+			for(int s = 0; s < num_steps; s++)
+			{
+				curr_uv = mix(start, end, float(s)/float(num_steps));
+						
+				ivec2 curr_uv_i;
+				curr_uv_i.x = int(curr_uv.x);
+				curr_uv_i.y = int(curr_uv.y);
+
+				light_blocking_image_sample = imageLoad(input_light_blocking_image, curr_uv_i);
+
+				if(light_blocking_image_sample.x != 0 || light_blocking_image_sample.y != 0 || light_blocking_image_sample.z != 0)
+				{	
+					found_light_blocker = true;
+					break;
+				}
+			}
+
+			if(found_light_blocker == false)
+			{
+				lighting += (1.0/5.0) / pow(distance(light_pos, curr_uv), 1.0);
+			}
+		}
+	}
+
+	vec4 main_image_sample = imageLoad(input_image, per_compute_pixel_coords);
+
+	lighting = clamp(lighting, 0.0, 1.0);
+	lighting = max(lighting, 0.2);
+
+	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, lighting, lighting, 1.0));
+}
