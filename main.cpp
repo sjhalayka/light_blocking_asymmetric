@@ -185,8 +185,6 @@ int main(int argc, char** argv)
 		uc_output.data[x + 3] = 255;
 	}
 
-	//transpose(uc_output, uc_output);
-
 	resize(uc_output, uc_output, cv::Size(res_x, res_y), 0, 0, cv::INTER_LINEAR);
 
 	for (size_t x = 0; x < (res_x * res_y * 4); x += 4)
