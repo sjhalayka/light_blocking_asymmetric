@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 {
 	int tile_size = 18;
 
-	int num_input_channels = 4;
+	
 
 	// Load from file
 	Mat input_mat = imread("input.png", IMREAD_UNCHANGED);
@@ -65,83 +65,40 @@ int main(int argc, char** argv)
 
 
 
+	vector<float> output_pixels(res_x / tile_size * res_y / tile_size * 4, 0.0f);
+	vector<float> input_pixels(res_x / tile_size * res_y / tile_size * 4, 0.0f);
+	vector<float> input_light_pixels(res_x / tile_size * res_y / tile_size * 4, 0.0f);
+	vector<float> input_light_blocking_pixels(res_x / tile_size * res_y / tile_size * 4, 0.0f);
 
-
-
-
-	int num_output_channels = 4;
-
-	vector<float> output_pixels(res_x / tile_size * res_y / tile_size * num_output_channels, 0.0f);
-	vector<float> input_pixels(res_x / tile_size * res_y / tile_size * num_input_channels, 0.0f);
-	vector<float> input_light_pixels(res_x / tile_size * res_y / tile_size * num_input_channels, 0.0f);
-	vector<float> input_light_blocking_pixels(res_x / tile_size * res_y / tile_size * num_input_channels, 0.0f);
-
-	for (size_t y = 0; y < res_y / tile_size; y++)
+	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
 	{
-		for (size_t x = 0; x < res_x / tile_size; x++)
-		{
-			size_t uc_index = 4 * (x * res_y / tile_size + y);
-
-			Vec4b pixelValue = input_mat.at<Vec4b>(x, y);
-
-			input_pixels[uc_index + 0] = pixelValue[0] / 255.0f;// input_mat.data[uc_index + 0] / 255.0f;
-			input_pixels[uc_index + 1] = pixelValue[1] / 255.0f;// input_mat.data[uc_index + 1] / 255.0f;
-			input_pixels[uc_index + 2] = pixelValue[2] / 255.0f;// input_mat.data[uc_index + 2] / 255.0f;
-			input_pixels[uc_index + 3] = 1.0;
-		}
+		input_pixels[x + 0] = input_mat.data[x + 0] / 255.0f;
+		input_pixels[x + 1] = input_mat.data[x + 1] / 255.0f;
+		input_pixels[x + 2] = input_mat.data[x + 2] / 255.0f;
+		input_pixels[x + 3] = 1.0;
 	}
 
-
-	for (size_t y = 0; y < res_y / tile_size; y++)
+	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
 	{
-		for (size_t x = 0; x < res_x / tile_size; x++)
-		{
-			size_t uc_index = 4 * (x * res_y / tile_size + y);
-
-			Vec4b pixelValue = input_light_mat.at<Vec4b>(x, y);
-
-			input_light_pixels[uc_index + 0] = pixelValue[0] / 255.0f;// input_mat.data[uc_index + 0] / 255.0f;
-			input_light_pixels[uc_index + 1] = pixelValue[1] / 255.0f;// input_mat.data[uc_index + 1] / 255.0f;
-			input_light_pixels[uc_index + 2] = pixelValue[2] / 255.0f;// input_mat.data[uc_index + 2] / 255.0f;
-			input_light_pixels[uc_index + 3] = 0.0;
-		}
+		input_light_pixels[x + 0] = input_light_mat.data[x + 0] / 255.0f;
+		input_light_pixels[x + 1] = input_light_mat.data[x + 1] / 255.0f;
+		input_light_pixels[x + 2] = input_light_mat.data[x + 2] / 255.0f;
+		input_light_pixels[x + 3] = 0.0;
 	}
 
-
-	for (size_t y = 0; y < res_y / tile_size; y++)
+	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
 	{
-		for (size_t x = 0; x < res_x / tile_size; x++)
-		{
-			size_t uc_index = 4 * (x * res_y / tile_size + y);
-
-			Vec4b pixelValue = input_light_blocking_mat.at<Vec4b>(x, y);
-
-			input_light_blocking_pixels[uc_index + 0] = pixelValue[0] / 255.0f;// input_mat.data[uc_index + 0] / 255.0f;
-			input_light_blocking_pixels[uc_index + 1] = pixelValue[1] / 255.0f;// input_mat.data[uc_index + 1] / 255.0f;
-			input_light_blocking_pixels[uc_index + 2] = pixelValue[2] / 255.0f;// input_mat.data[uc_index + 2] / 255.0f;
-			input_light_blocking_pixels[uc_index + 3] = 1.0;
-		}
+		input_light_blocking_pixels[x + 0] = input_light_blocking_mat.data[x + 0] / 255.0f;
+		input_light_blocking_pixels[x + 1] = input_light_blocking_mat.data[x + 1] / 255.0f;
+		input_light_blocking_pixels[x + 2] = input_light_blocking_mat.data[x + 2] / 255.0f;
+		input_light_blocking_pixels[x + 3] = 0.0;
 	}
-
-
-
-
-
-
-
-
-
-
-
 
 
 
 	// Initialize OpenGL / compute shader / textures
 	GLuint compute_shader_program = 0;
 	GLuint tex_output = 0, tex_input = 0, tex_light_input = 0, tex_light_blocking_input = 0;
-
-
-
 
 	if (false == init_all(
 		argc, argv,
@@ -158,8 +115,6 @@ int main(int argc, char** argv)
 
 	cout << "Computing " << endl;
 
-
-	// Run the compute shader
 	compute(tex_output,
 		tex_input,
 		tex_light_input,
@@ -196,8 +151,6 @@ int main(int argc, char** argv)
 	}
 
 	imwrite("out.png", uc_output);
-
-	//cout << "Save done" << endl;
 
 
 
