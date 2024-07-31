@@ -18,6 +18,17 @@ void main()
 
 	float lighting = 0.0;
 
+
+	vec4 image_sample = imageLoad(input_image, per_compute_pixel_coords);
+
+	// Black pixels are still black when lit
+	if(image_sample.x == 0 && image_sample.y == 0 && image_sample.z == 0)
+	{
+		imageStore(output_image, per_compute_pixel_coords, vec4(image_sample));
+		return;
+	}
+
+
 	
 	/*
 	if(u_size.x == 1908 && u_size.y == 1044)
@@ -40,11 +51,7 @@ void main()
 			per_image_pixel_coords.x = i;
 			per_image_pixel_coords.y = j;
 
-			vec4 image_sample = imageLoad(input_image, per_image_pixel_coords);
 
-			// Black pixels are still black when lit
-			if(image_sample.x == 0 && image_sample.y == 0 && image_sample.z == 0)
-				continue;
 
 			vec4 light_image_sample = imageLoad(input_light_image, per_image_pixel_coords);
 

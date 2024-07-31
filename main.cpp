@@ -152,7 +152,7 @@ int main(int argc, char** argv)
 	}
 
 	// Crop
-	uc_output = uc_output(Range(0, 1044), Range(0, 1908));
+	//uc_output = uc_output(Range(0, 1044), Range(0, 1908));
 
 	imwrite("out.png", uc_output);
 
