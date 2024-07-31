@@ -93,8 +93,6 @@ void main()
 		}
 	}
 
-	//vec4 main_image_sample = imageLoad(input_image, per_compute_pixel_coords);
-
 	lighting = clamp(lighting, 0.0, 1.0);
 	lighting = max(lighting, 0.2);
 

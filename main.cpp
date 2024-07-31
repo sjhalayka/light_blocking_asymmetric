@@ -12,7 +12,7 @@ using namespace cv;
 
 int main(int argc, char** argv)
 {
-	int tile_size = 9;
+	int tile_size = 18;
 
 	
 
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 		input_pixels[x + 0] = input_mat.data[x + 0] / 255.0f;
 		input_pixels[x + 1] = input_mat.data[x + 1] / 255.0f;
 		input_pixels[x + 2] = input_mat.data[x + 2] / 255.0f;
-		input_pixels[x + 3] = 0.0;
+		input_pixels[x + 3] = 1.0;
 	}
 
 	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 		input_light_pixels[x + 0] = input_light_mat.data[x + 0] / 255.0f;
 		input_light_pixels[x + 1] = input_light_mat.data[x + 1] / 255.0f;
 		input_light_pixels[x + 2] = input_light_mat.data[x + 2] / 255.0f;
-		input_light_pixels[x + 3] = 0.0;
+		input_light_pixels[x + 3] = 1.0;
 	}
 
 	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 		input_light_blocking_pixels[x + 0] = input_light_blocking_mat.data[x + 0] / 255.0f;
 		input_light_blocking_pixels[x + 1] = input_light_blocking_mat.data[x + 1] / 255.0f;
 		input_light_blocking_pixels[x + 2] = input_light_blocking_mat.data[x + 2] / 255.0f;
-		input_light_blocking_pixels[x + 3] = 0.0;
+		input_light_blocking_pixels[x + 3] = 1.0;
 	}
 
 
