@@ -21,27 +21,12 @@ void main()
 
 	vec4 image_sample = imageLoad(input_image, per_compute_pixel_coords);
 
-	// Black pixels are still black when lit
+	// Black pixels are still black when lit, so skip lighting altogether
 	if(image_sample.x == 0 && image_sample.y == 0 && image_sample.z == 0)
 	{
 		imageStore(output_image, per_compute_pixel_coords, vec4(image_sample));
 		return;
 	}
-
-
-	
-	/*
-	if(u_size.x == 1908 && u_size.y == 1044)
-	{
-		imageStore(output_image, per_compute_pixel_coords, vec4(1, 0, 0, 1.0));
-		return;
-	}
-	else
-	{
-		imageStore(output_image, per_compute_pixel_coords, vec4(0, 0, 1, 1.0));
-		return;
-	}
-	*/
 
 	for(int i = 0; i < u_size.x; i++) 
 	{
