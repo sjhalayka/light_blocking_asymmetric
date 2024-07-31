@@ -17,7 +17,6 @@ using namespace std;
 #include <GL/glew.h>
 #include <GL/glut.h>
 
-// Automatically link in the GLUT and GLEW libraries if compiling on MSVC++
 #ifdef _MSC_VER
 #pragma comment(lib, "freeglut")
 #pragma comment(lib, "glew32")
@@ -80,24 +79,24 @@ void init_textures(GLuint &tex_output, GLuint &tex_input, GLuint &tex_light_inpu
 	glGenTextures(1, &tex_input);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, tex_input);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glGenTextures(1, &tex_light_input);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, tex_light_input);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glGenTextures(1, &tex_light_blocking_input);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, tex_light_blocking_input);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
@@ -222,7 +221,6 @@ bool init_all(int argc, char** argv,
 		cout << "OpenGL 4.3 initialization OK" << endl;
 	}
 
-	// Check for non-POT texture support
 	if (!GLEW_ARB_texture_non_power_of_two)
 	{
 		cout << "System does not support non-POT textures" << endl;
@@ -232,6 +230,20 @@ bool init_all(int argc, char** argv,
 	{
 		cout << "System supports non-POT textures" << endl;
 	}
+
+	if (!GLEW_ARB_texture_rectangle)
+	{
+		cout << "System does not support rectangular textures" << endl;
+		return false;
+	}
+	else
+	{
+		cout << "System supports rectangular textures" << endl;
+	}
+
+	
+
+
 
 	// Initialize the compute shader
 	compute_shader_program = 0;

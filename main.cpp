@@ -12,7 +12,7 @@ using namespace cv;
 
 int main(int argc, char** argv)
 {
-	int tile_size = 18;
+	int tile_size = 9;
 
 	
 
@@ -58,24 +58,25 @@ int main(int argc, char** argv)
 		cout << "input_light_blocking.png must be a 32-bit PNG" << endl;
 		return -1;
 	}
+	imwrite("resized_light_mat.png", input_light_mat);
 
 	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(res_x / tile_size, res_y / tile_size), 0, 0, cv::INTER_NEAREST);
 
+	imwrite("resized_light_blocking_mat.png", input_light_blocking_mat);
 
 
+	vector<float> output_pixels((res_x / tile_size) * (res_y / tile_size) * 4, 1.0f);
+	vector<float> input_pixels((res_x / tile_size) * (res_y / tile_size) * 4, 1.0f);
+	vector<float> input_light_pixels((res_x / tile_size) * (res_y / tile_size) * 4, 1.0f);
+	vector<float> input_light_blocking_pixels((res_x / tile_size) * (res_y / tile_size) * 4, 1.0f);
 
-
-	vector<float> output_pixels(res_x / tile_size * res_y / tile_size * 4, 0.0f);
-	vector<float> input_pixels(res_x / tile_size * res_y / tile_size * 4, 0.0f);
-	vector<float> input_light_pixels(res_x / tile_size * res_y / tile_size * 4, 0.0f);
-	vector<float> input_light_blocking_pixels(res_x / tile_size * res_y / tile_size * 4, 0.0f);
 
 	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
 	{
 		input_pixels[x + 0] = input_mat.data[x + 0] / 255.0f;
 		input_pixels[x + 1] = input_mat.data[x + 1] / 255.0f;
 		input_pixels[x + 2] = input_mat.data[x + 2] / 255.0f;
-		input_pixels[x + 3] = 1.0;
+		input_pixels[x + 3] = 0.0;
 	}
 
 	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
