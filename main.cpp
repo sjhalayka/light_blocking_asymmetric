@@ -12,7 +12,7 @@ using namespace cv;
 
 int main(int argc, char** argv)
 {
-	int tile_size = 18;
+	int tile_size = 9;
 
 	
 
