@@ -18,6 +18,20 @@ void main()
 
 	float lighting = 0.0;
 
+	
+	/*
+	if(u_size.x == 1908 && u_size.y == 1044)
+	{
+		imageStore(output_image, per_compute_pixel_coords, vec4(1, 0, 0, 1.0));
+		return;
+	}
+	else
+	{
+		imageStore(output_image, per_compute_pixel_coords, vec4(0, 0, 1, 1.0));
+		return;
+	}
+	*/
+
 	for(int i = 0; i < u_size.x; i++) 
 	{
 		for(int j = 0; j < u_size.y; j++)

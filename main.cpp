@@ -151,6 +151,9 @@ int main(int argc, char** argv)
 		uc_output.data[x + 3] = 255;
 	}
 
+	// Crop
+	uc_output = uc_output(Range(0, 1044), Range(0, 1908));
+
 	imwrite("out.png", uc_output);
 
 
