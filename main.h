@@ -33,6 +33,8 @@ void compute(GLuint& tex_output,
 	const vector<float>& input_light_pixels,
 	const vector<float>& input_light_blocking_pixels)
 {
+	glEnable(GL_TEXTURE_2D);
+
 	glActiveTexture(GL_TEXTURE1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, &input_pixels[0]);
 	glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);

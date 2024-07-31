@@ -53,13 +53,9 @@ void main()
 			pixel_diff.y = distance(per_compute_pixel_coords.y, per_image_pixel_coords.y);
 
 			if(pixel_diff.x > pixel_diff.y)
-			{
 				num_steps = int(pixel_diff.x);
-			}
 			else
-			{
 				num_steps = int(pixel_diff.y);
-			}
 
 			if(num_steps < 2)
 				num_steps = 2;
