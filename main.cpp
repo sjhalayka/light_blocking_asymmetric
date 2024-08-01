@@ -28,12 +28,16 @@ int main(int argc, char** argv)
 	const int res_x = input_mat.cols;
 	const int res_y = input_mat.rows;
 
+	Mat square_mat(Size(res_x, res_x), CV_8UC4);
+	square_mat = Scalar(0, 0, 0, 255);
+	input_mat.copyTo(square_mat(Rect(0, 0, res_x, res_y)));
+	input_mat = square_mat.clone();
+
 	Mat input_mat_backup = input_mat.clone();
 
-	resize(input_mat, input_mat, cv::Size(res_x / tile_size, res_y / tile_size), 0, 0, cv::INTER_NEAREST);
+	resize(input_mat, input_mat, cv::Size(res_x / tile_size, res_x / tile_size), 0, 0, cv::INTER_NEAREST);
 
-
-
+	imwrite("input_mat.png", input_mat);
 
 
 
@@ -46,7 +50,13 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	resize(input_light_mat, input_light_mat, cv::Size(res_x / tile_size, res_y / tile_size), 0, 0, cv::INTER_NEAREST);
+	Mat square_light_mat(Size(res_x, res_x), CV_8UC4);
+	square_light_mat = Scalar(0, 0, 0, 255);
+	input_light_mat.copyTo(square_light_mat(Rect(0, 0, res_x, res_y)));
+	input_light_mat = square_light_mat.clone();
+
+
+	resize(input_light_mat, input_light_mat, cv::Size(res_x / tile_size, res_x / tile_size), 0, 0, cv::INTER_NEAREST);
 
 
 
@@ -58,20 +68,37 @@ int main(int argc, char** argv)
 		cout << "input_light_blocking.png must be a 32-bit PNG" << endl;
 		return -1;
 	}
-	imwrite("resized_light_mat.png", input_light_mat);
 
-	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(res_x / tile_size, res_y / tile_size), 0, 0, cv::INTER_NEAREST);
+	Mat square_light_blocking_mat(Size(res_x, res_x), CV_8UC4);
+	square_light_blocking_mat = Scalar(0, 0, 0, 255);
+	input_light_blocking_mat.copyTo(square_light_blocking_mat(Rect(0, 0, res_x, res_y)));
+	input_light_blocking_mat = square_light_blocking_mat.clone();
+
+//	imwrite("resized_light_mat.png", input_light_mat);
+
+	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(res_x / tile_size, res_x / tile_size), 0, 0, cv::INTER_NEAREST);
+
+
+
+
+
+
+
+
 
 	imwrite("resized_light_blocking_mat.png", input_light_blocking_mat);
 
 
-	vector<float> output_pixels((res_x / tile_size) * (res_y / tile_size) * 4, 1.0f);
-	vector<float> input_pixels((res_x / tile_size) * (res_y / tile_size) * 4, 1.0f);
-	vector<float> input_light_pixels((res_x / tile_size) * (res_y / tile_size) * 4, 1.0f);
-	vector<float> input_light_blocking_pixels((res_x / tile_size) * (res_y / tile_size) * 4, 1.0f);
 
 
-	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
+
+	vector<float> output_pixels((res_x / tile_size) * (res_x / tile_size) * 4, 1.0f);
+	vector<float> input_pixels((res_x / tile_size) * (res_x / tile_size) * 4, 1.0f);
+	vector<float> input_light_pixels((res_x / tile_size) * (res_x / tile_size) * 4, 1.0f);
+	vector<float> input_light_blocking_pixels((res_x / tile_size) * (res_x / tile_size) * 4, 1.0f);
+
+
+	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_x / tile_size)); x += 4)
 	{
 		input_pixels[x + 0] = input_mat.data[x + 0] / 255.0f;
 		input_pixels[x + 1] = input_mat.data[x + 1] / 255.0f;
@@ -79,7 +106,7 @@ int main(int argc, char** argv)
 		input_pixels[x + 3] = 1.0;
 	}
 
-	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
+	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_x / tile_size)); x += 4)
 	{
 		input_light_pixels[x + 0] = input_light_mat.data[x + 0] / 255.0f;
 		input_light_pixels[x + 1] = input_light_mat.data[x + 1] / 255.0f;
@@ -87,7 +114,7 @@ int main(int argc, char** argv)
 		input_light_pixels[x + 3] = 1.0;
 	}
 
-	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
+	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_x / tile_size)); x += 4)
 	{
 		input_light_blocking_pixels[x + 0] = input_light_blocking_mat.data[x + 0] / 255.0f;
 		input_light_blocking_pixels[x + 1] = input_light_blocking_mat.data[x + 1] / 255.0f;
@@ -107,7 +134,7 @@ int main(int argc, char** argv)
 		tex_input,
 		tex_light_input,
 		tex_light_blocking_input,
-		res_x / tile_size, res_y / tile_size,
+		res_x / tile_size, res_x / tile_size,
 		compute_shader_program))
 	{
 		cout << "Aborting" << endl;
@@ -120,7 +147,7 @@ int main(int argc, char** argv)
 		tex_input,
 		tex_light_input,
 		tex_light_blocking_input,
-		res_x / tile_size, res_y / tile_size,
+		res_x / tile_size, res_x / tile_size,
 		compute_shader_program,
 		output_pixels,
 		input_pixels,
@@ -131,9 +158,9 @@ int main(int argc, char** argv)
 
 
 	// Save output to PNG file
-	Mat uc_output(res_x / tile_size, res_y / tile_size, CV_8UC4);
+	Mat uc_output(res_x / tile_size, res_x / tile_size, CV_8UC4);
 
-	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_y / tile_size)); x += 4)
+	for (size_t x = 0; x < 4 * ((res_x / tile_size) * (res_x / tile_size)); x += 4)
 	{
 		uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
 		uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
@@ -141,9 +168,9 @@ int main(int argc, char** argv)
 		uc_output.data[x + 3] = 255;
 	}
 
-	resize(uc_output, uc_output, cv::Size(res_x, res_y), 0, 0, cv::INTER_LINEAR);
+	resize(uc_output, uc_output, cv::Size(res_x, res_x), 0, 0, cv::INTER_LINEAR);
 
-	for (size_t x = 0; x < (res_x * res_y * 4); x += 4)
+	for (size_t x = 0; x < (res_x * res_x * 4); x += 4)
 	{
 		uc_output.data[x + 0] = static_cast<unsigned char>(255.0 * (input_mat_backup.data[x + 0] / 255.0 * uc_output.data[x + 0] / 255.0));
 		uc_output.data[x + 1] = static_cast<unsigned char>(255.0 * (input_mat_backup.data[x + 1] / 255.0 * uc_output.data[x + 1] / 255.0));
@@ -152,7 +179,7 @@ int main(int argc, char** argv)
 	}
 
 	// Crop
-	//uc_output = uc_output(Range(0, 1044), Range(0, 1908));
+	uc_output = uc_output(Range(0, res_y), Range(0, res_x));
 
 	imwrite("out.png", uc_output);
 

@@ -18,7 +18,6 @@ void main()
 
 	float lighting = 0.0;
 
-
 	vec4 image_sample = imageLoad(input_image, per_compute_pixel_coords);
 
 	// Black pixels are still black when lit, so skip lighting altogether
