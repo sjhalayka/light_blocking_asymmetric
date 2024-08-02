@@ -43,7 +43,7 @@ void main()
 
 
 
-
+	int light_count = 0;
 
 
 
@@ -58,28 +58,22 @@ void main()
 			per_image_pixel_coords.x = i;
 			per_image_pixel_coords.y = j;
 
-		//	if(per_compute_pixel_coords == per_image_pixel_coords)
-		//		continue;
+			//if(per_compute_pixel_coords == per_image_pixel_coords)
+			//	continue;
 
 			vec4 light_image_sample = imageLoad(input_light_image, per_image_pixel_coords);
 
 			// Not a light
 			if(light_image_sample.x == 0 && light_image_sample.y == 0 && light_image_sample.z == 0) 
-			{
 				continue;
-			}
-			else
-			{	
-				//if(is_light)
-				//continue;
-			}
 
+			light_count++;
 
 			vec4 light_blocking_image_sample = imageLoad(input_light_blocking_image, per_image_pixel_coords);
 
 			// A light blocker doesn't receive light
-			//if(light_blocking_image_sample.x == 1 && light_blocking_image_sample.y == 1 && light_blocking_image_sample.z == 1)
-			//	continue;
+			if(light_blocking_image_sample.x == 1 && light_blocking_image_sample.y == 1 && light_blocking_image_sample.z == 1)
+				continue;
 
 			int num_steps = 0;
 
@@ -126,19 +120,19 @@ void main()
 
 			if(found_light_blocker == false)
 			{
-				const float dist = distance(light_pos, curr_uv);
+				const float dist = distance(light_pos, curr_uv) / 50.0;
 				
-					const float attenuation = (1.0f / (1.0f + dist + 0.01*dist*dist));
+				const float attenuation = 1.0 / (1.0f + dist + dist*dist);
 
-					lighting += light_image_sample.xyz *attenuation;
-
+				lighting += light_image_sample.xyz * attenuation;
 			}
 		}
 	}
 
-	lighting = clamp(lighting, 0, 1);
+	if(light_count > 1)
+		lighting /= light_count;
 
-	lighting = max(lighting, 0.2);
+	//lighting = max(lighting, 0.2);
 
 	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
 }
