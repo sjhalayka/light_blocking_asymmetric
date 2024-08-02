@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 
 	Mat input_mat_backup = input_mat.clone();
 
-	resize(input_mat, input_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_LINEAR);
+	resize(input_mat, input_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_NEAREST);
 
 //	imwrite("input_mat.png", input_mat);
 
@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 	input_light_mat = square_light_mat.clone();
 
 
-	resize(input_light_mat, input_light_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_LINEAR);
+	resize(input_light_mat, input_light_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_NEAREST);
 
 
 
@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 
 //	imwrite("resized_light_mat.png", input_light_mat);
 
-	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_LINEAR);
+	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_NEAREST);
 
 
 
