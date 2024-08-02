@@ -130,7 +130,7 @@ void main()
 				
 					const float attenuation = (1.0f / (1.0f + dist + dist*dist));
 
-					lighting += light_image_sample.xyz * pow(attenuation, 0.5);
+					lighting += light_image_sample.xyz * pow(attenuation, 1.0);
 
 			}
 		}
