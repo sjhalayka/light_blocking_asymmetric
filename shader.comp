@@ -16,8 +16,6 @@ void main()
 {
 	const ivec2 per_compute_pixel_coords = ivec2(gl_GlobalInvocationID.xy);
 
-	bool is_light = false;
-
 	vec3 lighting = vec3(0, 0, 0);
 
 	vec4 image_sample = imageLoad(input_image, per_compute_pixel_coords);
@@ -35,9 +33,8 @@ void main()
 	// Skip lights
 	if(image_light_sample.x != 0 || image_light_sample.y != 0 || image_light_sample.z != 0)
 	{
-//		is_light = true;
-		imageStore(output_image, per_compute_pixel_coords, vec4(image_light_sample));
-		return;
+//		imageStore(output_image, per_compute_pixel_coords, vec4(image_light_sample));
+//		return;
 	}
 	
 
@@ -120,8 +117,9 @@ void main()
 
 			if(found_light_blocker == false)
 			{
-				const float dist = distance(light_pos, curr_uv) / 50.0;
-				
+				// Convert from screenspace to some other coordinate system,
+				// so that attenuation works much better
+				const float dist = distance(light_pos, curr_uv) / 25.0; 
 				const float attenuation = 1.0 / (1.0f + dist + dist*dist);
 
 				lighting += light_image_sample.xyz * attenuation;
@@ -131,7 +129,7 @@ void main()
 
 	if(light_count > 1)
 		lighting /= light_count;
-
+		
 	//lighting = max(lighting, 0.2);
 
 	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
