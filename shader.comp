@@ -58,8 +58,8 @@ void main()
 			per_image_pixel_coords.x = i;
 			per_image_pixel_coords.y = j;
 
-			if(per_compute_pixel_coords == per_image_pixel_coords)
-				continue;
+		//	if(per_compute_pixel_coords == per_image_pixel_coords)
+		//		continue;
 
 			vec4 light_image_sample = imageLoad(input_light_image, per_image_pixel_coords);
 
@@ -126,15 +126,19 @@ void main()
 
 			if(found_light_blocker == false)
 			{
-				const float dist = distance(light_pos, curr_uv);
-				const float attenuation = 1.0f / (1.0f + 0.5*dist + dist*dist);
+				const float dist = ( distance(light_pos, curr_uv));
+				
+					const float attenuation = (1.0f / (1.0f + dist + dist*dist));
 
-				lighting += light_image_sample.xyz * attenuation;
+					lighting += light_image_sample.xyz * pow(attenuation, 0.5);
+
 			}
 		}
 	}
 
-	lighting = max(lighting, 0.2);
+	lighting = clamp(lighting, 0, 1);
+
+	// = max(lighting, 0.2);
 
 	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
 }
