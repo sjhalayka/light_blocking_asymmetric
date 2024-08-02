@@ -35,9 +35,9 @@ void main()
 	// Skip lights
 	if(image_light_sample.x != 0 || image_light_sample.y != 0 || image_light_sample.z != 0)
 	{
-		is_light = true;
-		//imageStore(output_image, per_compute_pixel_coords, vec4(image_light_sample));
-		//return;
+//		is_light = true;
+		imageStore(output_image, per_compute_pixel_coords, vec4(image_light_sample));
+		return;
 	}
 	
 
@@ -58,43 +58,28 @@ void main()
 			per_image_pixel_coords.x = i;
 			per_image_pixel_coords.y = j;
 
+			if(per_compute_pixel_coords == per_image_pixel_coords)
+				continue;
+
 			vec4 light_image_sample = imageLoad(input_light_image, per_image_pixel_coords);
 
-//			if(is_light == true)
-//			{
-//				continue;
-//			}
-//			else
-//			{
-				if(light_image_sample.x == 0 && light_image_sample.y == 0 && light_image_sample.z == 0) 
-					continue;
-
-/*
-				// Not a light
-				if(light_image_sample.x == 0 && light_image_sample.y == 0 && light_image_sample.z == 0) 
-					continue;
-				else
+			// Not a light
+			if(light_image_sample.x == 0 && light_image_sample.y == 0 && light_image_sample.z == 0) 
 			{
-					// A light
-					if(is_light)
-					{
-						imageStore(output_image, per_compute_pixel_coords, light_image_sample);
-						return;
-					}
-
-
+				continue;
+			}
+			else
+			{	
+				//if(is_light)
+				//continue;
 			}
 
-*/
-
-
-//			}
 
 			vec4 light_blocking_image_sample = imageLoad(input_light_blocking_image, per_image_pixel_coords);
 
 			// A light blocker doesn't receive light
-			if(light_blocking_image_sample.x == 1 && light_blocking_image_sample.y == 1 && light_blocking_image_sample.z == 1)
-				continue;
+			//if(light_blocking_image_sample.x == 1 && light_blocking_image_sample.y == 1 && light_blocking_image_sample.z == 1)
+			//	continue;
 
 			int num_steps = 0;
 
@@ -141,12 +126,14 @@ void main()
 
 			if(found_light_blocker == false)
 			{
-				lighting += light_image_sample.xyz / pow(distance(light_pos, curr_uv), 1.0);
+				const float dist = distance(light_pos, curr_uv);
+				const float attenuation = 1.0f / (1.0f + 0.5*dist + dist*dist);
+
+				lighting += light_image_sample.xyz * attenuation;
 			}
 		}
 	}
 
-	lighting = clamp(lighting, 0.0, 1.0);
 	lighting = max(lighting, 0.2);
 
 	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
