@@ -126,11 +126,11 @@ void main()
 
 			if(found_light_blocker == false)
 			{
-				const float dist = ( distance(light_pos, curr_uv));
+				const float dist = distance(light_pos, curr_uv);
 				
-					const float attenuation = (1.0f / (1.0f + dist + dist*dist));
+					const float attenuation = (1.0f / (1.0f + dist + 0.01*dist*dist));
 
-					lighting += light_image_sample.xyz * pow(attenuation, 1.0);
+					lighting += light_image_sample.xyz *attenuation;
 
 			}
 		}
@@ -138,7 +138,7 @@ void main()
 
 	lighting = clamp(lighting, 0, 1);
 
-	// = max(lighting, 0.2);
+	lighting = max(lighting, 0.2);
 
 	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
 }
