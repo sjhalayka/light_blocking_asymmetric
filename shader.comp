@@ -37,9 +37,6 @@ void main()
 			per_image_pixel_coords.x = i;
 			per_image_pixel_coords.y = j;
 
-			//if(per_compute_pixel_coords == per_image_pixel_coords)
-			//	continue;
-
 			vec4 light_image_sample = imageLoad(input_light_image, per_image_pixel_coords);
 
 			// Not a light
@@ -95,16 +92,17 @@ void main()
 			{
 				// Convert from screenspace to some other coordinate system,
 				// so that attenuation works much better
-				const float dist = distance(light_pos, curr_uv) / 15.0; 
+				const float dist = distance(light_pos, curr_uv) / 5.0; 
 
-				const float attenuation = 1.0 / (1.0f + dist + dist*dist);
+				const float attenuation = 1.0 / (1.0f + 0.5*dist + 0.5*dist*dist);
 				lighting += light_image_sample.xyz * attenuation;
 			}
 		}
 	}
 	
-	lighting = clamp(lighting, 0, 1);
+	
 	lighting = max(lighting, 0.2);
+	lighting = clamp(lighting, 0, 1);
 
 	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
 }
