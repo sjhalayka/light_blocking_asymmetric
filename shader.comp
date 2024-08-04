@@ -49,6 +49,7 @@ void main()
 			if(light_blocking_image_sample.x == 1 && light_blocking_image_sample.y == 1 && light_blocking_image_sample.z == 1)
 				continue;
 
+
 			int num_steps = 0;
 
 			vec2 pixel_diff;
@@ -92,17 +93,21 @@ void main()
 			{
 				// Convert from screenspace to some other coordinate system,
 				// so that attenuation works much better
-				const float dist = distance(light_pos, curr_uv) / 5.0; 
+				const float coordinate_change = 1.0 / 25.0;
+				
+				const float dist = distance(light_pos, curr_uv) * coordinate_change; 
+				const float dist_coefficient = 1.0;
+				const float dist_squared_coefficient = 1.0;
 
-				const float attenuation = 1.0 / (1.0f + 0.5*dist + 0.5*dist*dist);
+				const float attenuation = 1.0 / (1.0f + dist_coefficient * dist + dist_squared_coefficient * dist*dist);
 				lighting += light_image_sample.xyz * attenuation;
 			}
 		}
 	}
 	
 	
-	lighting = max(lighting, 0.2);
-	lighting = clamp(lighting, 0, 1);
+	lighting = max(lighting, 0.2); // Throw in some ambient lighting
+	lighting = clamp(lighting, 0, 1); // Make it a valid colour
 
 	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
 }
