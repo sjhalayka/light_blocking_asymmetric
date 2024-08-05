@@ -87,43 +87,34 @@ int main(int argc, char** argv)
 		colours.push_back(glm::vec3(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f));
 	}
 
-	// get range for colours
+	vector<glm::vec3> loop_centres;
+	vector<glm::vec3> loop_colours;
+
+
 
 	for (size_t i = 0; i < colours.size(); i++)
 	{
 		Mat mask;
-		Mat canny_output_HSV;
 
-		//cvtColor(canny_output, canny_output_HSV, COLOR_BGR2HSV);
+		inRange(input_light_mat,
+			Scalar(static_cast<unsigned char>(colours[i].r * 255.0f), static_cast<unsigned char>(colours[i].g * 255.0f), static_cast<unsigned char>(colours[i].b * 255.0f), 255),
+			Scalar(static_cast<unsigned char>(colours[i].r * 255.0f), static_cast<unsigned char>(colours[i].g * 255.0f), static_cast<unsigned char>(colours[i].b * 255.0f), 255),
+			mask);
 
+		vector<vector<Point> > loop_contours;
+		vector<Vec4i> loop_hierarchy;
+		findContours(mask, loop_contours, loop_hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
 
+		for (int i = 0; i < loop_contours.size(); i++)
+		{
+			cv::Moments M = cv::moments(loop_contours[i]);
+			cv::Point loop_centre(M.m10 / M.m00, M.m01 / M.m00);
 
-
-			inRange(input_light_mat, 
-				Scalar(static_cast<unsigned char>(colours[i].r * 255.0f), static_cast<unsigned char>(colours[i].g * 255.0f), static_cast<unsigned char>(colours[i].b * 255.0f), 255), 
-				Scalar(static_cast<unsigned char>(colours[i].r * 255.0f), static_cast<unsigned char>(colours[i].g * 255.0f), static_cast<unsigned char>(colours[i].b * 255.0f), 255), 
-				mask);
-
-			std::vector<cv::Point2i> locations;   // output, locations of non-zero pixels 
-			findNonZero(mask, locations);
-
-			cout << locations.size() << endl;
-
-
-
-
-			string filename = "colour_mask_" + to_string(i) + ".png";
-
-			// Show the frames
-			imwrite(filename.c_str(), mask);
-			//waitKey();
-		//imshow(window_detection_name, frame_threshold);
-
+			Vec4b pixelValue = input_light_mat.at<Vec4b>(loop_centre.y, loop_centre.x);
+			loop_centres.push_back(glm::vec3(loop_centre.x, loop_centre.y, 0));
+			loop_colours.push_back(glm::vec3(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f));
+		}
 	}
-
-;
-
-
 
 
 
@@ -144,13 +135,8 @@ int main(int argc, char** argv)
 
 
 
-	for (size_t i = 0; i < centres.size(); i++)
-	{
-		input_light_mat.at<Vec4b>(centres[i].y / tile_size, centres[i].x / tile_size) = Vec4b(colours[i].r * 255.0f, colours[i].g * 255.0f, colours[i].b * 255.0f, 255.0f);
-
-	}
-
-	imwrite("input_light_mat.png", input_light_mat);
+	for (size_t i = 0; i < loop_centres.size(); i++)
+		input_light_mat.at<Vec4b>(loop_centres[i].y / tile_size, loop_centres[i].x / tile_size) = Vec4b(loop_colours[i].r * 255.0f, loop_colours[i].g * 255.0f, loop_colours[i].b * 255.0f, 255.0f);
 
 
 
