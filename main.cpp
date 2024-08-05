@@ -59,13 +59,6 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-
-
-
-
-
-
-
 	Mat canny_input;// = input_light_mat.clone();
 	cvtColor(input_light_mat, canny_input, COLOR_BGR2GRAY);
 	Mat canny_output = canny_input.clone();
@@ -89,7 +82,7 @@ int main(int argc, char** argv)
 
 	vector<glm::vec3> loop_centres;
 	vector<glm::vec3> loop_colours;
-
+			
 	for (size_t i = 0; i < colours.size(); i++)
 	{
 		Mat mask;
@@ -103,9 +96,9 @@ int main(int argc, char** argv)
 		vector<Vec4i> loop_hierarchy;
 		findContours(mask, loop_contours, loop_hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
 
-		for (int i = 0; i < loop_contours.size(); i++)
+		for (size_t j = 0; j < loop_contours.size(); j++)
 		{
-			cv::Moments M = cv::moments(loop_contours[i]);
+			cv::Moments M = cv::moments(loop_contours[j]);
 			cv::Point2f loop_centre(M.m10 / M.m00, M.m01 / M.m00);
 
 			if (isnan(loop_centre.x) || isnan(loop_centre.y))
@@ -117,32 +110,12 @@ int main(int argc, char** argv)
 		}
 	}
 
-
-
-
-
-	;
-
-
-
-
-
-
-
-
-
-
 	Mat square_light_mat(Size(largest_dim, largest_dim), CV_8UC4);
 	square_light_mat = Scalar(0, 0, 0, 255);
 	//input_light_mat.copyTo(square_light_mat(Rect(0, 0, res_x, res_y)));
 	input_light_mat = square_light_mat.clone();
 
-
-
-
 	resize(input_light_mat, input_light_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_NEAREST);
-
-
 
 	for (size_t i = 0; i < centres.size(); i++)
 		input_light_mat.at<Vec4b>(centres[i].y / tile_size, centres[i].x / tile_size) = Vec4b(colours[i].r * 255.0f, colours[i].g * 255.0f, colours[i].b * 255.0f, 255.0f);
