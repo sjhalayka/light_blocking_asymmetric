@@ -61,58 +61,59 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
+
+
+
+
+
+
+
 	int thresh = 100;
 
-	Mat canny_input = input_light_mat.clone();
-	//cvtColor(input_light_mat, canny_input, COLOR_BGR2GRAY);
+	Mat canny_input;// = input_light_mat.clone();
+	cvtColor(input_light_mat, canny_input, COLOR_BGR2GRAY);
 	Mat canny_output = canny_input.clone();
 	//Canny(canny_input, canny_output, thresh, thresh * 2);
 
-	vector<vector<Point> > contours;
+	vector<vector<Point> > contours;	
 	vector<Vec4i> hierarchy;
-	findContours(canny_output, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+	findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
 
 	Mat drawing = Mat::zeros(input_light_mat.size(), CV_8UC3);
 
-	std::vector<cv::Point> centres;
 	std::vector<glm::vec3> colours;
 	
+	cout << contours.size() << endl;
+
 	for (int i = 0; i < contours.size(); i++) 
 	{
 		cv::Moments M = cv::moments(contours[i]);
 		cv::Point centre(M.m10 / M.m00, M.m01 / M.m00);
-		centres.push_back(centre);
-	
-		//size_t uc_index = 4 * (x * res_y / tile_size + y);
 
-		//Vec4b pixelValue = input_mat.at<Vec4b>(x, y);
+		Vec4b pixelValue = input_light_mat.at<Vec4b>(centre.y, centre.x);
 
-		//input_pixels[uc_index + 0] = pixelValue[0] / 255.0f;// input_mat.data[uc_index + 0] / 255.0f;
-		//input_pixels[uc_index + 1] = pixelValue[1] / 255.0f;// input_mat.data[uc_index + 1] / 255.0f;
-		//input_pixels[uc_index + 2] = pixelValue[2] / 255.0f;// input_mat.data[uc_index + 2] / 255.0f;
-		//input_pixels[uc_index + 3] = 1.0;
-	
+		cout << centre.x << " " << centre.y << endl;
+
+		cout << pixelValue[0] / 255.0f << " " << pixelValue[1] / 255.0f << " " << pixelValue[2] / 255.0f << endl;
 	}
 
 
-
-
-	cout << centres.size() << endl;
-
-	for (size_t i = 0; i < contours.size(); i++)
-	{
-		Scalar color = Scalar(1, 1, 1);
-
-//		cx = m.m10 / m.m00;   cy = m.m01 / m.m00;
-
-		drawContours(drawing, contours, (int)i, color, 2, LINE_8, hierarchy, 0);
-	}
+//	cout << centres.size() << endl;
+//
+//	for (size_t i = 0; i < contours.size(); i++)
+//	{
+//		Scalar color = Scalar(1, 1, 1);
+//
+////		cx = m.m10 / m.m00;   cy = m.m01 / m.m00;
+//
+//		drawContours(drawing, contours, (int)i, color, 2, LINE_8, hierarchy, 0);
+//	}
 
 	imwrite("canny.png", drawing);
 
 	//imshow("Contours", drawing);
 
-	waitKey();
+	//waitKey();
 
 	return 0;
 
