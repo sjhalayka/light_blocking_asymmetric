@@ -81,8 +81,9 @@ int main(int argc, char** argv)
 
 	Mat drawing = Mat::zeros(input_light_mat.size(), CV_8UC3);
 
-	std::vector<glm::vec3> colours;
-	
+	vector<glm::vec3> centres;
+	vector<glm::vec3> colours;
+
 	cout << contours.size() << endl;
 
 	for (int i = 0; i < contours.size(); i++) 
@@ -91,10 +92,13 @@ int main(int argc, char** argv)
 		cv::Point centre(M.m10 / M.m00, M.m01 / M.m00);
 
 		Vec4b pixelValue = input_light_mat.at<Vec4b>(centre.y, centre.x);
-
-		cout << centre.x << " " << centre.y << endl;
-
-		cout << pixelValue[0] / 255.0f << " " << pixelValue[1] / 255.0f << " " << pixelValue[2] / 255.0f << endl;
+		centres.push_back(glm::vec3(centre.x, centre.y, 0));
+		colours.push_back(glm::vec3(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f));
+	
+		
+		
+		//cout << centre.x << " " << centre.y << endl;
+//		cout << pixelValue[0] / 255.0f << " " << pixelValue[1] / 255.0f << " " << pixelValue[2] / 255.0f << endl;
 	}
 
 
@@ -109,13 +113,13 @@ int main(int argc, char** argv)
 //		drawContours(drawing, contours, (int)i, color, 2, LINE_8, hierarchy, 0);
 //	}
 
-	imwrite("canny.png", drawing);
+	//imwrite("canny.png", drawing);
 
-	//imshow("Contours", drawing);
+	////imshow("Contours", drawing);
 
-	//waitKey();
+	////waitKey();
 
-	return 0;
+	//return 0;
 
 
 
@@ -125,15 +129,8 @@ int main(int argc, char** argv)
 
 	Mat square_light_mat(Size(largest_dim, largest_dim), CV_8UC4);
 	square_light_mat = Scalar(0, 0, 0, 255);
-	input_light_mat.copyTo(square_light_mat(Rect(0, 0, res_x, res_y)));
+	//input_light_mat.copyTo(square_light_mat(Rect(0, 0, res_x, res_y)));
 	input_light_mat = square_light_mat.clone();
-
-
-
-
-
-
-
 
 
 
@@ -142,9 +139,15 @@ int main(int argc, char** argv)
 
 
 
+	for (size_t i = 0; i < centres.size(); i++)
+	{
 
 
+		input_light_mat.at<Vec4b>(centres[i].y / tile_size, centres[i].x / tile_size) = Vec4b(colours[i].r * 255.0f, colours[i].g * 255.0f, colours[i].b * 255.0f, 255.0f);
 
+	}
+
+	imwrite("input_light_mat.png", input_light_mat);
 
 
 
