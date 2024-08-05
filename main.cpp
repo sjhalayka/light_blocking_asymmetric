@@ -145,12 +145,9 @@ int main(int argc, char** argv)
 
 
 	for (size_t i = 0; i < centres.size(); i++)
-	{
 		input_light_mat.at<Vec4b>(centres[i].y / tile_size, centres[i].x / tile_size) = Vec4b(colours[i].r * 255.0f, colours[i].g * 255.0f, colours[i].b * 255.0f, 255.0f);
 
-	}
-
-	imwrite("input_light_mat.png", input_light_mat);
+//	imwrite("input_light_mat.png", input_light_mat);
 
 
 
