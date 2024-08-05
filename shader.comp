@@ -16,9 +16,6 @@ void main()
 {
 	const ivec2 per_compute_pixel_coords = ivec2(gl_GlobalInvocationID.xy);
 
-	vec3 lighting = vec3(0, 0, 0);
-	int light_count = 0;
-
 	vec4 image_sample = imageLoad(input_image, per_compute_pixel_coords);
 
 	// Black pixels are still black when lit, so skip lighting altogether
@@ -29,7 +26,7 @@ void main()
 	}
 
 
-
+	vec3 lighting = vec3(0, 0, 0);
 
 	for(int i = 0; i < u_size.x; i++) 
 	{
@@ -92,11 +89,9 @@ void main()
 
 			if(found_light_blocker == false)
 			{
-				light_count++;
-
 				// Convert from screen space to some other coordinate system,
 				// so that attenuation works much better
-				const float coordinate_change = 1.0 / 50.0;
+				const float coordinate_change = 1.0 / 5.0;
 				
 				const float dist = distance(light_pos, curr_uv) * coordinate_change; 
 				const float dist_coefficient = 0.5;
@@ -107,9 +102,6 @@ void main()
 			}
 		}
 	}
-	
-	if(light_count > 1)
-		lighting /= light_count;
 
 	lighting = clamp(lighting, 0, 1);
 	lighting = max(lighting, 0.2); // Throw in some ambient lighting

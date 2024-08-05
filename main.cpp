@@ -10,8 +10,6 @@ using namespace cv;
 #pragma comment(lib, "opencv_world4100.lib")
 
 
-
-
 int main(int argc, char** argv)
 {
 	const int tile_size = 18;
@@ -67,24 +65,17 @@ int main(int argc, char** argv)
 
 
 
-
-	int thresh = 100;
-
+	
 	Mat canny_input;// = input_light_mat.clone();
 	cvtColor(input_light_mat, canny_input, COLOR_BGR2GRAY);
 	Mat canny_output = canny_input.clone();
-	//Canny(canny_input, canny_output, thresh, thresh * 2);
 
 	vector<vector<Point> > contours;	
 	vector<Vec4i> hierarchy;
 	findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
 
-	Mat drawing = Mat::zeros(input_light_mat.size(), CV_8UC3);
-
 	vector<glm::vec3> centres;
 	vector<glm::vec3> colours;
-
-	cout << contours.size() << endl;
 
 	for (int i = 0; i < contours.size(); i++) 
 	{
@@ -94,32 +85,46 @@ int main(int argc, char** argv)
 		Vec4b pixelValue = input_light_mat.at<Vec4b>(centre.y, centre.x);
 		centres.push_back(glm::vec3(centre.x, centre.y, 0));
 		colours.push_back(glm::vec3(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f));
-	
-		
-		
-		//cout << centre.x << " " << centre.y << endl;
-//		cout << pixelValue[0] / 255.0f << " " << pixelValue[1] / 255.0f << " " << pixelValue[2] / 255.0f << endl;
 	}
 
+	// get range for colours
 
-//	cout << centres.size() << endl;
-//
-//	for (size_t i = 0; i < contours.size(); i++)
-//	{
-//		Scalar color = Scalar(1, 1, 1);
-//
-////		cx = m.m10 / m.m00;   cy = m.m01 / m.m00;
-//
-//		drawContours(drawing, contours, (int)i, color, 2, LINE_8, hierarchy, 0);
-//	}
+	for (size_t i = 0; i < colours.size(); i++)
+	{
+		Mat mask;
+		Mat canny_output_HSV;
 
-	//imwrite("canny.png", drawing);
+		//cvtColor(canny_output, canny_output_HSV, COLOR_BGR2HSV);
 
-	////imshow("Contours", drawing);
 
-	////waitKey();
 
-	//return 0;
+
+			inRange(input_light_mat, 
+				Scalar(static_cast<unsigned char>(colours[i].r * 255.0f), static_cast<unsigned char>(colours[i].g * 255.0f), static_cast<unsigned char>(colours[i].b * 255.0f), 255), 
+				Scalar(static_cast<unsigned char>(colours[i].r * 255.0f), static_cast<unsigned char>(colours[i].g * 255.0f), static_cast<unsigned char>(colours[i].b * 255.0f), 255), 
+				mask);
+
+			std::vector<cv::Point2i> locations;   // output, locations of non-zero pixels 
+			findNonZero(mask, locations);
+
+			cout << locations.size() << endl;
+
+
+
+
+			string filename = "colour_mask_" + to_string(i) + ".png";
+
+			// Show the frames
+			imwrite(filename.c_str(), mask);
+			//waitKey();
+		//imshow(window_detection_name, frame_threshold);
+
+	}
+
+;
+
+
+
 
 
 
@@ -141,8 +146,6 @@ int main(int argc, char** argv)
 
 	for (size_t i = 0; i < centres.size(); i++)
 	{
-
-
 		input_light_mat.at<Vec4b>(centres[i].y / tile_size, centres[i].x / tile_size) = Vec4b(colours[i].r * 255.0f, colours[i].g * 255.0f, colours[i].b * 255.0f, 255.0f);
 
 	}
