@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 	}
 
 	vector<glm::vec3> distinct_colours;
-	vector<glm::vec3> sample_points;
+	vector<glm::vec3> centres;
 
 
 	for (int i = 0; i < input_light_mat.cols; i++)
@@ -90,11 +90,49 @@ int main(int argc, char** argv)
 			if (colour.x == 0 && colour.y == 0 && colour.z == 0)
 				continue;
 
+
 			if (distinct_colours.end() == find(distinct_colours.begin(), distinct_colours.end(), colour))
 			{
 				distinct_colours.push_back(colour);
-				sample_points.push_back(glm::vec3(i, j, 0));
+				centres.push_back(glm::vec3(i, j, 0));
+
 			}
+		}
+	}
+
+	cout << distinct_colours.size() << endl;
+
+	for (vector<glm::vec3>::const_iterator ci = distinct_colours.begin(); ci != distinct_colours.end(); ci++)
+		cout << ci->x << " " << ci->y << " " << ci->z << endl;
+
+
+	vector<glm::vec3> loop_centres;
+	vector<glm::vec3> loop_colours;
+			
+	for (size_t i = 0; i < distinct_colours.size(); i++)
+	{
+		Mat mask;
+
+		inRange(input_light_mat,
+			Scalar(static_cast<unsigned char>(distinct_colours[i].r * 255.0f), static_cast<unsigned char>(distinct_colours[i].g * 255.0f), static_cast<unsigned char>(distinct_colours[i].b * 255.0f), 255),
+			Scalar(static_cast<unsigned char>(distinct_colours[i].r * 255.0f), static_cast<unsigned char>(distinct_colours[i].g * 255.0f), static_cast<unsigned char>(distinct_colours[i].b * 255.0f), 255),
+			mask);
+
+		vector<vector<Point> > loop_contours;
+		vector<Vec4i> loop_hierarchy;
+		findContours(mask, loop_contours, loop_hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
+
+		for (size_t j = 0; j < loop_contours.size(); j++)
+		{
+			cv::Moments M = cv::moments(loop_contours[j]);
+			cv::Point2f loop_centre(M.m10 / M.m00, M.m01 / M.m00);
+
+			if (isnan(loop_centre.x) || isnan(loop_centre.y))
+				continue;
+
+			Vec4b pixelValue = input_light_mat.at<Vec4b>(loop_centre.y, loop_centre.x);
+			loop_centres.push_back(glm::vec3(loop_centre.x, loop_centre.y, 0));
+			loop_colours.push_back(glm::vec3(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f));
 		}
 	}
 
@@ -105,10 +143,10 @@ int main(int argc, char** argv)
 
 	resize(input_light_mat, input_light_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_NEAREST);
 
-	for (size_t i = 0; i < sample_points.size(); i++)
-		input_light_mat.at<Vec4b>(sample_points[i].y / tile_size, sample_points[i].x / tile_size) = Vec4b(distinct_colours[i].r * 255.0f, distinct_colours[i].g * 255.0f, distinct_colours[i].b * 255.0f, 255.0f);
+	for (size_t i = 0; i < loop_centres.size(); i++)
+		input_light_mat.at<Vec4b>(loop_centres[i].y / tile_size, loop_centres[i].x / tile_size) = Vec4b(loop_colours[i].r * 255.0f, loop_colours[i].g * 255.0f, loop_colours[i].b * 255.0f, 255.0f);
 
-//	imwrite("input_light_mat.png", input_light_mat);
+	imwrite("input_light_mat.png", input_light_mat);
 
 
 
