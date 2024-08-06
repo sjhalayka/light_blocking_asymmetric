@@ -250,7 +250,7 @@ int main(int argc, char** argv)
 
 	for (size_t a = 0; a < array_of_images.size(); a++)
 	{
-		float brightness_rand = rand() % 10 * 0.01;
+		float r = rand() % 10 * 0.015;
 
 		for (int i = 0; i < array_of_images[a].cols; i++)
 		{
@@ -262,8 +262,13 @@ int main(int argc, char** argv)
 				glm::vec3 hsv;
 				
 				RGBtoHSV(colour.x, colour.y, colour.z, hsv.x, hsv.y, hsv.z);
-					
-				hsv.z += brightness_rand;
+				
+				hsv.x += r*180.0;
+
+				if (hsv.x > 360.0)
+					hsv.x = 360.0;
+
+				hsv.z += r;
 
 				if (hsv.z > 1.0)
 					hsv.z = 1.0;
