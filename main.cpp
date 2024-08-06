@@ -2,6 +2,8 @@
 
 #include "main.h"
 
+
+#define GLM_FORCE_SWIZZLE
 #include <glm/glm.hpp>
 
 #include <opencv2/opencv.hpp>
@@ -32,78 +34,121 @@ namespace std
 	}
 }
 
+/*! \brief Convert RGB to HSV color space
 
+  Converts a given set of RGB values `r', `g', `b' into HSV
+  coordinates. The input RGB values are in the range [0, 1], and the
+  output HSV values are in the ranges h = [0, 360], and s, v = [0,
+  1], respectively.
 
+  \param fR Red component, used as input, range: [0, 1]
+  \param fG Green component, used as input, range: [0, 1]
+  \param fB Blue component, used as input, range: [0, 1]
+  \param fH Hue component, used as output, range: [0, 360]
+  \param fS Hue component, used as output, range: [0, 1]
+  \param fV Hue component, used as output, range: [0, 1]
+ */
 
-/*
+void RGBtoHSV(float& fR, float& fG, float &fB, float& fH, float& fS, float& fV) {
+	float fCMax = max(max(fR, fG), fB);
+	float fCMin = min(min(fR, fG), fB);
+	float fDelta = fCMax - fCMin;
 
-// https://stackoverflow.com/questions/3696616/split-an-image-into-64x64-chunks
-#define CHUNKSIZE 36
-#define PIXEL_BYTES 4
-
-void ProcessChunk(Mat &m, int x, int y, int width, int height)
-{
-
-
-
-
-	for (int i = 0; i < width; i++)
-	{
-		for (int j = 0; j < height; j++)
-		{
-			Vec4b pixelValue = m.at<Vec4b>(j, i);
-
-			pixelValue[0] = 255;
-			pixelValue[0] = 0;
-			pixelValue[0] = 0;
-			pixelValue[0] = 255;
-
-			m.at<Vec4b>(j, i) = pixelValue;
-
-
-			//glm::vec3 colour(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f);
-
-
-
-			//unsigned char c0 = m.data[(j * width + i) * PIXEL_BYTES + 0];
-			//unsigned char c1 = m.data[(j * width + i) * PIXEL_BYTES + 1];
-			//unsigned char c2 = m.data[(j * width + i) * PIXEL_BYTES + 2];
-			//unsigned char c3 = m.data[(j * width + i) * PIXEL_BYTES + 3];
-
-			//c0 = 0;// rand() % 50;
-			//c1 = 0;//rand() % 50;
-			//c2 = 0;//rand() % 50;
-			//c3 = 0;//rand() % 50;
-
-			//m.data[(j * width + i) * PIXEL_BYTES + 0] = 255;
-			//m.data[(j * width + i) * PIXEL_BYTES + 1] = 0;
-			//m.data[(j * width + i) * PIXEL_BYTES + 2] = 0;
-			//m.data[(j * width + i) * PIXEL_BYTES + 3] = 255;
-
-
+	if (fDelta > 0) {
+		if (fCMax == fR) {
+			fH = 60 * (fmod(((fG - fB) / fDelta), 6));
 		}
+		else if (fCMax == fG) {
+			fH = 60 * (((fB - fR) / fDelta) + 2);
+		}
+		else if (fCMax == fB) {
+			fH = 60 * (((fR - fG) / fDelta) + 4);
+		}
+
+		if (fCMax > 0) {
+			fS = fDelta / fCMax;
+		}
+		else {
+			fS = 0;
+		}
+
+		fV = fCMax;
+	}
+	else {
+		fH = 0;
+		fS = 0;
+		fV = fCMax;
+	}
+
+	if (fH < 0) {
+		fH = 360 + fH;
 	}
 }
 
 
+/*! \brief Convert HSV to RGB color space
 
+  Converts a given set of HSV values `h', `s', `v' into RGB
+  coordinates. The output RGB values are in the range [0, 1], and
+  the input HSV values are in the ranges h = [0, 360], and s, v =
+  [0, 1], respectively.
 
+  \param fR Red component, used as output, range: [0, 1]
+  \param fG Green component, used as output, range: [0, 1]
+  \param fB Blue component, used as output, range: [0, 1]
+  \param fH Hue component, used as input, range: [0, 360]
+  \param fS Hue component, used as input, range: [0, 1]
+  \param fV Hue component, used as input, range: [0, 1]
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
+*/
+void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV) {
+	float fC = fV * fS; // Chroma
+	float fHPrime = fmod(fH / 60.0, 6);
+	float fX = fC * (1 - fabs(fmod(fHPrime, 2) - 1));
+	float fM = fV - fC;
 
+	if (0 <= fHPrime && fHPrime < 1) {
+		fR = fC;
+		fG = fX;
+		fB = 0;
+	}
+	else if (1 <= fHPrime && fHPrime < 2) {
+		fR = fX;
+		fG = fC;
+		fB = 0;
+	}
+	else if (2 <= fHPrime && fHPrime < 3) {
+		fR = 0;
+		fG = fC;
+		fB = fX;
+	}
+	else if (3 <= fHPrime && fHPrime < 4) {
+		fR = 0;
+		fG = fX;
+		fB = fC;
+	}
+	else if (4 <= fHPrime && fHPrime < 5) {
+		fR = fX;
+		fG = 0;
+		fB = fC;
+	}
+	else if (5 <= fHPrime && fHPrime < 6) {
+		fR = fC;
+		fG = 0;
+		fB = fX;
+	}
+	else {
+		fR = 0;
+		fG = 0;
+		fB = 0;
+	}
 
-void ProcessImage(Mat &m)
-{
-	int nWidth = m.cols;
-	int nHeight = m.rows;
-
-	for (int x = 0; x < nWidth; x += CHUNKSIZE)
-		for (int y = 0; y < nHeight; y += CHUNKSIZE)
-			ProcessChunk(m, x, y, MIN(nWidth - x, CHUNKSIZE), MIN(nHeight - y, CHUNKSIZE));
+	fR += fM;
+	fG += fM;
+	fB += fM;
 }
 
 
-*/
 
 
 
@@ -205,20 +250,65 @@ int main(int argc, char** argv)
 
 	for (size_t a = 0; a < array_of_images.size(); a++)
 	{
+		//(array_of_images[a], array_of_images[a], COLOR_BGR2HSV, 4);
+
+		float hue_rand = rand() % 10 * 0.01;
+
 		for (int i = 0; i < array_of_images[a].cols; i++)
 		{
 			for (int j = 0; j < array_of_images[a].rows; j++)
 			{
 				Vec4b pixelValue = array_of_images[a].at<Vec4b>(j, i);
 
-				//pixelValue[0] = 0;
-				//pixelValue[1] = 0;
-				//pixelValue[2] = 255;
-				pixelValue[3] = 255;
+				glm::vec3 colour(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f);
+				glm::vec3 hsv;
+				
+				RGBtoHSV(colour.x, colour.y, colour.z, hsv.x, hsv.y, hsv.z);
+					
+				hsv.z += hue_rand;
+
+				if (hsv.z > 1.0)
+					hsv.z = 1.0;
+
+				glm::vec3 new_colour;
+
+				HSVtoRGB(new_colour.x, new_colour.y, new_colour.z, hsv.x, hsv.y, hsv.z);
+
+				pixelValue[0] = new_colour.x * 255.0f;
+				pixelValue[1] = new_colour.y * 255.0f;
+				pixelValue[2] = new_colour.z * 255.0f;
+				pixelValue[3] = 255.0f;
 
 				array_of_images[a].at<Vec4b>(j, i) = pixelValue;
+
+
+
+
+
+				//glm::vec3 hsv = rgb_to_hsv(colour);
+				//	
+				//hsv.x += hue_rand;
+
+				//if (hsv.x > 360.0)
+				//	hsv.x = 360.0;
+
+				//glm::vec3 new_colour = hsv_to_rgb(hsv);
+
+				//	// Translates RGB to HSV
+				//	// R, G, B: 0.0 - 1.0
+				//	// H: 0.0 - 360.0, S: 0.0 - 100.0, V: 0.0 - 100.0
+
+				//pixelValue[0] = new_colour.x;// *255.0f;
+				//pixelValue[1] = new_colour.y;// *255.0f;
+				//pixelValue[2] = new_colour.z;// *255.0f;
+				//pixelValue[3] = 255.0f;
+
+//				array_of_images[a].at<Vec4b>(j, i) = pixelValue;
 			}
 		}
+
+		//cvtColor(array_of_images[a], array_of_images[a], COLOR_HSV2BGR, 4);
+
 	}
 
 	cout << array_of_images.size() << endl;
