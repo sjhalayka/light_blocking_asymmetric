@@ -100,6 +100,9 @@ int main(int argc, char** argv)
 
 			glm::vec3 colour(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f);
 
+			//if (pixelValue[0] == 0 && pixelValue[1] == 0 && pixelValue[2] == 0)
+			//	continue;
+
 			if (distinct_colour_map[colour] == 0)
 			{
 				distinct_colour_map[colour]++;
