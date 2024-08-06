@@ -17,8 +17,20 @@ namespace glm
 	{
 		return glm::all(glm::lessThan(lhs, rhs));
 	}
+
+	bool operator== (const glm::vec3& lhs, const glm::vec3& rhs)
+	{
+		return glm::all(glm::lessThan(lhs, rhs));
+	}
 }
 
+namespace std
+{
+	bool operator==(const pair<glm::vec3, size_t>& lhs, const pair<glm::vec3, size_t>& rhs)
+	{
+		return lhs.first == rhs.first && lhs.second == rhs.second;
+	}
+}
 
 
 int main(int argc, char** argv)
@@ -78,6 +90,7 @@ int main(int argc, char** argv)
 	vector<glm::vec3> distinct_colours;
 	vector<glm::vec3> centres;
 
+	map<glm::vec3, size_t> distinct_colour_map;
 
 	for (int i = 0; i < input_light_mat.cols; i++)
 	{
@@ -87,23 +100,19 @@ int main(int argc, char** argv)
 
 			glm::vec3 colour(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f);
 
-			if (colour.x == 0 && colour.y == 0 && colour.z == 0)
-				continue;
-
-
-			if (distinct_colours.end() == find(distinct_colours.begin(), distinct_colours.end(), colour))
+			if (distinct_colour_map[colour] == 0)
 			{
+				distinct_colour_map[colour]++;
 				distinct_colours.push_back(colour);
 				centres.push_back(glm::vec3(i, j, 0));
-
 			}
 		}
 	}
 
-	cout << distinct_colours.size() << endl;
+	cout << distinct_colour_map.size() << endl;
 
-	for (vector<glm::vec3>::const_iterator ci = distinct_colours.begin(); ci != distinct_colours.end(); ci++)
-		cout << ci->x << " " << ci->y << " " << ci->z << endl;
+	//for (vector<glm::vec3>::const_iterator ci = distinct_colours.begin(); ci != distinct_colours.end(); ci++)
+	//	cout << ci->x << " " << ci->y << " " << ci->z << endl;
 
 
 	vector<glm::vec3> loop_centres;
@@ -125,10 +134,11 @@ int main(int argc, char** argv)
 		for (size_t j = 0; j < loop_contours.size(); j++)
 		{
 			cv::Moments M = cv::moments(loop_contours[j]);
-			cv::Point2f loop_centre(M.m10 / M.m00, M.m01 / M.m00);
 
-			if (isnan(loop_centre.x) || isnan(loop_centre.y))
+			if (M.m00 == 0)
 				continue;
+
+			cv::Point2f loop_centre(M.m10 / M.m00, M.m01 / M.m00);
 
 			Vec4b pixelValue = input_light_mat.at<Vec4b>(loop_centre.y, loop_centre.x);
 			loop_centres.push_back(glm::vec3(loop_centre.x, loop_centre.y, 0));
@@ -146,7 +156,7 @@ int main(int argc, char** argv)
 	for (size_t i = 0; i < loop_centres.size(); i++)
 		input_light_mat.at<Vec4b>(loop_centres[i].y / tile_size, loop_centres[i].x / tile_size) = Vec4b(loop_colours[i].r * 255.0f, loop_colours[i].g * 255.0f, loop_colours[i].b * 255.0f, 255.0f);
 
-	imwrite("input_light_mat.png", input_light_mat);
+//	imwrite("input_light_mat.png", input_light_mat);
 
 
 
@@ -167,19 +177,9 @@ int main(int argc, char** argv)
 	input_light_blocking_mat.copyTo(square_light_blocking_mat(Rect(0, 0, res_x, res_y)));
 	input_light_blocking_mat = square_light_blocking_mat.clone();
 
-	//	imwrite("resized_light_mat.png", input_light_mat);
-
 	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_NEAREST);
 
 
-
-
-
-
-
-
-
-	//	imwrite("resized_light_blocking_mat.png", input_light_blocking_mat);
 
 
 
