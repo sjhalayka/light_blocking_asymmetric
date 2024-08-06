@@ -250,9 +250,7 @@ int main(int argc, char** argv)
 
 	for (size_t a = 0; a < array_of_images.size(); a++)
 	{
-		//(array_of_images[a], array_of_images[a], COLOR_BGR2HSV, 4);
-
-		float hue_rand = rand() % 10 * 0.01;
+		float brightness_rand = rand() % 10 * 0.01;
 
 		for (int i = 0; i < array_of_images[a].cols; i++)
 		{
@@ -265,7 +263,7 @@ int main(int argc, char** argv)
 				
 				RGBtoHSV(colour.x, colour.y, colour.z, hsv.x, hsv.y, hsv.z);
 					
-				hsv.z += hue_rand;
+				hsv.z += brightness_rand;
 
 				if (hsv.z > 1.0)
 					hsv.z = 1.0;
@@ -280,35 +278,8 @@ int main(int argc, char** argv)
 				pixelValue[3] = 255.0f;
 
 				array_of_images[a].at<Vec4b>(j, i) = pixelValue;
-
-
-
-
-
-				//glm::vec3 hsv = rgb_to_hsv(colour);
-				//	
-				//hsv.x += hue_rand;
-
-				//if (hsv.x > 360.0)
-				//	hsv.x = 360.0;
-
-				//glm::vec3 new_colour = hsv_to_rgb(hsv);
-
-				//	// Translates RGB to HSV
-				//	// R, G, B: 0.0 - 1.0
-				//	// H: 0.0 - 360.0, S: 0.0 - 100.0, V: 0.0 - 100.0
-
-				//pixelValue[0] = new_colour.x;// *255.0f;
-				//pixelValue[1] = new_colour.y;// *255.0f;
-				//pixelValue[2] = new_colour.z;// *255.0f;
-				//pixelValue[3] = 255.0f;
-
-//				array_of_images[a].at<Vec4b>(j, i) = pixelValue;
 			}
 		}
-
-		//cvtColor(array_of_images[a], array_of_images[a], COLOR_HSV2BGR, 4);
-
 	}
 
 	cout << array_of_images.size() << endl;
