@@ -35,7 +35,9 @@ namespace std
 
 int main(int argc, char** argv)
 {
-	const int tile_size = 18;
+	const int lighting_tile_size = 18;
+	const int background_tile_size = 36;
+
 
 	// Load from file
 	Mat input_mat = imread("input.png", IMREAD_UNCHANGED);
@@ -67,7 +69,7 @@ int main(int argc, char** argv)
 
 	Mat input_mat_backup = input_mat.clone();
 
-	resize(input_mat, input_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_NEAREST);
+	resize(input_mat, input_mat, cv::Size(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size), 0, 0, cv::INTER_NEAREST);
 
 	//	imwrite("input_mat.png", input_mat);
 
@@ -90,7 +92,7 @@ int main(int argc, char** argv)
 	vector<glm::vec3> distinct_colours;
 	vector<glm::vec3> centres;
 
-	map<glm::vec3, size_t> distinct_colour_map;
+	map<glm::vec3, size_t> distinct_colour_map; // for acceleration
 
 	for (int i = 0; i < input_light_mat.cols; i++)
 	{
@@ -99,9 +101,6 @@ int main(int argc, char** argv)
 			Vec4b pixelValue = input_light_mat.at<Vec4b>(j, i);
 
 			glm::vec3 colour(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f);
-
-			//if (pixelValue[0] == 0 && pixelValue[1] == 0 && pixelValue[2] == 0)
-			//	continue;
 
 			if (distinct_colour_map[colour] == 0)
 			{
@@ -151,13 +150,12 @@ int main(int argc, char** argv)
 
 	Mat square_light_mat(Size(largest_dim, largest_dim), CV_8UC4);
 	square_light_mat = Scalar(0, 0, 0, 255);
-	//input_light_mat.copyTo(square_light_mat(Rect(0, 0, res_x, res_y)));
 	input_light_mat = square_light_mat.clone();
 
-	resize(input_light_mat, input_light_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_NEAREST);
+	resize(input_light_mat, input_light_mat, cv::Size(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size), 0, 0, cv::INTER_NEAREST);
 
 	for (size_t i = 0; i < loop_centres.size(); i++)
-		input_light_mat.at<Vec4b>(loop_centres[i].y / tile_size, loop_centres[i].x / tile_size) = Vec4b(loop_colours[i].r * 255.0f, loop_colours[i].g * 255.0f, loop_colours[i].b * 255.0f, 255.0f);
+		input_light_mat.at<Vec4b>(loop_centres[i].y / lighting_tile_size, loop_centres[i].x / lighting_tile_size) = Vec4b(loop_colours[i].r * 255.0f, loop_colours[i].g * 255.0f, loop_colours[i].b * 255.0f, 255.0f);
 
 //	imwrite("input_light_mat.png", input_light_mat);
 
@@ -180,7 +178,7 @@ int main(int argc, char** argv)
 	input_light_blocking_mat.copyTo(square_light_blocking_mat(Rect(0, 0, res_x, res_y)));
 	input_light_blocking_mat = square_light_blocking_mat.clone();
 
-	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(largest_dim / tile_size, largest_dim / tile_size), 0, 0, cv::INTER_NEAREST);
+	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size), 0, 0, cv::INTER_NEAREST);
 
 
 
@@ -188,13 +186,13 @@ int main(int argc, char** argv)
 
 
 
-	vector<float> output_pixels((largest_dim / tile_size) * (largest_dim / tile_size) * 4, 1.0f);
-	vector<float> input_pixels((largest_dim / tile_size) * (largest_dim / tile_size) * 4, 1.0f);
-	vector<float> input_light_pixels((largest_dim / tile_size) * (largest_dim / tile_size) * 4, 1.0f);
-	vector<float> input_light_blocking_pixels((largest_dim / tile_size) * (largest_dim / tile_size) * 4, 1.0f);
+	vector<float> output_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+	vector<float> input_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+	vector<float> input_light_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+	vector<float> input_light_blocking_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
 
 
-	for (size_t x = 0; x < 4 * ((largest_dim / tile_size) * (largest_dim / tile_size)); x += 4)
+	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
 	{
 		input_pixels[x + 0] = input_mat.data[x + 0] / 255.0f;
 		input_pixels[x + 1] = input_mat.data[x + 1] / 255.0f;
@@ -202,7 +200,7 @@ int main(int argc, char** argv)
 		input_pixels[x + 3] = 1.0;
 	}
 
-	for (size_t x = 0; x < 4 * ((largest_dim / tile_size) * (largest_dim / tile_size)); x += 4)
+	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
 	{
 		input_light_pixels[x + 0] = input_light_mat.data[x + 0] / 255.0f;
 		input_light_pixels[x + 1] = input_light_mat.data[x + 1] / 255.0f;
@@ -210,7 +208,7 @@ int main(int argc, char** argv)
 		input_light_pixels[x + 3] = 1.0;
 	}
 
-	for (size_t x = 0; x < 4 * ((largest_dim / tile_size) * (largest_dim / tile_size)); x += 4)
+	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
 	{
 		input_light_blocking_pixels[x + 0] = input_light_blocking_mat.data[x + 0] / 255.0f;
 		input_light_blocking_pixels[x + 1] = input_light_blocking_mat.data[x + 1] / 255.0f;
@@ -230,7 +228,7 @@ int main(int argc, char** argv)
 		tex_input,
 		tex_light_input,
 		tex_light_blocking_input,
-		largest_dim / tile_size, largest_dim / tile_size,
+		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 		compute_shader_program))
 	{
 		cout << "Aborting" << endl;
@@ -243,7 +241,7 @@ int main(int argc, char** argv)
 		tex_input,
 		tex_light_input,
 		tex_light_blocking_input,
-		largest_dim / tile_size, largest_dim / tile_size,
+		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 		compute_shader_program,
 		output_pixels,
 		input_pixels,
@@ -254,9 +252,9 @@ int main(int argc, char** argv)
 
 
 	// Save output to PNG file
-	Mat uc_output(largest_dim / tile_size, largest_dim / tile_size, CV_8UC4);
+	Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
 
-	for (size_t x = 0; x < 4 * ((largest_dim / tile_size) * (largest_dim / tile_size)); x += 4)
+	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
 	{
 		uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
 		uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
