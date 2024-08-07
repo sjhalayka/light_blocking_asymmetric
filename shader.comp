@@ -59,8 +59,8 @@ void main()
 			else
 				num_steps = int(pixel_diff.y);
 
-			if(num_steps < 2)
-				num_steps = 2;
+			if(num_steps < 10)
+				num_steps = 10;
 
 			vec2 light_pos = per_image_pixel_coords;		
 

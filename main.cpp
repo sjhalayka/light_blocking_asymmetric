@@ -250,7 +250,9 @@ int main(int argc, char** argv)
 
 	for (size_t a = 0; a < array_of_images.size(); a++)
 	{
-		float r = rand() % 10 * 0.015;
+		float r_brightness = rand() % 10 * 0.015;
+		float r_hue = rand() % 10 * 0.015;
+
 
 		for (int i = 0; i < array_of_images[a].cols; i++)
 		{
@@ -263,12 +265,12 @@ int main(int argc, char** argv)
 				
 				RGBtoHSV(colour.x, colour.y, colour.z, hsv.x, hsv.y, hsv.z);
 				
-				hsv.x += r*180.0;
+				hsv.x += r_hue*360.0;
 
 				if (hsv.x > 360.0)
 					hsv.x = 360.0;
 
-				hsv.z += r;
+				hsv.z += r_brightness;
 
 				if (hsv.z > 1.0)
 					hsv.z = 1.0;
@@ -287,7 +289,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	cout << array_of_images.size() << endl;
+//	cout << array_of_images.size() << endl;
 
 	cv::Mat image_collage = imageCollage(array_of_images, num_tiles_x, num_tiles_y);
 
