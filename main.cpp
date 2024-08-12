@@ -484,6 +484,12 @@ int main(int argc, char** argv)
 
 	cout << "Computing " << endl;
 
+
+
+
+
+	auto start_time = std::chrono::high_resolution_clock::now();
+
 	compute(tex_output,
 		tex_input,
 		tex_light_input,
@@ -495,7 +501,19 @@ int main(int argc, char** argv)
 		input_light_pixels,
 		input_light_blocking_pixels);
 
+
+
+	auto end_time = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
+
 	cout << "Computing done" << endl;
+
+	cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds";
+
+
+
+
 
 
 	// Save output to PNG file
