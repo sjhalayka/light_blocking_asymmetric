@@ -13,6 +13,63 @@
 
 int main(int argc, char** argv)
 {
+
+	// Setup SDL
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
+	{
+		printf("Error: %s\n", SDL_GetError());
+		return -1;
+	}
+
+	// GL 4.3 + GLSL 430
+	const char* glsl_version = "#version 430";
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+
+	// From 2.0.18: Enable native IME.
+#ifdef SDL_HINT_IME_SHOW_UI
+	SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+#endif
+
+	// Create window with graphics context
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+	SDL_Window* window = SDL_CreateWindow("World Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, 1080, window_flags);
+	if (window == nullptr)
+	{
+		printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
+		return -1;
+	}
+
+	SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+	SDL_GL_MakeCurrent(window, gl_context);
+	SDL_GL_SetSwapInterval(1); // Enable vsync
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	const int lighting_tile_size = 18;
 	const int background_tile_size = 36;
 
@@ -31,8 +88,8 @@ int main(int argc, char** argv)
 
 
 
-// https://stackoverflow.com/questions/64972297/how-to-stitch-an-array-of-images-into-an-mxn-image-collage/64973661#64973661
-// https://stackoverflow.com/questions/65091012/how-to-split-an-image-into-m-x-n-tiles
+	// https://stackoverflow.com/questions/64972297/how-to-stitch-an-array-of-images-into-an-mxn-image-collage/64973661#64973661
+	// https://stackoverflow.com/questions/65091012/how-to-split-an-image-into-m-x-n-tiles
 
 
 	int num_tiles_x = res_x / background_tile_size;
@@ -53,10 +110,10 @@ int main(int argc, char** argv)
 
 				glm::vec3 colour(pixelValue[0] / 255.0f, pixelValue[1] / 255.0f, pixelValue[2] / 255.0f);
 				glm::vec3 hsv;
-				
+
 				RGBtoHSV(colour.x, colour.y, colour.z, hsv.x, hsv.y, hsv.z);
-				
-				hsv.x += r_hue*360.0;
+
+				hsv.x += r_hue * 360.0;
 
 				if (hsv.x > 360.0)
 					hsv.x = 360.0;
@@ -80,7 +137,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-//	cout << array_of_images.size() << endl;
+	//	cout << array_of_images.size() << endl;
 
 	cv::Mat image_collage = imageCollage(array_of_images, num_tiles_x, num_tiles_y);
 
@@ -103,6 +160,24 @@ int main(int argc, char** argv)
 		cout << "Aborting" << endl;
 		return -1;
 	}
+
+	if (false == ortho_shader.init("ortho.vs.glsl", "ortho.fs.glsl"))
+	{
+		cout << "Could not load ortho shader" << endl;
+		return false;
+	}
+
+	uniforms.ortho_shader_uniforms.tex = glGetUniformLocation(ortho_shader.get_program(), "tex");
+	uniforms.ortho_shader_uniforms.viewport_width = glGetUniformLocation(ortho_shader.get_program(), "viewport_width");
+	uniforms.ortho_shader_uniforms.viewport_height = glGetUniformLocation(ortho_shader.get_program(), "viewport_height");
+	//uniforms.ortho_shader_uniforms.projection = glGetUniformLocation(ortho_shader.get_program(), "projection");
+	//uniforms.ortho_shader_uniforms.view = glGetUniformLocation(ortho_shader.get_program(), "view");
+	//uniforms.ortho_shader_uniforms.model = glGetUniformLocation(ortho_shader.get_program(), "model");
+	//uniforms.ortho_shader_uniforms.opacity = glGetUniformLocation(ortho_shader.get_program(), "opacity");
+
+
+
+
 
 
 	Mat square_mat(Size(largest_dim, largest_dim), CV_8UC4);
@@ -161,15 +236,15 @@ int main(int argc, char** argv)
 		}
 	}
 
-//	cout << distinct_colour_map.size() << endl;
+	//	cout << distinct_colour_map.size() << endl;
 
-	//for (vector<glm::vec3>::const_iterator ci = distinct_colours.begin(); ci != distinct_colours.end(); ci++)
-	//	cout << ci->x << " " << ci->y << " " << ci->z << endl;
+		//for (vector<glm::vec3>::const_iterator ci = distinct_colours.begin(); ci != distinct_colours.end(); ci++)
+		//	cout << ci->x << " " << ci->y << " " << ci->z << endl;
 
 
 	vector<glm::vec3> loop_centres;
 	vector<glm::vec3> loop_colours;
-			
+
 	for (size_t i = 0; i < distinct_colours.size(); i++)
 	{
 		Mat mask;
@@ -213,7 +288,7 @@ int main(int argc, char** argv)
 
 
 
-//	imwrite("input_light_mat.png", input_light_mat);
+	//	imwrite("input_light_mat.png", input_light_mat);
 
 
 
@@ -244,15 +319,12 @@ int main(int argc, char** argv)
 
 
 
-	auto start_time = std::chrono::high_resolution_clock::now();
-
-
 
 
 	vector<glm::vec3> dynamic_centres;
 	vector<glm::vec3> dynamic_colours;
 
-	dynamic_centres.push_back(glm::vec3(2* lighting_tile_size, 1* lighting_tile_size, 0.0f));
+	dynamic_centres.push_back(glm::vec3(2 * lighting_tile_size, 1 * lighting_tile_size, 0.0f));
 	dynamic_colours.push_back(glm::vec3(0, 1, 0));
 
 	Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
@@ -261,123 +333,167 @@ int main(int argc, char** argv)
 	for (size_t i = 0; i < dynamic_centres.size(); i++)
 		input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) += Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
 
+	bool done = false;
 
-
-
-
-
-
-	vector<float> output_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-	vector<float> input_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-	vector<float> input_light_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-	vector<float> input_light_blocking_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-
-
-	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+	while (false == done)
 	{
-		input_pixels[x + 0] = input_mat.data[x + 0] / 255.0f;
-		input_pixels[x + 1] = input_mat.data[x + 1] / 255.0f;
-		input_pixels[x + 2] = input_mat.data[x + 2] / 255.0f;
-		input_pixels[x + 3] = 1.0;
+		auto start_time = std::chrono::high_resolution_clock::now();
+
+		SDL_Event event;
+		while (SDL_PollEvent(&event))
+		{
+			if (event.type == SDL_QUIT)
+			{
+				done = true;
+			}
+
+			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+			{
+				done = true;
+			}
+		}
+
+
+		vector<float> output_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+		vector<float> input_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+		vector<float> input_light_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+		vector<float> input_light_blocking_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+
+
+		for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+		{
+			input_pixels[x + 0] = input_mat.data[x + 0] / 255.0f;
+			input_pixels[x + 1] = input_mat.data[x + 1] / 255.0f;
+			input_pixels[x + 2] = input_mat.data[x + 2] / 255.0f;
+			input_pixels[x + 3] = 1.0;
+		}
+
+		for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+		{
+			input_light_pixels[x + 0] = input_light_mat_with_dynamic_lights.data[x + 0] / 255.0f;
+			input_light_pixels[x + 1] = input_light_mat_with_dynamic_lights.data[x + 1] / 255.0f;
+			input_light_pixels[x + 2] = input_light_mat_with_dynamic_lights.data[x + 2] / 255.0f;
+			input_light_pixels[x + 3] = 1.0;
+		}
+
+		for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+		{
+			input_light_blocking_pixels[x + 0] = input_light_blocking_mat.data[x + 0] / 255.0f;
+			input_light_blocking_pixels[x + 1] = input_light_blocking_mat.data[x + 1] / 255.0f;
+			input_light_blocking_pixels[x + 2] = input_light_blocking_mat.data[x + 2] / 255.0f;
+			input_light_blocking_pixels[x + 3] = 1.0;
+		}
+
+
+
+		// Initialize OpenGL / compute shader / textures
+
+
+
+
+
+
+	//	cout << "Computing " << endl;
+
+
+
+
+
+
+		compute(tex_output,
+			tex_input,
+			tex_light_input,
+			tex_light_blocking_input,
+			largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
+			compute_shader_program,
+			output_pixels,
+			input_pixels,
+			input_light_pixels,
+			input_light_blocking_pixels);
+
+
+
+
+
+
+
+
+
+		// Save output to PNG file
+		Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
+
+		for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+		{
+			uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
+			uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
+			uc_output.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
+			uc_output.data[x + 3] = 255;
+		}
+
+		resize(uc_output, uc_output, cv::Size(largest_dim, largest_dim), 0,0, cv::INTER_LINEAR);
+
+		for (size_t x = 0; x < (largest_dim * largest_dim * 4); x += 4)
+		{
+			uc_output.data[x + 0] = static_cast<unsigned char>(255.0 * (input_mat_backup.data[x + 0] / 255.0 * uc_output.data[x + 0] / 255.0));
+			uc_output.data[x + 1] = static_cast<unsigned char>(255.0 * (input_mat_backup.data[x + 1] / 255.0 * uc_output.data[x + 1] / 255.0));
+			uc_output.data[x + 2] = static_cast<unsigned char>(255.0 * (input_mat_backup.data[x + 2] / 255.0 * uc_output.data[x + 2] / 255.0));
+			uc_output.data[x + 3] = 255;
+
+			unsigned char temp = uc_output.data[x + 0];
+			uc_output.data[x + 0] = uc_output.data[x + 2];
+			uc_output.data[x + 2] = temp;
+			
+		}
+
+		// Crop
+		uc_output = uc_output(Range(0, res_y), Range(0, res_x));
+
+
+		auto end_time = std::chrono::high_resolution_clock::now();
+
+		std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
+
+		//	cout << "Computing done" << endl;
+
+		cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds";
+
+
+		int window_w = 0, window_h = 0;
+		SDL_GetWindowSize(window, &window_w, &window_h);
+
+
+		glViewport(0, 0, window_w, window_h);
+		glClearColor(1.0, 0.5, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		GLuint tex_uc_output = 0;
+
+		glGenTextures(1, &tex_uc_output);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, tex_uc_output);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+		glActiveTexture(GL_TEXTURE4);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, uc_output.cols, uc_output.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
+		glBindImageTexture(4, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
+
+		draw_full_screen_tex(4, tex_uc_output, window_w, window_h);
+
+		glDeleteTextures(1, &tex_uc_output);
+
+		//		imwrite("out.png", uc_output);
+		SDL_GL_SwapWindow(window);
 	}
-
-	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
-	{
-		input_light_pixels[x + 0] = input_light_mat_with_dynamic_lights.data[x + 0] / 255.0f;
-		input_light_pixels[x + 1] = input_light_mat_with_dynamic_lights.data[x + 1] / 255.0f;
-		input_light_pixels[x + 2] = input_light_mat_with_dynamic_lights.data[x + 2] / 255.0f;
-		input_light_pixels[x + 3] = 1.0;
-	}
-
-	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
-	{
-		input_light_blocking_pixels[x + 0] = input_light_blocking_mat.data[x + 0] / 255.0f;
-		input_light_blocking_pixels[x + 1] = input_light_blocking_mat.data[x + 1] / 255.0f;
-		input_light_blocking_pixels[x + 2] = input_light_blocking_mat.data[x + 2] / 255.0f;
-		input_light_blocking_pixels[x + 3] = 1.0;
-	}
-
-
-
-	// Initialize OpenGL / compute shader / textures
-
-
-
-
-
-
-//	cout << "Computing " << endl;
-
-
-
-
-
-
-	compute(tex_output,
-		tex_input,
-		tex_light_input,
-		tex_light_blocking_input,
-		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
-		compute_shader_program,
-		output_pixels,
-		input_pixels,
-		input_light_pixels,
-		input_light_blocking_pixels);
-
-
-
-
-
-
-
-
-
-	// Save output to PNG file
-	Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
-
-	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
-	{
-		uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
-		uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
-		uc_output.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
-		uc_output.data[x + 3] = 255;
-	}
-
-	resize(uc_output, uc_output, cv::Size(largest_dim, largest_dim), 0, 0, cv::INTER_LINEAR);
-
-	for (size_t x = 0; x < (largest_dim * largest_dim * 4); x += 4)
-	{
-		uc_output.data[x + 0] = static_cast<unsigned char>(255.0 * (input_mat_backup.data[x + 0] / 255.0 * uc_output.data[x + 0] / 255.0));
-		uc_output.data[x + 1] = static_cast<unsigned char>(255.0 * (input_mat_backup.data[x + 1] / 255.0 * uc_output.data[x + 1] / 255.0));
-		uc_output.data[x + 2] = static_cast<unsigned char>(255.0 * (input_mat_backup.data[x + 2] / 255.0 * uc_output.data[x + 2] / 255.0));
-		uc_output.data[x + 3] = 255;
-	}
-
-	// Crop
-	uc_output = uc_output(Range(0, res_y), Range(0, res_x));
-
-	auto end_time = std::chrono::high_resolution_clock::now();
-
-	std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
-
-//	cout << "Computing done" << endl;
-
-	cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds";
-
-
-
-
-
-
-
-	imwrite("out.png", uc_output);
-
-
 
 	// Clean up all memory
 	delete_all(tex_output, tex_input, tex_light_input, tex_light_blocking_input, compute_shader_program);
 
-
+	SDL_GL_DeleteContext(gl_context);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 
 	return 0;
 }

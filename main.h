@@ -15,18 +15,38 @@
 using namespace std;
 
 #include <GL/glew.h>
-#include <GL/glut.h>
+//#include <GL/glut.h>
 
 #include <glm/glm.hpp>
 
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
+//#include <stdio.h>
+#include <SDL.h>
+#include <SDL_opengl.h>
+
+
+
 #ifdef _MSC_VER
 #pragma comment(lib, "opencv_world4100")
 #pragma comment(lib, "freeglut")
 #pragma comment(lib, "glew32")
+#pragma comment(lib, "SDL2main")
+#pragma comment(lib, "SDL2")
+#pragma comment(lib, "OpenGL32")
 #endif
+
+
+#include "vertex_fragment_shader.h"
+
+
+
+vertex_fragment_shader ortho_shader;
+
+
+
+
 
 void compute(GLuint& tex_output, 
 	GLuint& tex_input,
@@ -41,6 +61,9 @@ void compute(GLuint& tex_output,
 {
 	glEnable(GL_TEXTURE_2D);
 
+
+	// Use the compute shader
+	glUseProgram(compute_shader_program);
 
 	glActiveTexture(GL_TEXTURE1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, &input_pixels[0]);
@@ -197,16 +220,16 @@ bool compile_and_link_compute_shader(const char *const file_name, GLuint &progra
 
 bool init_opengl_4_3(int argc, char** argv)
 {
-	glutInit(&argc, argv);
+	//glutInit(&argc, argv);
 
-	glutInitDisplayMode(GLUT_RGBA);
-	int glut_window_handle = glutCreateWindow("");
+	//glutInitDisplayMode(GLUT_RGBA);
+	//int glut_window_handle = glutCreateWindow("");
 
-	if (!(GLEW_OK == glewInit() &&
-		GLEW_VERSION_4_3))
-	{
-		return false;
-	}
+	//if (!(GLEW_OK == glewInit() &&
+	//	GLEW_VERSION_4_3))
+	//{
+	//	return false;
+	//}
 
 	return true;
 }
@@ -216,37 +239,45 @@ bool init_gl(int argc, char** argv,
 	GLuint& compute_shader_program)
 {
 	// Initialize OpenGL
-	if (false == init_opengl_4_3(argc, argv))
+	//if (false == init_opengl_4_3(argc, argv))
+	//{
+	//	cout << "OpenGL 4.3 initialization failure" << endl;
+	//	return false;
+	//}
+
+
+	if (!(GLEW_OK == glewInit() &&
+		GLEW_VERSION_4_3))
 	{
-		cout << "OpenGL 4.3 initialization failure" << endl;
 		return false;
 	}
+
 	else
 	{
 		cout << "OpenGL 4.3 initialization OK" << endl;
 	}
 
-	if (!GLEW_ARB_texture_non_power_of_two)
-	{
-		cout << "System does not support non-POT textures" << endl;
-		return false;
-	}
-	else
-	{
-		cout << "System supports non-POT textures" << endl;
-	}
+	//if (!GLEW_ARB_texture_non_power_of_two)
+	//{
+	//	cout << "System does not support non-POT textures" << endl;
+	//	return false;
+	//}
+	//else
+	//{
+	//	cout << "System supports non-POT textures" << endl;
+	//}
 
-	if (!GLEW_ARB_texture_rectangle)
-	{
-		cout << "System does not support rectangular textures" << endl;
-		return false;
-	}
-	else
-	{
-		cout << "System supports rectangular textures" << endl;
-	}
+	//if (!GLEW_ARB_texture_rectangle)
+	//{
+	//	cout << "System does not support rectangular textures" << endl;
+	//	return false;
+	//}
+	//else
+	//{
+	//	cout << "System supports rectangular textures" << endl;
+	//}
 
-	
+	//
 
 
 
@@ -282,8 +313,6 @@ bool init_gl(int argc, char** argv,
 	}
 
 	
-	// Use the compute shader
-	glUseProgram(compute_shader_program);
 
 	return true;
 }
@@ -491,6 +520,112 @@ cv::Mat imageCollage(std::vector<cv::Mat>& array_of_images, int M, int N)
 	return image_collage;
 }
 
+
+
+
+complex<float> get_window_coords_from_ndc_coords(size_t viewport_width, size_t viewport_height, complex<float>& src_coords)
+{
+	float x_w = viewport_width / 2.0f * src_coords.real() + viewport_width / 2.0f;
+	float y_w = viewport_height / 2.0f * src_coords.imag() + viewport_height / 2.0f;
+
+	return complex<float>(x_w, y_w);
+}
+
+complex<float> get_ndc_coords_from_window_coords(size_t viewport_width, size_t viewport_height, complex<float>& src_coords)
+{
+	float x_ndc = (2.0f * src_coords.real() / viewport_width) - 1.0f;
+	float y_ndc = (2.0f * src_coords.imag() / viewport_height) - 1.0f;
+
+	return complex<float>(x_ndc, y_ndc);
+}
+
+
+
+
+
+struct
+{
+	struct
+	{
+		GLint tex;
+		GLint viewport_width;
+		GLint viewport_height;
+		//GLint projection;
+		//GLint view;
+		//GLint model;
+		//GLint opacity;
+	}
+	ortho_shader_uniforms;
+}
+uniforms;
+
+
+bool draw_full_screen_tex(GLint tex_slot, GLint tex_handle, long signed int win_width, long signed int win_height)
+{
+	complex<float> v0ndc(-1, -1);
+	complex<float> v1ndc(-1, 1);
+	complex<float> v2ndc(1, 1);
+	complex<float> v3ndc(1, -1);
+
+	static GLuint vao = 0, vbo = 0, ibo = 0;
+
+	if (!glIsVertexArray(vao))
+	{
+		glGenVertexArrays(1, &vao);
+		glGenBuffers(1, &vbo);
+		glGenBuffers(1, &ibo);
+	}
+
+	const GLfloat vertexData[] = {
+		//	  X             Y             Z		  U         V     
+			  v0ndc.real(), v0ndc.imag(), 0,      0, 1,
+			  v1ndc.real(), v1ndc.imag(), 0,      0, 0,
+			  v2ndc.real(), v2ndc.imag(), 0,      1, 0,
+			  v3ndc.real(), v3ndc.imag(), 0,      1, 1
+	};
+
+	// https://raw.githubusercontent.com/progschj/OpenGL-Examples/master/03texture.cpp
+
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 5, vertexData, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (char*)0 + 0 * sizeof(GLfloat));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (char*)0 + 3 * sizeof(GLfloat));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+
+	static const GLuint indexData[] = {
+		3,1,0,
+		2,1,3,
+	};
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * 2 * 3, indexData, GL_STATIC_DRAW);
+
+	glBindVertexArray(0);
+
+	glUseProgram(ortho_shader.get_program());
+
+	glActiveTexture(GL_TEXTURE0 + tex_slot);
+	glBindTexture(GL_TEXTURE_2D, tex_handle);
+
+	glUniform1i(uniforms.ortho_shader_uniforms.tex, tex_slot);
+	glUniform1i(uniforms.ortho_shader_uniforms.viewport_width, win_width);
+	glUniform1i(uniforms.ortho_shader_uniforms.viewport_height, win_height);
+
+
+	glBindVertexArray(vao);
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+
+
+	return true;
+}
 
 
 
