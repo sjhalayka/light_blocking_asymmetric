@@ -256,7 +256,6 @@ int main(int argc, char** argv)
 	dynamic_colours.push_back(glm::vec3(0, 1, 0));
 
 	Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
-	resize(input_light_mat_with_dynamic_lights, input_light_mat_with_dynamic_lights, cv::Size(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size), 0, 0, cv::INTER_NEAREST);
 
 	for (size_t i = 0; i < dynamic_centres.size(); i++)
 		input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) = Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
