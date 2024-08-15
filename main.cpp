@@ -241,17 +241,25 @@ int main(int argc, char** argv)
 	init_textures(tex_output, tex_input, tex_light_input, tex_light_blocking_input, largest_dim / lighting_tile_size, largest_dim / lighting_tile_size);
 
 
+
+
+
 	auto start_time = std::chrono::high_resolution_clock::now();
 
 
 
 
+	vector<glm::vec3> dynamic_centres;
+	vector<glm::vec3> dynamic_colours;
 
+	dynamic_centres.push_back(glm::vec3(2* lighting_tile_size, 1* lighting_tile_size, 0.0f));
+	dynamic_colours.push_back(glm::vec3(0, 1, 0));
 
-	// do dynamic lights here
+	Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
+	resize(input_light_mat_with_dynamic_lights, input_light_mat_with_dynamic_lights, cv::Size(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size), 0, 0, cv::INTER_NEAREST);
 
-
-
+	for (size_t i = 0; i < dynamic_centres.size(); i++)
+		input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) = Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
 
 
 
@@ -275,9 +283,9 @@ int main(int argc, char** argv)
 
 	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
 	{
-		input_light_pixels[x + 0] = input_light_mat.data[x + 0] / 255.0f;
-		input_light_pixels[x + 1] = input_light_mat.data[x + 1] / 255.0f;
-		input_light_pixels[x + 2] = input_light_mat.data[x + 2] / 255.0f;
+		input_light_pixels[x + 0] = input_light_mat_with_dynamic_lights.data[x + 0] / 255.0f;
+		input_light_pixels[x + 1] = input_light_mat_with_dynamic_lights.data[x + 1] / 255.0f;
+		input_light_pixels[x + 2] = input_light_mat_with_dynamic_lights.data[x + 2] / 255.0f;
 		input_light_pixels[x + 3] = 1.0;
 	}
 
@@ -298,7 +306,7 @@ int main(int argc, char** argv)
 
 
 
-	cout << "Computing " << endl;
+//	cout << "Computing " << endl;
 
 
 
@@ -352,7 +360,7 @@ int main(int argc, char** argv)
 
 	std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
 
-	cout << "Computing done" << endl;
+//	cout << "Computing done" << endl;
 
 	cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds";
 
