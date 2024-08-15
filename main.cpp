@@ -257,8 +257,9 @@ int main(int argc, char** argv)
 
 	Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
 
+	// Add in the extra lighting (using +=)
 	for (size_t i = 0; i < dynamic_centres.size(); i++)
-		input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) = Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
+		input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) += Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
 
 
 
