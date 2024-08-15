@@ -59,6 +59,7 @@ void main()
 			else
 				num_steps = int(pixel_diff.y);
 
+			// Please forgive my use of a magic number
 			if(num_steps < 10)
 				num_steps = 10;
 

@@ -234,15 +234,6 @@ int main(int argc, char** argv)
 // https://stackoverflow.com/questions/65091012/how-to-split-an-image-into-m-x-n-tiles
 
 
-	//std::vector<cv::Mat> array_of_images;
-	//array_of_images.push_back(cv::imread("1.jpg"));
-	//array_of_images.push_back(cv::imread("2.jpg"));
-	//cv::Mat image_collage = imageCollage(array_of_images, 3, 3);
-
-	//cv::imshow("Image Collage", image_collage);
-	//cv::waitKey(0);
-
-
 	int num_tiles_x = res_x / background_tile_size;
 	int num_tiles_y = res_y / background_tile_size;
 
@@ -252,7 +243,6 @@ int main(int argc, char** argv)
 	{
 		float r_brightness = rand() % 10 * 0.015;
 		float r_hue = rand() % 10 * 0.015;
-
 
 		for (int i = 0; i < array_of_images[a].cols; i++)
 		{
@@ -302,6 +292,17 @@ int main(int argc, char** argv)
 	if (res_y > largest_dim)
 		largest_dim = res_y;
 
+	GLuint compute_shader_program = 0;
+
+	if (false == init_gl(
+		argc, argv,
+		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
+		compute_shader_program))
+	{
+		cout << "Aborting" << endl;
+		return -1;
+	}
+
 
 	Mat square_mat(Size(largest_dim, largest_dim), CV_8UC4);
 	square_mat = Scalar(0, 0, 0, 255);
@@ -336,6 +337,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
+	// Static lights
 	vector<glm::vec3> distinct_colours;
 	vector<glm::vec3> centres;
 
@@ -395,6 +397,8 @@ int main(int argc, char** argv)
 		}
 	}
 
+
+
 	Mat square_light_mat(Size(largest_dim, largest_dim), CV_8UC4);
 	square_light_mat = Scalar(0, 0, 0, 255);
 	input_light_mat = square_light_mat.clone();
@@ -403,6 +407,9 @@ int main(int argc, char** argv)
 
 	for (size_t i = 0; i < loop_centres.size(); i++)
 		input_light_mat.at<Vec4b>(loop_centres[i].y / lighting_tile_size, loop_centres[i].x / lighting_tile_size) = Vec4b(loop_colours[i].r * 255.0f, loop_colours[i].g * 255.0f, loop_colours[i].b * 255.0f, 255.0f);
+
+	// do dynamic lights
+
 
 //	imwrite("input_light_mat.png", input_light_mat);
 
@@ -428,6 +435,8 @@ int main(int argc, char** argv)
 	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size), 0, 0, cv::INTER_NEAREST);
 
 
+	GLuint tex_output = 0, tex_input = 0, tex_light_input = 0, tex_light_blocking_input = 0;
+	init_textures(tex_output, tex_input, tex_light_input, tex_light_blocking_input, largest_dim / lighting_tile_size, largest_dim / lighting_tile_size);
 
 
 
@@ -466,21 +475,11 @@ int main(int argc, char** argv)
 
 
 	// Initialize OpenGL / compute shader / textures
-	GLuint compute_shader_program = 0;
-	GLuint tex_output = 0, tex_input = 0, tex_light_input = 0, tex_light_blocking_input = 0;
 
-	if (false == init_all(
-		argc, argv,
-		tex_output,
-		tex_input,
-		tex_light_input,
-		tex_light_blocking_input,
-		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
-		compute_shader_program))
-	{
-		cout << "Aborting" << endl;
-		return -1;
-	}
+
+
+
+
 
 	cout << "Computing " << endl;
 

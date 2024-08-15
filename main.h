@@ -205,11 +205,7 @@ bool init_opengl_4_3(int argc, char** argv)
 	return true;
 }
 
-bool init_all(int argc, char** argv, 
-	GLuint& tex_output, 
-	GLuint& tex_input, 
-	GLuint& tex_light_input,
-	GLuint& tex_light_blocking_input,
+bool init_gl(int argc, char** argv, 
 	GLint tex_w, GLint tex_h, 
 	GLuint& compute_shader_program)
 {
@@ -279,7 +275,6 @@ bool init_all(int argc, char** argv,
 		return false;
 	}
 
-	init_textures(tex_output, tex_input, tex_light_input, tex_light_blocking_input, tex_w, tex_h);
 	
 	// Use the compute shader
 	glUseProgram(compute_shader_program);
