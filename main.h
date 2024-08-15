@@ -15,14 +15,12 @@
 using namespace std;
 
 #include <GL/glew.h>
-//#include <GL/glut.h>
 
 #include <glm/glm.hpp>
 
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
-//#include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 

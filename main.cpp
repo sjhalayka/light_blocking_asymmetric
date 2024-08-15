@@ -321,18 +321,6 @@ int main(int argc, char** argv)
 
 
 
-	vector<glm::vec3> dynamic_centres;
-	vector<glm::vec3> dynamic_colours;
-
-	dynamic_centres.push_back(glm::vec3(2 * lighting_tile_size, 1 * lighting_tile_size, 0.0f));
-	dynamic_colours.push_back(glm::vec3(0, 1, 0));
-
-	Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
-
-	// Add in the extra lighting (using +=)
-	for (size_t i = 0; i < dynamic_centres.size(); i++)
-		input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) += Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
-
 	bool done = false;
 
 	while (false == done)
@@ -340,6 +328,7 @@ int main(int argc, char** argv)
 		auto start_time = std::chrono::high_resolution_clock::now();
 
 		SDL_Event event;
+
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT)
@@ -353,6 +342,21 @@ int main(int argc, char** argv)
 			}
 		}
 
+
+		vector<glm::vec3> dynamic_centres;
+		vector<glm::vec3> dynamic_colours;
+
+		int mouse_x = 0, mouse_y = 0;
+		SDL_GetMouseState(&mouse_x, &mouse_y);
+
+		dynamic_centres.push_back(glm::vec3(mouse_x, mouse_y, 0.0f));
+		dynamic_colours.push_back(glm::vec3(0.0, 1.0, 2.0));
+
+		Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
+
+		// Add in the extra lighting (using +=)
+		for (size_t i = 0; i < dynamic_centres.size(); i++)
+			input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) += Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
 
 		vector<float> output_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
 		vector<float> input_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
@@ -385,21 +389,6 @@ int main(int argc, char** argv)
 		}
 
 
-
-		// Initialize OpenGL / compute shader / textures
-
-
-
-
-
-
-	//	cout << "Computing " << endl;
-
-
-
-
-
-
 		compute(tex_output,
 			tex_input,
 			tex_light_input,
@@ -413,13 +402,6 @@ int main(int argc, char** argv)
 
 
 
-
-
-
-
-
-
-		// Save output to PNG file
 		Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
 
 		for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
@@ -449,13 +431,6 @@ int main(int argc, char** argv)
 		uc_output = uc_output(Range(0, res_y), Range(0, res_x));
 
 
-		auto end_time = std::chrono::high_resolution_clock::now();
-
-		std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
-
-		//	cout << "Computing done" << endl;
-
-		cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds";
 
 
 		int window_w = 0, window_h = 0;
@@ -484,7 +459,13 @@ int main(int argc, char** argv)
 
 		glDeleteTextures(1, &tex_uc_output);
 
-		//		imwrite("out.png", uc_output);
+		auto end_time = std::chrono::high_resolution_clock::now();
+
+		std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
+
+		//cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds" << endl;
+		//imwrite("out.png", uc_output);
+
 		SDL_GL_SwapWindow(window);
 	}
 
