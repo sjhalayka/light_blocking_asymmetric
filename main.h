@@ -528,15 +528,13 @@ struct
 	struct
 	{
 		GLint tex;
-		GLint viewport_width;
-		GLint viewport_height;
 	}
 	ortho_shader_uniforms;
 }
 uniforms;
 
 
-bool draw_full_screen_tex(GLint tex_slot, GLint tex_handle, long signed int win_width, long signed int win_height)
+bool draw_full_screen_tex(GLint tex_slot, GLint tex_handle)//, long signed int win_width, long signed int win_height)
 {
 	complex<float> v0ndc(-1, -1);
 	complex<float> v1ndc(-1, 1);
@@ -589,8 +587,8 @@ bool draw_full_screen_tex(GLint tex_slot, GLint tex_handle, long signed int win_
 	glBindTexture(GL_TEXTURE_2D, tex_handle);
 
 	glUniform1i(uniforms.ortho_shader_uniforms.tex, tex_slot);
-	glUniform1i(uniforms.ortho_shader_uniforms.viewport_width, win_width);
-	glUniform1i(uniforms.ortho_shader_uniforms.viewport_height, win_height);
+	//glUniform1i(uniforms.ortho_shader_uniforms.viewport_width, win_width);
+	//glUniform1i(uniforms.ortho_shader_uniforms.viewport_height, win_height);
 
 
 	glBindVertexArray(vao);

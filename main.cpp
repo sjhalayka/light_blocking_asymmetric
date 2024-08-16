@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	SDL_Window* window = SDL_CreateWindow("World Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, 1080, window_flags);
+	SDL_Window* window = SDL_CreateWindow("World Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, window_flags);
 	if (window == nullptr)
 	{
 		printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -168,12 +168,6 @@ int main(int argc, char** argv)
 	}
 
 	uniforms.ortho_shader_uniforms.tex = glGetUniformLocation(ortho_shader.get_program(), "tex");
-	uniforms.ortho_shader_uniforms.viewport_width = glGetUniformLocation(ortho_shader.get_program(), "viewport_width");
-	uniforms.ortho_shader_uniforms.viewport_height = glGetUniformLocation(ortho_shader.get_program(), "viewport_height");
-	//uniforms.ortho_shader_uniforms.projection = glGetUniformLocation(ortho_shader.get_program(), "projection");
-	//uniforms.ortho_shader_uniforms.view = glGetUniformLocation(ortho_shader.get_program(), "view");
-	//uniforms.ortho_shader_uniforms.model = glGetUniformLocation(ortho_shader.get_program(), "model");
-	//uniforms.ortho_shader_uniforms.opacity = glGetUniformLocation(ortho_shader.get_program(), "opacity");
 
 
 
@@ -349,7 +343,13 @@ int main(int argc, char** argv)
 		int mouse_x = 0, mouse_y = 0;
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 
-		dynamic_centres.push_back(glm::vec3(mouse_x, mouse_y, 0.0f));
+		int window_w = 0, window_h = 0;
+		SDL_GetWindowSize(window, &window_w, &window_h);
+
+		float res_x_ratio = res_x * (1.0 / window_w);
+		float res_y_ratio = res_y * (1.0 / window_h);
+
+		dynamic_centres.push_back(glm::vec3(mouse_x * res_x_ratio, mouse_y * res_y_ratio, 0.0f));
 		dynamic_colours.push_back(glm::vec3(0.0, 0.5, 1.0));
 
 		Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
@@ -433,8 +433,7 @@ int main(int argc, char** argv)
 
 
 
-		int window_w = 0, window_h = 0;
-		SDL_GetWindowSize(window, &window_w, &window_h);
+
 
 
 		glViewport(0, 0, window_w, window_h);
@@ -452,10 +451,10 @@ int main(int argc, char** argv)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 		glActiveTexture(GL_TEXTURE4);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, res_x,res_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, uc_output.cols, uc_output.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
 		glBindImageTexture(4, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
 
-		draw_full_screen_tex(4, tex_uc_output, window_w, window_h);
+		draw_full_screen_tex(4, tex_uc_output);// , window_w, window_h);
 
 		glDeleteTextures(1, &tex_uc_output);
 
