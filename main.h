@@ -521,24 +521,6 @@ cv::Mat imageCollage(std::vector<cv::Mat>& array_of_images, int M, int N)
 
 
 
-complex<float> get_window_coords_from_ndc_coords(size_t viewport_width, size_t viewport_height, complex<float>& src_coords)
-{
-	float x_w = viewport_width / 2.0f * src_coords.real() + viewport_width / 2.0f;
-	float y_w = viewport_height / 2.0f * src_coords.imag() + viewport_height / 2.0f;
-
-	return complex<float>(x_w, y_w);
-}
-
-complex<float> get_ndc_coords_from_window_coords(size_t viewport_width, size_t viewport_height, complex<float>& src_coords)
-{
-	float x_ndc = (2.0f * src_coords.real() / viewport_width) - 1.0f;
-	float y_ndc = (2.0f * src_coords.imag() / viewport_height) - 1.0f;
-
-	return complex<float>(x_ndc, y_ndc);
-}
-
-
-
 
 
 struct
@@ -548,10 +530,6 @@ struct
 		GLint tex;
 		GLint viewport_width;
 		GLint viewport_height;
-		//GLint projection;
-		//GLint view;
-		//GLint model;
-		//GLint opacity;
 	}
 	ortho_shader_uniforms;
 }
@@ -575,7 +553,7 @@ bool draw_full_screen_tex(GLint tex_slot, GLint tex_handle, long signed int win_
 	}
 
 	const GLfloat vertexData[] = {
-		//	  X             Y             Z		  U         V     
+		//	  X             Y             Z		  U  V     
 			  v0ndc.real(), v0ndc.imag(), 0,      0, 1,
 			  v1ndc.real(), v1ndc.imag(), 0,      0, 0,
 			  v2ndc.real(), v2ndc.imag(), 0,      1, 0,
@@ -618,9 +596,6 @@ bool draw_full_screen_tex(GLint tex_slot, GLint tex_handle, long signed int win_
 	glBindVertexArray(vao);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-
-
 
 	return true;
 }

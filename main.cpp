@@ -350,7 +350,7 @@ int main(int argc, char** argv)
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 
 		dynamic_centres.push_back(glm::vec3(mouse_x, mouse_y, 0.0f));
-		dynamic_colours.push_back(glm::vec3(0.0, 1.0, 2.0));
+		dynamic_colours.push_back(glm::vec3(0.0, 0.5, 1.0));
 
 		Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
 
@@ -452,7 +452,7 @@ int main(int argc, char** argv)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 		glActiveTexture(GL_TEXTURE4);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, uc_output.cols, uc_output.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, res_x,res_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
 		glBindImageTexture(4, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
 
 		draw_full_screen_tex(4, tex_uc_output, window_w, window_h);
