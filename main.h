@@ -24,6 +24,7 @@ using namespace cv;
 #include <SDL.h>
 #include <SDL_opengl.h>
 
+#include <OpenImageDenoise/oidn.hpp>
 
 
 #ifdef _MSC_VER
@@ -33,6 +34,7 @@ using namespace cv;
 #pragma comment(lib, "SDL2main")
 #pragma comment(lib, "SDL2")
 #pragma comment(lib, "OpenGL32")
+#pragma comment(lib, "OpenImageDenoise")
 #endif
 
 
@@ -46,14 +48,14 @@ vertex_fragment_shader ortho_shader;
 
 
 
-void compute(GLuint& tex_output, 
+void compute(GLuint& tex_output,
 	GLuint& tex_input,
 	GLuint& tex_light_input,
 	GLuint& tex_light_blocking_input,
-	GLint tex_w, GLint tex_h, 
-	GLuint& compute_shader_program, 
-	vector<float> &output_pixels, 
-	const vector<float> &input_pixels,
+	GLint tex_w, GLint tex_h,
+	GLuint& compute_shader_program,
+	vector<float>& output_pixels,
+	const vector<float>& input_pixels,
 	const vector<float>& input_light_pixels,
 	const vector<float>& input_light_blocking_pixels)
 {
@@ -75,7 +77,7 @@ void compute(GLuint& tex_output,
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, &input_light_blocking_pixels[0]);
 	glBindImageTexture(3, tex_light_blocking_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
-	glUniform1i(glGetUniformLocation(compute_shader_program, "input_image"), 1); 
+	glUniform1i(glGetUniformLocation(compute_shader_program, "input_image"), 1);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_image"), 2);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_blocking_image"), 3);
 	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w, tex_h);
@@ -92,7 +94,7 @@ void compute(GLuint& tex_output,
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, &output_pixels[0]);
 }
 
-void init_textures(GLuint &tex_output, GLuint &tex_input, GLuint &tex_light_input, GLuint &tex_light_blocking_input, GLuint tex_w, GLuint tex_h)
+void init_textures(GLuint& tex_output, GLuint& tex_input, GLuint& tex_light_input, GLuint& tex_light_blocking_input, GLuint tex_w, GLuint tex_h)
 {
 	// Generate and allocate output texture
 	glGenTextures(1, &tex_output);
@@ -133,7 +135,7 @@ void init_textures(GLuint &tex_output, GLuint &tex_input, GLuint &tex_light_inpu
 
 
 
-bool compile_and_link_compute_shader(const char *const file_name, GLuint &program)
+bool compile_and_link_compute_shader(const char* const file_name, GLuint& program)
 {
 	// Read in compute shader contents
 	ifstream infile(file_name);
@@ -190,7 +192,7 @@ bool compile_and_link_compute_shader(const char *const file_name, GLuint &progra
 	if (GL_FALSE == status)
 	{
 		string status_string = "Program link error.\n";
-		vector<GLchar> buf(4096, '\0'); 
+		vector<GLchar> buf(4096, '\0');
 		glGetShaderInfoLog(program, 4095, 0, &buf[0]);
 
 		for (size_t i = 0; i < buf.size(); i++)
@@ -232,8 +234,8 @@ bool init_opengl_4_3(int argc, char** argv)
 	return true;
 }
 
-bool init_gl(int argc, char** argv, 
-	GLint tex_w, GLint tex_h, 
+bool init_gl(int argc, char** argv,
+	GLint tex_w, GLint tex_h,
 	GLuint& compute_shader_program)
 {
 	// Initialize OpenGL
@@ -310,7 +312,7 @@ bool init_gl(int argc, char** argv,
 		return false;
 	}
 
-	
+
 
 	return true;
 }
@@ -600,5 +602,62 @@ bool draw_full_screen_tex(GLint tex_slot, GLint tex_handle)//, long signed int w
 
 
 
+Mat anti_alias_mat(Mat aliased_mat)
+{
+	Mat anti_aliased_mat(aliased_mat.rows, aliased_mat.cols, CV_8UC4);
+
+	for (signed int i = 0; i < aliased_mat.cols; i++)
+	{
+		for (signed int j = 0; j < aliased_mat.rows; j++)
+		{
+			int horizontal_begin = i - 1;
+			int vertical_begin = j - 1;
+
+			if (horizontal_begin < 0)
+				horizontal_begin = 0;
+
+			if (vertical_begin < 0)
+				vertical_begin = 0;
+
+			int horizontal_end = i + 1;
+			int vertical_end = j + 1;
+
+			if (horizontal_end >= aliased_mat.cols)
+				horizontal_end = aliased_mat.cols - 1;
+
+			if (vertical_end >= aliased_mat.rows)
+				vertical_end = aliased_mat.rows - 1;
+
+			Vec4b pixelValue_centre = aliased_mat.at<Vec4b>(j, i);
+
+			Vec4b pixelValue_left = aliased_mat.at<Vec4b>(j, horizontal_begin);
+			Vec4b pixelValue_right = aliased_mat.at<Vec4b>(j, horizontal_end);
+
+			Vec4b pixelValue_up = aliased_mat.at<Vec4b>(vertical_begin, i);
+			Vec4b pixelValue_down = aliased_mat.at<Vec4b>(vertical_end, i);
+
+			Vec4f horizontal_avg = (pixelValue_left + pixelValue_right);
+			Vec4f vertical_avg = (pixelValue_up + pixelValue_down);
+
+			Vec4f avg;
+
+			avg[0] = (1.0 / 3.0) * (pixelValue_centre[0] + horizontal_avg[0] + vertical_avg[0]);
+			avg[1] = (1.0 / 3.0) * (pixelValue_centre[1] + horizontal_avg[1] + vertical_avg[1]);
+			avg[2] = (1.0 / 3.0) * (pixelValue_centre[2] + horizontal_avg[2] + vertical_avg[2]);
+			avg[3] = 255;
+
+			Vec4b avg_b;
+			avg_b[0] = avg[0];
+			avg_b[1] = avg[1];
+			avg_b[2] = avg[2];
+			avg_b[3] = avg[3];
+
+			anti_aliased_mat.at<Vec4b>(j, i) = avg_b;
+		}
+	}
+
+	return anti_aliased_mat;
+
+}
 
 #endif

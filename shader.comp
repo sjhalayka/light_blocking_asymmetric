@@ -105,7 +105,7 @@ void main()
 	}
 
 	lighting = clamp(lighting, 0, 1);
-	lighting = max(lighting, 0.2); // Throw in some ambient lighting
+	lighting = max(lighting, 0.1); // Throw in some ambient lighting
 	
 
 	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
