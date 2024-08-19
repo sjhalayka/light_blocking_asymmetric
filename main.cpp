@@ -416,7 +416,21 @@ int main(int argc, char** argv)
 			input_light_blocking_pixels[x + 3] = 1.0;
 		}
 
-		Mat output_mat(input_mat.rows, input_mat.cols, CV_32FC4);
+		Mat output_mat = input_mat.clone();// input_mat.rows, input_mat.cols, CV_32FC4);
+
+		Mat input_mat_float(input_mat.rows, input_mat.cols, CV_32FC4, Scalar(0, 0, 0, 0));
+
+		for (int i = 0; i < input_mat.cols; i++)
+		{
+			for (int j = 0; j < input_mat.rows; j++)
+			{
+				Vec4b pixelValue = input_mat.at<Vec4b>(j, i);
+				Vec4f p = pixelValue / 255.0f;
+				p[0] = 1.0; // ABGR
+				input_mat_float.at<Vec4f>(j, i) = p;
+			}
+		}
+
 
 		compute(
 			tex_input,
@@ -425,14 +439,9 @@ int main(int argc, char** argv)
 			largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 			compute_shader_program,
 			output_pixels,
-			input_pixels,
+			input_mat_float,
 			input_light_pixels,
 			input_light_blocking_pixels);
-
-
-
-
-
 
 
 		Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);

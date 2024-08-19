@@ -52,7 +52,7 @@ void compute(
 	GLint tex_w, GLint tex_h,
 	GLuint& compute_shader_program,
 	vector<float> & output_pixels,
-	const vector<float>& input_pixels,
+	const Mat &input_pixels,
 	const vector<float>& input_light_pixels,
 	const vector<float>& input_light_blocking_pixels)
 {
@@ -71,13 +71,8 @@ void compute(
 	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 
-
-
-	// Use the compute shader
-	glUseProgram(compute_shader_program);
-
 	glActiveTexture(GL_TEXTURE1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, &input_pixels[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, input_pixels.data);
 	glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	glActiveTexture(GL_TEXTURE2);
@@ -87,6 +82,9 @@ void compute(
 	glActiveTexture(GL_TEXTURE3);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, &input_light_blocking_pixels[0]);
 	glBindImageTexture(3, tex_light_blocking_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
+	// Use the compute shader
+	glUseProgram(compute_shader_program);
 
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_image"), 1);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_image"), 2);
@@ -109,17 +107,6 @@ void compute(
 
 void init_textures(GLuint& tex_output, GLuint& tex_input, GLuint& tex_light_input, GLuint& tex_light_blocking_input, GLuint tex_w, GLuint tex_h)
 {
-	// Generate and allocate output texture
-	//glGenTextures(1, &tex_output);
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, tex_output);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
-	//glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
 	// Generate input texture
 	glGenTextures(1, &tex_input);
 	glActiveTexture(GL_TEXTURE1);
