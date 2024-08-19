@@ -378,7 +378,7 @@ int main(int argc, char** argv)
 		float res_y_ratio = res_y * (1.0 / window_h);
 
 		dynamic_centres.push_back(glm::vec3(mouse_x * res_x_ratio, mouse_y * res_y_ratio, 0.0f));
-		dynamic_colours.push_back(glm::vec3(0.0, 0.5, 1.0));
+		dynamic_colours.push_back(glm::vec3(1.0, 0.5, 0.0)); // blue in BGR
 
 		Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
 
@@ -429,65 +429,6 @@ int main(int argc, char** argv)
 			input_light_blocking_pixels);
 
 
-/*
-		vector<float> float_data(3 * (largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size));
-
-		for (size_t i = 0; i < largest_dim / lighting_tile_size; i++)
-		{
-			for (size_t j = 0; j < largest_dim / lighting_tile_size; j++)
-			{
-				size_t float_index = 3 * (j * (largest_dim / lighting_tile_size) + i);
-				size_t index = 4 * (j * (largest_dim / lighting_tile_size) + i);
-
-				float_data[float_index + 0] = output_pixels[index + 0];
-				float_data[float_index + 1] = output_pixels[index + 1];
-				float_data[float_index + 2] = output_pixels[index + 2];
-			}
-		}
-
-		oidn::DeviceRef dev = oidn::newDevice();
-		dev.commit();
-
-		oidn::BufferRef colorBuf = dev.newBuffer((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 3 * sizeof(float));
-		colorBuf.write(0, (largest_dim / lighting_tile_size)* (largest_dim / lighting_tile_size) * 3 * sizeof(float), &float_data[0]);
-
-		oidn::FilterRef filter = dev.newFilter("RT");
-
-		filter.setImage("color", colorBuf, oidn::Format::Float3, (largest_dim / lighting_tile_size), (largest_dim / lighting_tile_size));
-		filter.setImage("output", colorBuf, oidn::Format::Float3, (largest_dim / lighting_tile_size), (largest_dim / lighting_tile_size));
-		filter.set("hdr", false); // Do not enable this, or the lights will look strange
-		filter.commit();
-		filter.execute();
-
-		// Check for errors
-		const char* errorMessage;
-		if (dev.getError(errorMessage) != oidn::Error::None)
-			cout << errorMessage << endl;// MessageBox(NULL, errorMessage, "Error", MB_OK);
-
-		colorBuf.read(0, (largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 3 * sizeof(float), &float_data[0]);
-
-		for (size_t i = 0; i < (largest_dim / lighting_tile_size); i++)
-		{
-			for (size_t j = 0; j < (largest_dim / lighting_tile_size); j++)
-			{
-				size_t uc_index = 4 * (j * (largest_dim / lighting_tile_size) + i);
-				size_t data_index = 3 * (j * (largest_dim / lighting_tile_size) + i);
-
-				output_pixels[uc_index + 0] = float_data[data_index + 0];
-				output_pixels[uc_index + 1] = float_data[data_index + 1];
-				output_pixels[uc_index + 2] = float_data[data_index + 2];
-				output_pixels[uc_index + 3] = 1.0f;
-			}
-		}
-
-*/
-
-
-
-
-
-		// convert output_pixels to mat, anti-alias, then convert back to float
-
 
 
 
@@ -523,7 +464,6 @@ int main(int argc, char** argv)
 			unsigned char temp = uc_output.data[x + 0];
 			uc_output.data[x + 0] = uc_output.data[x + 2];
 			uc_output.data[x + 2] = temp;
-			
 		}
 
 
@@ -535,17 +475,15 @@ int main(int argc, char** argv)
 
 
 
-
-
-
-
 		glViewport(0, 0, window_w, window_h);
 		glClearColor(1.0, 0.5, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		GLuint tex_uc_output = 0;
+		static GLuint tex_uc_output = 0;
 
-		glGenTextures(1, &tex_uc_output);
+		if(!glIsTexture(tex_uc_output))
+			glGenTextures(1, &tex_uc_output);
+
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, tex_uc_output);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -558,8 +496,6 @@ int main(int argc, char** argv)
 		glBindImageTexture(4, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
 
 		draw_full_screen_tex(4, tex_uc_output);
-
-		glDeleteTextures(1, &tex_uc_output);
 
 		auto end_time = std::chrono::high_resolution_clock::now();
 
