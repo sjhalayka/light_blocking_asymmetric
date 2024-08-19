@@ -416,8 +416,9 @@ int main(int argc, char** argv)
 			input_light_blocking_pixels[x + 3] = 1.0;
 		}
 
+		Mat output_mat(input_mat.rows, input_mat.cols, CV_32FC4);
 
-		compute(tex_output,
+		compute(
 			tex_input,
 			tex_light_input,
 			tex_light_blocking_input,
@@ -449,7 +450,7 @@ int main(int argc, char** argv)
 
 
 
-		resize(uc_output, uc_output, cv::Size(largest_dim, largest_dim), 0,0, cv::INTER_LINEAR);
+		resize(uc_output, uc_output, cv::Size(largest_dim, largest_dim), 0, 0, cv::INTER_LINEAR);
 
 
 
@@ -481,7 +482,7 @@ int main(int argc, char** argv)
 
 		static GLuint tex_uc_output = 0;
 
-		if(!glIsTexture(tex_uc_output))
+		if (!glIsTexture(tex_uc_output))
 			glGenTextures(1, &tex_uc_output);
 
 		glActiveTexture(GL_TEXTURE4);
