@@ -145,7 +145,7 @@ void compute(
 
 
 
-Mat gpu_compute(
+void gpu_compute(
 	GLint largest_dim, GLint lighting_tile_size,
 	GLint tex_w_small, GLint tex_h_small,
 	GLint tex_w_full_size, GLint tex_h_full_size,
@@ -217,8 +217,8 @@ Mat gpu_compute(
 
 
 	compute(
-		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, // this will be smaller
-		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
+		 tex_w_small, tex_h_small, // this will be smaller
+		 tex_w_full_size, tex_h_full_size,
 		compute_shader_program,
 		output_pixels,
 		input_mat_float,
@@ -226,19 +226,19 @@ Mat gpu_compute(
 		input_light_blocking_mat_float);
 
 
-	Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
+	//Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
 
-	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
-	{
-		uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
-		uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
-		uc_output.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
-		uc_output.data[x + 3] = 255;
-	}
+	//for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+	//{
+	//	uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
+	//	uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
+	//	uc_output.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
+	//	uc_output.data[x + 3] = 255;
+	//}
 
-	Mat output_mat = uc_output.clone();
+	//Mat output_mat = uc_output.clone();
 
-	return uc_output;
+	//return uc_output;
 }
 
 

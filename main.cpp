@@ -364,7 +364,7 @@ int main(int argc, char** argv)
 		for (size_t i = 0; i < dynamic_centres.size(); i++)
 			input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) = Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
 
-	
+
 
 
 		int num_tiles_x = 1;// res_x / background_tile_size;
@@ -378,17 +378,17 @@ int main(int argc, char** argv)
 		for (size_t a = 0; a < array_of_images.size(); a++)
 		{
 			gpu_compute(
-			largest_dim, lighting_tile_size,
-			largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, // this will be smaller
-			largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
-			compute_shader_program,
-			reinterpret_cast<unsigned char *>(&output_pixels[0]),
-			input_mat,
-			input_light_mat_with_dynamic_lights,
-			input_light_blocking_mat);
+				largest_dim, lighting_tile_size,
+				largest_dim / lighting_tile_size / num_tiles_x, largest_dim / lighting_tile_size / num_tiles_y, // this will be smaller
+				largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
+				compute_shader_program,
+				reinterpret_cast<unsigned char*>(&output_pixels[0]),
+				input_mat,
+				input_light_mat_with_dynamic_lights,
+				input_light_blocking_mat);
 
 			Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
-	
+
 			for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
 			{
 				uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
