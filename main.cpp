@@ -367,8 +367,8 @@ int main(int argc, char** argv)
 
 
 
-		int num_tiles_x = 1;// res_x / background_tile_size;
-		int num_tiles_y = 1;// res_y / background_tile_size;
+		int num_tiles_x = 1;//largest_dim / lighting_tile_size / background_tile_size;
+		int num_tiles_y = 1;// largest_dim / lighting_tile_size / background_tile_size;
 
 		std::vector<cv::Mat> array_of_images = splitImage(input_mat, num_tiles_x, num_tiles_y);
 
@@ -378,7 +378,6 @@ int main(int argc, char** argv)
 		for (size_t a = 0; a < array_of_images.size(); a++)
 		{
 			gpu_compute(
-				largest_dim, lighting_tile_size,
 				array_of_images[a].cols, array_of_images[a].rows, // this will be smaller
 				largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 				compute_shader_program,

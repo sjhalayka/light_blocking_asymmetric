@@ -146,7 +146,7 @@ void compute(
 
 
 void gpu_compute(
-	GLint largest_dim, GLint lighting_tile_size,
+//	GLint largest_dim, GLint lighting_tile_size,
 	GLint tex_w_small, GLint tex_h_small,
 	GLint tex_w_full_size, GLint tex_h_full_size,
 	GLuint& compute_shader_program,
