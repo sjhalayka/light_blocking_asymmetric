@@ -367,15 +367,13 @@ int main(int argc, char** argv)
 
 
 
-		int num_tiles_per_dimension = 1;// (largest_dim / lighting_tile_size) / background_tile_size;
-
-		//cout << num_tiles_per_dimension << endl;
+		int num_tiles_per_dimension = 1;
 
 		std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 
 		for (size_t a = 0; a < array_of_input_mats.size(); a++)
 		{
-			vector<float> output_pixels(array_of_input_mats[a].rows * array_of_input_mats[a].cols * 4, 1.0f);
+			vector<float> output_pixels(array_of_input_mats[a].rows* array_of_input_mats[a].cols * 4);// , 1.0f);
 
 			gpu_compute(
 				array_of_input_mats[a].rows, array_of_input_mats[a].cols,
@@ -393,11 +391,12 @@ int main(int argc, char** argv)
 				uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
 				uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
 				uc_output.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
-				uc_output.data[x + 3] = 255;
+				uc_output.data[x + 3] = 255;// <unsigned char>(output_pixels[x + 3] * 255.0);
 			}
 
-			array_of_input_mats[a] = uc_output;// .clone();// .at<Vec4b>(j, i) = pixelValue;
+			array_of_input_mats[a] = uc_output.clone();
 		}
+
 
 		cv::Mat uc_output = imageCollage(array_of_input_mats, num_tiles_per_dimension, num_tiles_per_dimension).clone();
 

@@ -211,8 +211,8 @@ void gpu_compute(
 	}
 
 	compute(
-		 tex_w_small, tex_h_small, // this will be smaller
-		 tex_w_full_size, tex_h_full_size,
+		tex_w_small, tex_h_small, // this will be smaller
+		tex_w_full_size, tex_h_full_size,
 		compute_shader_program,
 		output_pixels,
 		input_mat_float,
