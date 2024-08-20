@@ -48,22 +48,20 @@ vertex_fragment_shader ortho_shader;
 
 
 
-
-
 void compute(
 	GLint tex_w_small, GLint tex_h_small,
 	GLint tex_w_full_size, GLint tex_h_full_size,
 	GLuint& compute_shader_program,
-	unsigned char *output_pixels,
+	unsigned char* output_pixels,
 	const Mat& input_pixels,
 	const Mat& input_light_pixels,
-	const Mat &input_light_blocking_pixels)
+	const Mat& input_light_blocking_pixels)
 {
 	glEnable(GL_TEXTURE_2D);
 
-	GLuint tex_input;
-	GLuint tex_light_input;
-	GLuint tex_light_blocking_input;
+	GLuint tex_input = 0;
+	GLuint tex_light_input = 0;
+	GLuint tex_light_blocking_input = 0;
 
 	glGenTextures(1, &tex_input);
 	glActiveTexture(GL_TEXTURE1);
@@ -109,12 +107,15 @@ void compute(
 
 
 	glActiveTexture(GL_TEXTURE2);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_full_size , tex_h_full_size, 0, GL_RGBA, GL_FLOAT, input_light_pixels.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_full_size, tex_h_full_size, 0, GL_RGBA, GL_FLOAT, input_light_pixels.data);
 	glBindImageTexture(2, tex_light_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	glActiveTexture(GL_TEXTURE3);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_full_size, tex_h_full_size, 0, GL_RGBA, GL_FLOAT, input_light_blocking_pixels.data);
 	glBindImageTexture(3, tex_light_blocking_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
+
+
 
 	// Use the compute shader
 	glUseProgram(compute_shader_program);
@@ -140,6 +141,109 @@ void compute(
 	glDeleteTextures(1, &tex_light_input);
 	glDeleteTextures(1, &tex_light_blocking_input);
 }
+
+
+
+
+Mat gpu_compute(
+	GLint largest_dim, GLint lighting_tile_size,
+	GLint tex_w_small, GLint tex_h_small,
+	GLint tex_w_full_size, GLint tex_h_full_size,
+	GLuint& compute_shader_program,
+	unsigned char* output_pixels,
+	const Mat& input_mat,
+	const Mat& input_light_mat_with_dynamic_lights,
+	const Mat& input_light_blocking_mat)
+{
+
+
+
+
+	Mat input_mat_float(input_mat.rows, input_mat.cols, CV_32FC4, Scalar(0, 0, 0, 0));
+
+	for (int i = 0; i < input_mat.cols; i++)
+	{
+		for (int j = 0; j < input_mat.rows; j++)
+		{
+			Vec4b pixelValue = input_mat.at<Vec4b>(j, i);
+			Vec4f p;
+
+			p[0] = pixelValue[0] / 255.0f;
+			p[1] = pixelValue[1] / 255.0f;
+			p[2] = pixelValue[2] / 255.0f;
+			p[3] = pixelValue[3] / 255.0f;
+
+			input_mat_float.at<Vec4f>(j, i) = p;
+		}
+	}
+
+
+	Mat input_light_mat_float(input_light_mat_with_dynamic_lights.rows, input_light_mat_with_dynamic_lights.cols, CV_32FC4, Scalar(0, 0, 0, 0));
+
+	for (int i = 0; i < input_light_mat_with_dynamic_lights.cols; i++)
+	{
+		for (int j = 0; j < input_light_mat_with_dynamic_lights.rows; j++)
+		{
+			Vec4b pixelValue = input_light_mat_with_dynamic_lights.at<Vec4b>(j, i);
+			Vec4f p;// = pixelValue / 255.0f;
+
+			p[0] = pixelValue[0] / 255.0f;
+			p[1] = pixelValue[1] / 255.0f;
+			p[2] = pixelValue[2] / 255.0f;
+			p[3] = pixelValue[3] / 255.0f;
+
+			input_light_mat_float.at<Vec4f>(j, i) = p;
+		}
+	}
+
+
+	Mat input_light_blocking_mat_float(input_light_blocking_mat.rows, input_light_blocking_mat.cols, CV_32FC4, Scalar(0, 0, 0, 0));
+
+	for (int i = 0; i < input_light_blocking_mat.cols; i++)
+	{
+		for (int j = 0; j < input_light_blocking_mat.rows; j++)
+		{
+			Vec4b pixelValue = input_light_blocking_mat.at<Vec4b>(j, i);
+			Vec4f p;// = pixelValue / 255.0f;
+
+			p[0] = pixelValue[0] / 255.0f;
+			p[1] = pixelValue[1] / 255.0f;
+			p[2] = pixelValue[2] / 255.0f;
+			p[3] = pixelValue[3] / 255.0f;
+
+			input_light_blocking_mat_float.at<Vec4f>(j, i) = p;
+		}
+	}
+
+
+	compute(
+		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, // this will be smaller
+		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
+		compute_shader_program,
+		output_pixels,
+		input_mat_float,
+		input_light_mat_float,
+		input_light_blocking_mat_float);
+
+
+	Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
+
+	for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+	{
+		uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
+		uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
+		uc_output.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
+		uc_output.data[x + 3] = 255;
+	}
+
+	Mat output_mat = uc_output.clone();
+
+	return uc_output;
+}
+
+
+
+
 
 void init_textures(GLuint& tex_output, GLuint& tex_input, GLuint& tex_light_input, GLuint& tex_light_blocking_input, GLuint tex_w, GLuint tex_h)
 {
