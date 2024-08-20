@@ -52,10 +52,9 @@ void compute(
 	vector<float>& output_pixels,
 	const Mat& input_pixels,
 	const Mat& input_light_pixels,
-	const vector<float>& input_light_blocking_pixels)
+	const Mat &input_light_blocking_pixels)
 {
 	glEnable(GL_TEXTURE_2D);
-
 
 	GLuint tex_input;
 	GLuint tex_light_input;
@@ -108,7 +107,7 @@ void compute(
 	glBindImageTexture(2, tex_light_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	glActiveTexture(GL_TEXTURE3);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, &input_light_blocking_pixels[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, input_light_blocking_pixels.data);
 	glBindImageTexture(3, tex_light_blocking_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	// Use the compute shader
@@ -134,8 +133,6 @@ void compute(
 	glDeleteTextures(1, &tex_input);
 	glDeleteTextures(1, &tex_light_input);
 	glDeleteTextures(1, &tex_light_blocking_input);
-
-
 }
 
 void init_textures(GLuint& tex_output, GLuint& tex_input, GLuint& tex_light_input, GLuint& tex_light_blocking_input, GLuint tex_w, GLuint tex_h)

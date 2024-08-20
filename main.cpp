@@ -456,6 +456,23 @@ int main(int argc, char** argv)
 		}
 
 
+		Mat input_light_blocking_mat_float(input_light_blocking_mat.rows, input_light_blocking_mat.cols, CV_32FC4, Scalar(0, 0, 0, 0));
+
+		for (int i = 0; i < input_light_blocking_mat.cols; i++)
+		{
+			for (int j = 0; j < input_light_blocking_mat.rows; j++)
+			{
+				Vec4b pixelValue = input_light_blocking_mat.at<Vec4b>(j, i);
+				Vec4f p;// = pixelValue / 255.0f;
+
+				p[0] = pixelValue[0] / 255.0f;
+				p[1] = pixelValue[1] / 255.0f;
+				p[2] = pixelValue[2] / 255.0f;
+				p[3] = pixelValue[3] / 255.0f;
+
+				input_light_blocking_mat_float.at<Vec4f>(j, i) = p;
+			}
+		}
 
 
 		compute(
@@ -464,7 +481,7 @@ int main(int argc, char** argv)
 			output_pixels,
 			input_mat_float,
 			input_light_mat_float,
-			input_light_blocking_pixels);
+			input_light_blocking_mat_float);
 
 
 		Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
