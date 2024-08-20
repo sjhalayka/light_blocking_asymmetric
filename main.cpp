@@ -387,26 +387,26 @@ int main(int argc, char** argv)
 			input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) = Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
 
 		vector<float> output_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-		vector<float> input_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-		vector<float> input_light_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+//		vector<float> input_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+//		vector<float> input_light_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
 		vector<float> input_light_blocking_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
 
 
-		for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
-		{
-			input_pixels[x + 0] = input_mat.data[x + 0] / 255.0f;
-			input_pixels[x + 1] = input_mat.data[x + 1] / 255.0f;
-			input_pixels[x + 2] = input_mat.data[x + 2] / 255.0f;
-			input_pixels[x + 3] = 1.0;
-		}
+		//for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+		//{
+		//	input_pixels[x + 0] = input_mat.data[x + 0] / 255.0f;
+		//	input_pixels[x + 1] = input_mat.data[x + 1] / 255.0f;
+		//	input_pixels[x + 2] = input_mat.data[x + 2] / 255.0f;
+		//	input_pixels[x + 3] = 1.0;
+		//}
 
-		for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
-		{
-			input_light_pixels[x + 0] = input_light_mat_with_dynamic_lights.data[x + 0] / 255.0f;
-			input_light_pixels[x + 1] = input_light_mat_with_dynamic_lights.data[x + 1] / 255.0f;
-			input_light_pixels[x + 2] = input_light_mat_with_dynamic_lights.data[x + 2] / 255.0f;
-			input_light_pixels[x + 3] = 1.0;
-		}
+		//for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+		//{
+		//	input_light_pixels[x + 0] = input_light_mat_with_dynamic_lights.data[x + 0] / 255.0f;
+		//	input_light_pixels[x + 1] = input_light_mat_with_dynamic_lights.data[x + 1] / 255.0f;
+		//	input_light_pixels[x + 2] = input_light_mat_with_dynamic_lights.data[x + 2] / 255.0f;
+		//	input_light_pixels[x + 3] = 1.0;
+		//}
 
 		for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
 		{
@@ -425,22 +425,45 @@ int main(int argc, char** argv)
 			for (int j = 0; j < input_mat.rows; j++)
 			{
 				Vec4b pixelValue = input_mat.at<Vec4b>(j, i);
-				Vec4f p = pixelValue / 255.0f;
-				p[0] = 1.0; // ABGR
+				Vec4f p;
+
+				p[0] = pixelValue[0] / 255.0f;
+				p[1] = pixelValue[1] / 255.0f;
+				p[2] = pixelValue[2] / 255.0f;
+				p[3] = pixelValue[3] / 255.0f;
+
 				input_mat_float.at<Vec4f>(j, i) = p;
 			}
 		}
 
 
+		Mat input_light_mat_float(input_light_mat_with_dynamic_lights.rows, input_light_mat_with_dynamic_lights.cols, CV_32FC4, Scalar(0, 0, 0, 0));
+
+		for (int i = 0; i < input_light_mat_with_dynamic_lights.cols; i++)
+		{
+			for (int j = 0; j < input_light_mat_with_dynamic_lights.rows; j++)
+			{
+				Vec4b pixelValue = input_light_mat_with_dynamic_lights.at<Vec4b>(j, i);
+				Vec4f p;// = pixelValue / 255.0f;
+
+				p[0] = pixelValue[0] / 255.0f;
+				p[1] = pixelValue[1] / 255.0f;
+				p[2] = pixelValue[2] / 255.0f;
+				p[3] = pixelValue[3] / 255.0f;
+
+				input_light_mat_float.at<Vec4f>(j, i) = p;
+			}
+		}
+
+
+
+
 		compute(
-			tex_input,
-			tex_light_input,
-			tex_light_blocking_input,
 			largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 			compute_shader_program,
 			output_pixels,
 			input_mat_float,
-			input_light_pixels,
+			input_light_mat_float,
 			input_light_blocking_pixels);
 
 
