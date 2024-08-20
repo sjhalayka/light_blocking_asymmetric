@@ -379,7 +379,7 @@ int main(int argc, char** argv)
 		{
 			gpu_compute(
 				largest_dim, lighting_tile_size,
-				largest_dim / lighting_tile_size / num_tiles_x, largest_dim / lighting_tile_size / num_tiles_y, // this will be smaller
+				array_of_images[a].cols, array_of_images[a].rows, // this will be smaller
 				largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 				compute_shader_program,
 				reinterpret_cast<unsigned char*>(&output_pixels[0]),
