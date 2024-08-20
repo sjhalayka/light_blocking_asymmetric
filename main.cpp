@@ -478,7 +478,7 @@ int main(int argc, char** argv)
 		compute(
 			largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 			compute_shader_program,
-			output_pixels,
+			reinterpret_cast<unsigned char *>(&output_pixels[0]),
 			input_mat_float,
 			input_light_mat_float,
 			input_light_blocking_mat_float);

@@ -54,7 +54,7 @@ void compute(
 
 	GLint tex_w, GLint tex_h,
 	GLuint& compute_shader_program,
-	vector<float>& output_pixels,
+	unsigned char *output_pixels,
 	const Mat& input_pixels,
 	const Mat& input_light_pixels,
 	const Mat &input_light_blocking_pixels)
@@ -132,7 +132,7 @@ void compute(
 	// Copy output pixel array to CPU as texture 0
 	glActiveTexture(GL_TEXTURE0);
 	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, &output_pixels[0]);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, output_pixels);
 
 	glDeleteTextures(1, &tex_output);
 	glDeleteTextures(1, &tex_input);
