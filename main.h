@@ -45,6 +45,11 @@ using namespace cv;
 vertex_fragment_shader ortho_shader;
 
 
+
+
+
+
+
 void compute(
 
 	GLint tex_w, GLint tex_h,

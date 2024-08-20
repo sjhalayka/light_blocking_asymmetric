@@ -387,9 +387,9 @@ int main(int argc, char** argv)
 			input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) = Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
 
 		vector<float> output_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-//		vector<float> input_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-//		vector<float> input_light_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-		vector<float> input_light_blocking_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+		//		vector<float> input_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+		//		vector<float> input_light_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
+		//vector<float> input_light_blocking_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
 
 
 		//for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
@@ -408,13 +408,13 @@ int main(int argc, char** argv)
 		//	input_light_pixels[x + 3] = 1.0;
 		//}
 
-		for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
-		{
-			input_light_blocking_pixels[x + 0] = input_light_blocking_mat.data[x + 0] / 255.0f;
-			input_light_blocking_pixels[x + 1] = input_light_blocking_mat.data[x + 1] / 255.0f;
-			input_light_blocking_pixels[x + 2] = input_light_blocking_mat.data[x + 2] / 255.0f;
-			input_light_blocking_pixels[x + 3] = 1.0;
-		}
+		//for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
+		//{
+		//	input_light_blocking_pixels[x + 0] = input_light_blocking_mat.data[x + 0] / 255.0f;
+		//	input_light_blocking_pixels[x + 1] = input_light_blocking_mat.data[x + 1] / 255.0f;
+		//	input_light_blocking_pixels[x + 2] = input_light_blocking_mat.data[x + 2] / 255.0f;
+		//	input_light_blocking_pixels[x + 3] = 1.0;
+		//}
 
 		Mat output_mat = input_mat.clone();// input_mat.rows, input_mat.cols, CV_32FC4);
 
