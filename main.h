@@ -245,13 +245,6 @@ Mat gpu_compute(
 
 
 
-void init_textures(GLuint& tex_output, GLuint& tex_input, GLuint& tex_light_input, GLuint& tex_light_blocking_input, GLuint tex_w, GLuint tex_h)
-{
-	// Generate input texture
-
-}
-
-
 
 bool compile_and_link_compute_shader(const char* const file_name, GLuint& program)
 {
@@ -437,10 +430,6 @@ bool init_gl(int argc, char** argv,
 
 void delete_all(GLuint& tex_output, GLuint& tex_input, GLuint& tex_light_input, GLuint& tex_light_blocking_input, GLuint& compute_shader_program)
 {
-	//glDeleteTextures(1, &tex_output);
-	//glDeleteTextures(1, &tex_input);
-	//glDeleteTextures(1, &tex_light_input);
-	//glDeleteTextures(1, &tex_light_blocking_input);
 
 	glDeleteProgram(compute_shader_program);
 }

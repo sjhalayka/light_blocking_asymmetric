@@ -334,8 +334,6 @@ int main(int argc, char** argv)
 	resize(input_light_blocking_mat, input_light_blocking_mat, cv::Size(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size), 0, 0, cv::INTER_NEAREST);
 
 
-	GLuint tex_output = 0, tex_input = 0, tex_light_input = 0, tex_light_blocking_input = 0;
-		init_textures(tex_output, tex_input, tex_light_input, tex_light_blocking_input, largest_dim / lighting_tile_size, largest_dim / lighting_tile_size);
 
 
 
@@ -479,7 +477,7 @@ int main(int argc, char** argv)
 	}
 
 	// Clean up all memory
-	delete_all(tex_output, tex_input, tex_light_input, tex_light_blocking_input, compute_shader_program);
+	glDeleteProgram(compute_shader_program);
 
 	SDL_GL_DeleteContext(gl_context);
 	SDL_DestroyWindow(window);
