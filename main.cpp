@@ -476,6 +476,7 @@ int main(int argc, char** argv)
 
 
 		compute(
+			largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, // this will be smaller
 			largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 			compute_shader_program,
 			reinterpret_cast<unsigned char *>(&output_pixels[0]),

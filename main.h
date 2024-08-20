@@ -51,8 +51,8 @@ vertex_fragment_shader ortho_shader;
 
 
 void compute(
-
-	GLint tex_w, GLint tex_h,
+	GLint tex_w_small, GLint tex_h_small,
+	GLint tex_w_full_size, GLint tex_h_full_size,
 	GLuint& compute_shader_program,
 	unsigned char *output_pixels,
 	const Mat& input_pixels,
@@ -99,20 +99,21 @@ void compute(
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, NULL);
 	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
-
 	glActiveTexture(GL_TEXTURE1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, input_pixels.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, input_pixels.data);
 	glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
+
+
 	glActiveTexture(GL_TEXTURE2);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, input_light_pixels.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_full_size , tex_h_full_size, 0, GL_RGBA, GL_FLOAT, input_light_pixels.data);
 	glBindImageTexture(2, tex_light_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	glActiveTexture(GL_TEXTURE3);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, input_light_blocking_pixels.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_full_size, tex_h_full_size, 0, GL_RGBA, GL_FLOAT, input_light_blocking_pixels.data);
 	glBindImageTexture(3, tex_light_blocking_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	// Use the compute shader
@@ -121,10 +122,10 @@ void compute(
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_image"), 1);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_image"), 2);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_blocking_image"), 3);
-	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w, tex_h);
+	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w_full_size, tex_h_full_size);
 
 	// Run compute shader
-	glDispatchCompute((GLuint)tex_w, (GLuint)tex_h, 1);
+	glDispatchCompute((GLuint)tex_w_small, (GLuint)tex_h_small, 1);
 
 	// Wait for compute shader to finish
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
