@@ -367,9 +367,10 @@ int main(int argc, char** argv)
 
 
 
-		int num_tiles_per_dimension = 1;
+		int num_tiles_per_dimension = 2;
 
 		std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
+		std::vector<cv::Mat> array_of_output_mats;
 
 		for (size_t i = 0; i < array_of_input_mats.size(); i++)
 		{
@@ -380,7 +381,7 @@ int main(int argc, char** argv)
 
 			gpu_compute(
 				compute_shader_program,
-				reinterpret_cast<unsigned char*>(&output_pixels[0]),
+				&output_pixels[0],
 				array_of_input_mats[i],
 				input_light_mat_with_dynamic_lights,
 				input_light_blocking_mat);
@@ -395,14 +396,16 @@ int main(int argc, char** argv)
 				uc_output_small.data[x + 3] = 255;
 			}
 
-			array_of_input_mats[i] = uc_output_small.clone();
+			array_of_output_mats.push_back(uc_output_small);
 
+			// These images show that something's not working right where num_tiles_per_dimension is >= 2
+			// there are duplicate output images
 			s = "_output_" + to_string(i) + ".png";
-			imwrite(s.c_str(), array_of_input_mats[i]);
+			imwrite(s.c_str(), array_of_output_mats[i]);
 		}
 
 
-		cv::Mat uc_output = imageCollage(array_of_input_mats, num_tiles_per_dimension, num_tiles_per_dimension);
+		cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
 		uc_output = anti_alias_mat(uc_output);
 
 		resize(uc_output, uc_output, cv::Size(largest_dim, largest_dim), 0, 0, cv::INTER_LINEAR);

@@ -50,7 +50,7 @@ vertex_fragment_shader ortho_shader;
 
 void compute(
 	GLuint& compute_shader_program,
-	unsigned char* output_pixels,
+	float* output_pixels,
 	const Mat& input_pixels,
 	const Mat& input_light_pixels,
 	const Mat& input_light_blocking_pixels)
@@ -151,7 +151,7 @@ void compute(
 
 void gpu_compute(
 	GLuint& compute_shader_program,
-	unsigned char* output_pixels,
+	float* output_pixels,
 	const Mat& input_mat,
 	const Mat& input_light_mat_with_dynamic_lights,
 	const Mat& input_light_blocking_mat)
