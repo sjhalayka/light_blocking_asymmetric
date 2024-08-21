@@ -163,7 +163,7 @@ void gpu_compute(
 	const GLint tex_h_full_size = input_light_mat_with_dynamic_lights.rows;
 
 
-	Mat input_mat_float(tex_w_small, tex_h_small, CV_32FC4, Scalar(0, 0, 0, 0));
+	Mat input_mat_float(tex_w_small, tex_h_small, CV_32FC4);
 
 	for (int i = 0; i < tex_w_small; i++)
 	{
@@ -182,11 +182,11 @@ void gpu_compute(
 	}
 
 
-	Mat input_light_mat_float(tex_w_full_size, tex_h_full_size, CV_32FC4, Scalar(0, 0, 0, 0));
+	Mat input_light_mat_float(tex_w_full_size, tex_h_full_size, CV_32FC4);
 
-	for (int i = 0; i < input_light_mat_with_dynamic_lights.cols; i++)
+	for (int i = 0; i < tex_w_full_size; i++)
 	{
-		for (int j = 0; j < input_light_mat_with_dynamic_lights.rows; j++)
+		for (int j = 0; j < tex_h_full_size; j++)
 		{
 			Vec4b pixelValue = input_light_mat_with_dynamic_lights.at<Vec4b>(j, i);
 			Vec4f p;// = pixelValue / 255.0f;
@@ -201,11 +201,11 @@ void gpu_compute(
 	}
 
 
-	Mat input_light_blocking_mat_float(tex_w_full_size, tex_h_full_size, CV_32FC4, Scalar(0, 0, 0, 0));
+	Mat input_light_blocking_mat_float(tex_w_full_size, tex_h_full_size, CV_32FC4);
 
-	for (int i = 0; i < input_light_blocking_mat.cols; i++)
+	for (int i = 0; i < tex_w_full_size; i++)
 	{
-		for (int j = 0; j < input_light_blocking_mat.rows; j++)
+		for (int j = 0; j < tex_h_full_size; j++)
 		{
 			Vec4b pixelValue = input_light_blocking_mat.at<Vec4b>(j, i);
 			Vec4f p;// = pixelValue / 255.0f;

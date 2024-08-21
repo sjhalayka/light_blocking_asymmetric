@@ -371,19 +371,21 @@ int main(int argc, char** argv)
 
 		std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 
-
-		for (size_t a = 0; a < array_of_input_mats.size(); a++)
+		for (size_t i = 0; i < array_of_input_mats.size(); i++)
 		{
-			vector<float> output_pixels(array_of_input_mats[a].rows * array_of_input_mats[a].cols * 4);
+			string s = "_input_" + to_string(i) + ".png";
+			imwrite(s.c_str(), array_of_input_mats[i]);
+
+			vector<float> output_pixels(4 * array_of_input_mats[i].rows * array_of_input_mats[i].cols);
 
 			gpu_compute(
 				compute_shader_program,
 				reinterpret_cast<unsigned char*>(&output_pixels[0]),
-				array_of_input_mats[a],
+				array_of_input_mats[i],
 				input_light_mat_with_dynamic_lights,
 				input_light_blocking_mat);
 
-			Mat uc_output_small(array_of_input_mats[a].rows, array_of_input_mats[a].cols, CV_8UC4);
+			Mat uc_output_small(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_8UC4);
 
 			for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
 			{
@@ -393,21 +395,15 @@ int main(int argc, char** argv)
 				uc_output_small.data[x + 3] = 255;
 			}
 
+			array_of_input_mats[i] = uc_output_small.clone();
 
-
-			array_of_input_mats[a] = uc_output_small.clone();
-
-			string s = to_string(a) + ".png";
-			imwrite(s.c_str(), array_of_input_mats[a]);
-
-
+			s = "_output_" + to_string(i) + ".png";
+			imwrite(s.c_str(), array_of_input_mats[i]);
 		}
 
 
-		cv::Mat uc_output = imageCollage(array_of_input_mats, num_tiles_per_dimension, num_tiles_per_dimension).clone();
-		uc_output = anti_alias_mat(uc_output).clone();
-
-
+		cv::Mat uc_output = imageCollage(array_of_input_mats, num_tiles_per_dimension, num_tiles_per_dimension);
+		uc_output = anti_alias_mat(uc_output);
 
 		resize(uc_output, uc_output, cv::Size(largest_dim, largest_dim), 0, 0, cv::INTER_LINEAR);
 
@@ -435,14 +431,14 @@ int main(int argc, char** argv)
 
 
 
+
+		// Draw
 		glViewport(0, 0, window_w, window_h);
 		glClearColor(1.0, 0.5, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		static GLuint tex_uc_output = 0;
-
-		if (!glIsTexture(tex_uc_output))
-			glGenTextures(1, &tex_uc_output);
+		GLuint tex_uc_output = 0;
+		glGenTextures(1, &tex_uc_output);
 
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, tex_uc_output);
@@ -457,14 +453,15 @@ int main(int argc, char** argv)
 
 		draw_full_screen_tex(4, tex_uc_output);
 
-		auto end_time = std::chrono::high_resolution_clock::now();
-
-		std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
-
-		//cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds" << endl;
-		//imwrite("out.png", uc_output);
+		glDeleteTextures(1, &tex_uc_output);
 
 		SDL_GL_SwapWindow(window);
+
+		auto end_time = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
+
+		cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds" << endl;
+		//imwrite("out.png", uc_output);
 	}
 
 	// Clean up all memory
