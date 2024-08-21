@@ -49,14 +49,18 @@ vertex_fragment_shader ortho_shader;
 
 
 void compute(
-	GLint tex_w_small, GLint tex_h_small,
-	GLint tex_w_full_size, GLint tex_h_full_size,
 	GLuint& compute_shader_program,
 	unsigned char* output_pixels,
 	const Mat& input_pixels,
 	const Mat& input_light_pixels,
 	const Mat& input_light_blocking_pixels)
 {
+	const GLint tex_w_small = input_pixels.cols;
+	const GLint tex_h_small = input_pixels.rows;
+
+	const GLint tex_w_full_size = input_light_pixels.cols;
+	const GLint tex_h_full_size = input_light_pixels.rows;
+
 	glEnable(GL_TEXTURE_2D);
 
 	GLuint tex_input = 0;
@@ -146,14 +150,19 @@ void compute(
 
 
 void gpu_compute(
-	GLint tex_w_small, GLint tex_h_small,
-	GLint tex_w_full_size, GLint tex_h_full_size,
 	GLuint& compute_shader_program,
 	unsigned char* output_pixels,
 	const Mat& input_mat,
 	const Mat& input_light_mat_with_dynamic_lights,
 	const Mat& input_light_blocking_mat)
 {
+	const GLint tex_w_small = input_mat.cols;
+	const GLint tex_h_small = input_mat.rows;
+
+	const GLint tex_w_full_size = input_light_mat_with_dynamic_lights.cols;
+	const GLint tex_h_full_size = input_light_mat_with_dynamic_lights.rows;
+
+
 	Mat input_mat_float(tex_w_small, tex_h_small, CV_32FC4, Scalar(0, 0, 0, 0));
 
 	for (int i = 0; i < tex_w_small; i++)
@@ -175,9 +184,9 @@ void gpu_compute(
 
 	Mat input_light_mat_float(tex_w_full_size, tex_h_full_size, CV_32FC4, Scalar(0, 0, 0, 0));
 
-	for (int i = 0; i < tex_w_full_size; i++)
+	for (int i = 0; i < input_light_mat_with_dynamic_lights.cols; i++)
 	{
-		for (int j = 0; j < tex_h_full_size; j++)
+		for (int j = 0; j < input_light_mat_with_dynamic_lights.rows; j++)
 		{
 			Vec4b pixelValue = input_light_mat_with_dynamic_lights.at<Vec4b>(j, i);
 			Vec4f p;// = pixelValue / 255.0f;
@@ -194,9 +203,9 @@ void gpu_compute(
 
 	Mat input_light_blocking_mat_float(tex_w_full_size, tex_h_full_size, CV_32FC4, Scalar(0, 0, 0, 0));
 
-	for (int i = 0; i < tex_w_full_size; i++)
+	for (int i = 0; i < input_light_blocking_mat.cols; i++)
 	{
-		for (int j = 0; j < tex_h_full_size; j++)
+		for (int j = 0; j < input_light_blocking_mat.rows; j++)
 		{
 			Vec4b pixelValue = input_light_blocking_mat.at<Vec4b>(j, i);
 			Vec4f p;// = pixelValue / 255.0f;
@@ -211,8 +220,6 @@ void gpu_compute(
 	}
 
 	compute(
-		tex_w_small, tex_h_small, // this will be smaller
-		tex_w_full_size, tex_h_full_size,
 		compute_shader_program,
 		output_pixels,
 		input_mat_float,
@@ -589,7 +596,7 @@ cv::Mat imageCollage(std::vector<cv::Mat>& array_of_images, int M, int N)
 	// All images should be the same size
 	const cv::Size images_size = array_of_images[0].size();
 	// Create a black canvas
-	cv::Mat image_collage(images_size.height * N, images_size.width * M, CV_8UC4, cv::Scalar(0, 0, 0));
+	cv::Mat image_collage(images_size.height * N, images_size.width * M, array_of_images[0].type(), cv::Scalar(0, 0, 0));
 
 	for (int i = 0; i < N; ++i)
 	{

@@ -360,9 +360,9 @@ int main(int argc, char** argv)
 
 		Mat input_light_mat_with_dynamic_lights = input_light_mat.clone();
 
-		// Add in the extra lighting (not using +=, but = )
+		// Add in the extra lighting
 		for (size_t i = 0; i < dynamic_centres.size(); i++)
-			input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) = Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
+			input_light_mat_with_dynamic_lights.at<Vec4b>(dynamic_centres[i].y / lighting_tile_size, dynamic_centres[i].x / lighting_tile_size) += Vec4b(dynamic_colours[i].r * 255.0f, dynamic_colours[i].g * 255.0f, dynamic_colours[i].b * 255.0f, 255.0f);
 
 
 
@@ -371,75 +371,41 @@ int main(int argc, char** argv)
 
 		std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 
+
 		for (size_t a = 0; a < array_of_input_mats.size(); a++)
 		{
-			vector<float> output_pixels(array_of_input_mats[a].rows* array_of_input_mats[a].cols * 4);// , 1.0f);
+			vector<float> output_pixels(array_of_input_mats[a].rows * array_of_input_mats[a].cols * 4);
 
 			gpu_compute(
-				array_of_input_mats[a].rows, array_of_input_mats[a].cols,
-				largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 				compute_shader_program,
 				reinterpret_cast<unsigned char*>(&output_pixels[0]),
 				array_of_input_mats[a],
 				input_light_mat_with_dynamic_lights,
 				input_light_blocking_mat);
 
-			Mat uc_output(array_of_input_mats[a].rows, array_of_input_mats[a].cols, CV_8UC4);
+			Mat uc_output_small(array_of_input_mats[a].rows, array_of_input_mats[a].cols, CV_8UC4);
 
-			for (size_t x = 0; x < 4 * uc_output.rows * uc_output.cols; x += 4)
+			for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
 			{
-				uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
-				uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
-				uc_output.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
-				uc_output.data[x + 3] = 255;// <unsigned char>(output_pixels[x + 3] * 255.0);
+				uc_output_small.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
+				uc_output_small.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
+				uc_output_small.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
+				uc_output_small.data[x + 3] = 255;
 			}
 
-			array_of_input_mats[a] = uc_output.clone();
+
+
+			array_of_input_mats[a] = uc_output_small.clone();
+
+			string s = to_string(a) + ".png";
+			imwrite(s.c_str(), array_of_input_mats[a]);
+
+
 		}
 
 
 		cv::Mat uc_output = imageCollage(array_of_input_mats, num_tiles_per_dimension, num_tiles_per_dimension).clone();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		//vector<float> output_pixels((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size) * 4, 1.0f);
-
-		//gpu_compute(
-		//	largest_dim, lighting_tile_size,
-		//	largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, // this will be smaller
-		//	largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
-		//	compute_shader_program,
-		//	reinterpret_cast<unsigned char *>(&output_pixels[0]),
-		//	input_mat,
-		//	input_light_mat_with_dynamic_lights,
-		//	input_light_blocking_mat);
-
-		//Mat uc_output(largest_dim / lighting_tile_size, largest_dim / lighting_tile_size, CV_8UC4);
-
-
-
-		//for (size_t x = 0; x < 4 * ((largest_dim / lighting_tile_size) * (largest_dim / lighting_tile_size)); x += 4)
-		//{
-		//	uc_output.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
-		//	uc_output.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
-		//	uc_output.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
-		//	uc_output.data[x + 3] = 255;
-		//}
-
-
-		uc_output = anti_alias_mat(uc_output);
+		uc_output = anti_alias_mat(uc_output).clone();
 
 
 
