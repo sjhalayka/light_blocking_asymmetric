@@ -367,7 +367,7 @@ int main(int argc, char** argv)
 
 
 
-		int num_tiles_per_dimension = 2;
+		int num_tiles_per_dimension = 1;
 
 		std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 		std::vector<cv::Mat> array_of_output_mats;
@@ -377,11 +377,8 @@ int main(int argc, char** argv)
 			string s = "_input_" + to_string(i) + ".png";
 			imwrite(s.c_str(), array_of_input_mats[i]);
 
-			vector<float> output_pixels(4 * array_of_input_mats[i].rows * array_of_input_mats[i].cols);
-
-			gpu_compute(
+			Mat compute_result = gpu_compute(
 				compute_shader_program,
-				&output_pixels[0],
 				array_of_input_mats[i],
 				input_light_mat_with_dynamic_lights,
 				input_light_blocking_mat);
@@ -390,9 +387,9 @@ int main(int argc, char** argv)
 
 			for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
 			{
-				uc_output_small.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
-				uc_output_small.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
-				uc_output_small.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
+				uc_output_small.data[x + 0] = static_cast<unsigned char>(compute_result.data[x + 0] * 255.0);
+				uc_output_small.data[x + 1] = static_cast<unsigned char>(compute_result.data[x + 1] * 255.0);
+				uc_output_small.data[x + 2] = static_cast<unsigned char>(compute_result.data[x + 2] * 255.0);
 				uc_output_small.data[x + 3] = 255;
 			}
 

@@ -48,13 +48,14 @@ vertex_fragment_shader ortho_shader;
 
 
 
-void compute(
+Mat compute(
 	GLuint& compute_shader_program,
-	float* output_pixels,
 	const Mat& input_pixels,
 	const Mat& input_light_pixels,
 	const Mat& input_light_blocking_pixels)
 {
+	Mat output_mat(input_pixels.rows, input_pixels.cols, CV_32FC4, Scalar(1, 1, 1, 1));
+
 	const GLint tex_w_small = input_pixels.cols;
 	const GLint tex_h_small = input_pixels.rows;
 
@@ -138,21 +139,22 @@ void compute(
 	// Copy output pixel array to CPU as texture 0
 	glActiveTexture(GL_TEXTURE0);
 	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, output_pixels);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, output_mat.data);
 
 	glDeleteTextures(1, &tex_output);
 	glDeleteTextures(1, &tex_input);
 	glDeleteTextures(1, &tex_light_input);
 	glDeleteTextures(1, &tex_light_blocking_input);
+
+	return output_mat;
 }
 
 
 
 
-void gpu_compute(
+Mat gpu_compute(
 	GLuint& compute_shader_program,
-	float* output_pixels,
-	const Mat& input_mat,
+	const Mat input_mat,
 	const Mat& input_light_mat_with_dynamic_lights,
 	const Mat& input_light_blocking_mat)
 {
@@ -219,12 +221,13 @@ void gpu_compute(
 		}
 	}
 
-	compute(
+	Mat c = compute(
 		compute_shader_program,
-		output_pixels,
 		input_mat_float,
 		input_light_mat_float,
 		input_light_blocking_mat_float);
+
+	return c;
 }
 
 
