@@ -161,14 +161,6 @@ void gpu_compute(
 
 	pot = pow(2, ceil(log(pot) / log(2)));
 
-
-
-	//cout << "l: " <<  largest_dim << endl;
-	//cout << "x: " << res_x << endl;
-	//cout << "y: " << res_y << endl;
-
-
-
 	Mat input_square_mat(Size(pot, pot), CV_8UC4, Scalar(0, 0, 0, 255));
 	input_mat.copyTo(input_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
 	input_mat = input_square_mat.clone();
@@ -180,16 +172,6 @@ void gpu_compute(
 	Mat input_light_blocking_square_mat(Size(pot, pot), CV_8UC4, Scalar(0, 0, 0, 255));
 	input_light_blocking_mat.copyTo(input_light_blocking_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
 	input_light_blocking_mat = input_light_blocking_square_mat.clone();
-
-	
-
-
-	//imwrite("_input_mat.png", input_mat);
-	//imwrite("_input_light_mat_with_dynamic_lights.png", input_light_mat_with_dynamic_lights);
-	//imwrite("_input_light_blocking_mat.png", input_light_blocking_mat);
-
-	//exit(0);
-	
 
 	Mat input_mat_float(pot, pot, CV_32FC4);
 	input_mat.convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
@@ -206,8 +188,6 @@ void gpu_compute(
 		input_mat_float,
 		input_light_mat_float,
 		input_light_blocking_mat_float);
-
-	//return largest_dim;
 }
 
 

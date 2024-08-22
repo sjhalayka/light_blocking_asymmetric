@@ -419,19 +419,12 @@ int main(int argc, char** argv)
 
 		vector<float> output_pixels(4 * pot * pot);// *input_mat.rows* input_mat.cols);
 
-
 		gpu_compute(
 			compute_shader_program,
 			output_pixels,
 			input_mat,
 			input_light_mat_with_dynamic_lights,
 			input_light_blocking_mat);
-
-		Mat img = cv::Mat(pot, pot, CV_32FC4, &output_pixels[0]);
-
-	//	imwrite("_img.png", img);
-
-
 
 		Mat uc_output(pot, pot, CV_8UC4);
 
@@ -450,6 +443,7 @@ int main(int argc, char** argv)
 
 
 	//	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
+
 		uc_output = anti_alias_mat(uc_output);
 
 		resize(uc_output, uc_output, cv::Size(largest_dim, largest_dim), 0, 0, cv::INTER_LINEAR);
