@@ -108,7 +108,7 @@ void compute(
 	const Mat& input_light_pixels,
 	const Mat& input_light_blocking_pixels)
 {
-	output_pixels.resize(4 * input_pixels.cols * input_pixels.rows);
+//	output_pixels.resize(4 * input_pixels.cols * input_pixels.rows);
 
 	const GLint tex_w_small = input_pixels.cols;
 	const GLint tex_h_small = input_pixels.rows;
@@ -236,46 +236,54 @@ void gpu_compute(
 	input_light_blocking_mat.convertTo(input_light_blocking_mat_float, CV_32FC4, 1.0 / 255.0);
 
 
-	
-		int num_tiles_per_dimension = 1;
 
-		std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat_float, num_tiles_per_dimension, num_tiles_per_dimension);
-		std::vector<cv::Mat> array_of_output_mats;
+	int num_tiles_per_dimension = 1;
 
-		for (size_t i = 0; i < array_of_input_mats.size(); i++)
+	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat_float, num_tiles_per_dimension, num_tiles_per_dimension);
+	std::vector<cv::Mat> array_of_output_mats;
+
+	for (size_t i = 0; i < array_of_input_mats.size(); i++)
+	{
+		//string s = "_input_" + to_string(i) + ".png";
+		//imwrite(s.c_str(), array_of_input_mats[i]);
+
+
+		//Mat output_pixels(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_32FC4);
+
+		compute(
+			compute_shader_program,
+			output_pixels,
+			array_of_input_mats[i],
+			input_light_mat_float,
+			input_light_blocking_mat_float);
+
+		Mat uc_output_small(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_8UC4);
+
+		for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
 		{
-			//string s = "_input_" + to_string(i) + ".png";
-			//imwrite(s.c_str(), array_of_input_mats[i]);
-
-
-			//Mat output_pixels(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_32FC4);
-
-
-			compute(
-		compute_shader_program,
-		output_pixels,
-				array_of_input_mats[i],
-		input_light_mat_float,
-		input_light_blocking_mat_float);
-
-			Mat uc_output_small(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_8UC4);
-
-			for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
-			{
-				uc_output_small.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
-				uc_output_small.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
-				uc_output_small.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
-				uc_output_small.data[x + 3] = 255;
-			}
-
-			array_of_output_mats.push_back(uc_output_small);
-
-			// These images show that something's not working right where num_tiles_per_dimension is >= 2
-			// there are duplicate output images
-			//s = "_output_" + to_string(i) + ".png";
-			//imwrite(s.c_str(), array_of_output_mats[i]);
+			uc_output_small.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
+			uc_output_small.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
+			uc_output_small.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
+			uc_output_small.data[x + 3] = 255;
 		}
-		
+
+		array_of_output_mats.push_back(uc_output_small);
+
+		// These images show that something's not working right where num_tiles_per_dimension is >= 2
+		// there are duplicate output images
+		//s = "_output_" + to_string(i) + ".png";
+		//imwrite(s.c_str(), array_of_output_mats[i]);
+	}
+
+	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
+
+	for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
+	{
+		output_pixels[x + 0] = uc_output.data[x + 0] / 255.0f;// static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
+		output_pixels[x + 1] = uc_output.data[x + 1] / 255.0f;
+		output_pixels[x + 2] = uc_output.data[x + 2] / 255.0f;
+		output_pixels[x + 3] = 255;
+	}
 
 
 

@@ -402,7 +402,7 @@ int main(int argc, char** argv)
 
 
 
-		//	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
+		
 
 		uc_output = anti_alias_mat(uc_output);
 
