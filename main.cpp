@@ -417,8 +417,7 @@ int main(int argc, char** argv)
 
 		pot = pow(2, ceil(log(pot) / log(2)));
 
-		vector<float> output_pixels;// (4 * pot * pot);// *input_mat.rows* input_mat.cols);
-
+		vector<float> output_pixels(4 * pot * pot);// *input_mat.rows* input_mat.cols);
 
 
 		gpu_compute(
@@ -427,6 +426,10 @@ int main(int argc, char** argv)
 			input_mat,
 			input_light_mat_with_dynamic_lights,
 			input_light_blocking_mat);
+
+		Mat img = cv::Mat(pot, pot, CV_32FC4, &output_pixels[0]);
+
+	//	imwrite("_img.png", img);
 
 
 
@@ -440,6 +443,7 @@ int main(int argc, char** argv)
 			uc_output.data[x + 3] = 255;
 		}
 
+		uc_output = uc_output(Range(0, pre_pot_res_y), Range(0, pre_pot_res_x));
 
 
 

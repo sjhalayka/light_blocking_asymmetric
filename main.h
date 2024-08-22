@@ -207,8 +207,6 @@ void gpu_compute(
 		input_light_mat_float,
 		input_light_blocking_mat_float);
 
-
-
 	//return largest_dim;
 }
 
