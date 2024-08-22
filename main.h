@@ -51,10 +51,13 @@ vertex_fragment_shader ortho_shader;
 void compute(
 	GLuint& compute_shader_program,
 	unsigned char* output_pixels,
-	const Mat& input_pixels,
+	Mat input_pixels,
 	const Mat& input_light_pixels,
 	const Mat& input_light_blocking_pixels)
 {
+
+
+
 	const GLint tex_w_small = input_pixels.cols;
 	const GLint tex_h_small = input_pixels.rows;
 	const GLint tex_w_full_size = input_light_pixels.cols;
@@ -116,16 +119,22 @@ void compute(
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_blocking_image"), 3);
 	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w_full_size, tex_h_full_size);
 
+
 	// Run compute shader
 	glDispatchCompute((GLuint)tex_w_small, (GLuint)tex_h_small, 1);
 
 	// Wait for compute shader to finish
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
+
+
+
 	// Copy output pixel array to CPU as texture 0
 	glActiveTexture(GL_TEXTURE0);
 	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, output_pixels);
+
+
 
 	glDeleteTextures(1, &tex_input);
 	glDeleteTextures(1, &tex_light_input);
@@ -139,72 +148,62 @@ void compute(
 void gpu_compute(
 	GLuint& compute_shader_program,
 	unsigned char* output_pixels,
-	const Mat& input_mat,
-	const Mat& input_light_mat_with_dynamic_lights,
-	const Mat& input_light_blocking_mat)
+	Mat input_mat,
+	 Mat input_light_mat_with_dynamic_lights,
+	 Mat input_light_blocking_mat)
 {
+	int pre_pot_res_x = input_mat.cols;
+	int pre_pot_res_y = input_mat.rows;
+
+	int largest_dim = pre_pot_res_x;
+
+	if (pre_pot_res_y > largest_dim)
+		largest_dim = pre_pot_res_y;
+
+	largest_dim = pow(2, ceil(log(largest_dim) / log(2)));
+
+
+
+	//cout << "l: " <<  largest_dim << endl;
+	//cout << "x: " << res_x << endl;
+	//cout << "y: " << res_y << endl;
+
+
+
+	//Mat input_square_mat(Size(largest_dim, largest_dim), CV_8UC4, Scalar(0, 0, 0, 255));
+	//input_mat.copyTo(input_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
+	//input_mat = input_square_mat.clone();
+
+	//Mat input_light_square_mat(Size(largest_dim, largest_dim), CV_8UC4, Scalar(0, 0, 0, 255));
+	//input_light_mat_with_dynamic_lights.copyTo(input_light_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
+	//input_light_mat_with_dynamic_lights = input_light_square_mat.clone();
+
+	//Mat input_light_blocking_square_mat(Size(largest_dim, largest_dim), CV_8UC4, Scalar(0, 0, 0, 255));
+	//input_light_blocking_mat.copyTo(input_light_blocking_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
+	//input_light_blocking_mat = input_light_blocking_square_mat.clone();
+
+	/*
+
+
+	imwrite("_input_mat.png", input_mat);
+	imwrite("_input_light_mat_with_dynamic_lights.png", input_light_mat_with_dynamic_lights);
+	imwrite("_input_light_blocking_mat.png", input_light_blocking_mat);
+
+	exit(0);
+	*/
+
+
 	const GLint tex_w_small = input_mat.cols;
 	const GLint tex_h_small = input_mat.rows;
 
-	const GLint tex_w_full_size = input_light_mat_with_dynamic_lights.cols;
-	const GLint tex_h_full_size = input_light_mat_with_dynamic_lights.rows;
-
-
 	Mat input_mat_float(tex_w_small, tex_h_small, CV_32FC4);
+	input_mat.convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
 
-	for (int i = 0; i < tex_w_small; i++)
-	{
-		for (int j = 0; j < tex_h_small; j++)
-		{
-			Vec4b pixelValue = input_mat.at<Vec4b>(j, i);
-			Vec4f p;
+	Mat input_light_mat_float(tex_w_small, tex_h_small, CV_32FC4);
+	input_light_mat_with_dynamic_lights.convertTo(input_light_mat_float, CV_32FC4, 1.0 / 255.0);
 
-			p[0] = pixelValue[0] / 255.0f;
-			p[1] = pixelValue[1] / 255.0f;
-			p[2] = pixelValue[2] / 255.0f;
-			p[3] = pixelValue[3] / 255.0f;
-
-			input_mat_float.at<Vec4f>(j, i) = p;
-		}
-	}
-
-
-	Mat input_light_mat_float(tex_w_full_size, tex_h_full_size, CV_32FC4);
-
-	for (int i = 0; i < tex_w_full_size; i++)
-	{
-		for (int j = 0; j < tex_h_full_size; j++)
-		{
-			Vec4b pixelValue = input_light_mat_with_dynamic_lights.at<Vec4b>(j, i);
-			Vec4f p;// = pixelValue / 255.0f;
-
-			p[0] = pixelValue[0] / 255.0f;
-			p[1] = pixelValue[1] / 255.0f;
-			p[2] = pixelValue[2] / 255.0f;
-			p[3] = pixelValue[3] / 255.0f;
-
-			input_light_mat_float.at<Vec4f>(j, i) = p;
-		}
-	}
-
-
-	Mat input_light_blocking_mat_float(tex_w_full_size, tex_h_full_size, CV_32FC4);
-
-	for (int i = 0; i < tex_w_full_size; i++)
-	{
-		for (int j = 0; j < tex_h_full_size; j++)
-		{
-			Vec4b pixelValue = input_light_blocking_mat.at<Vec4b>(j, i);
-			Vec4f p;// = pixelValue / 255.0f;
-
-			p[0] = pixelValue[0] / 255.0f;
-			p[1] = pixelValue[1] / 255.0f;
-			p[2] = pixelValue[2] / 255.0f;
-			p[3] = pixelValue[3] / 255.0f;
-
-			input_light_blocking_mat_float.at<Vec4f>(j, i) = p;
-		}
-	}
+	Mat input_light_blocking_mat_float(tex_w_small, tex_h_small, CV_32FC4);
+	input_light_blocking_mat.convertTo(input_light_blocking_mat_float, CV_32FC4, 1.0 / 255.0);
 
 	compute(
 		compute_shader_program,
@@ -212,6 +211,9 @@ void gpu_compute(
 		input_mat_float,
 		input_light_mat_float,
 		input_light_blocking_mat_float);
+
+	//exit(0);
+
 }
 
 
