@@ -47,10 +47,63 @@ vertex_fragment_shader ortho_shader;
 
 
 
+std::vector<cv::Mat> splitImage(cv::Mat& image, int M, int N)
+{
+	// All images should be the same size ...
+	int width = image.cols / M;
+	int height = image.rows / N;
+	// ... except for the Mth column and the Nth row
+	int width_last_column = width + (image.cols % width);
+	int height_last_row = height + (image.rows % height);
+
+	std::vector<cv::Mat> result;
+
+	for (int i = 0; i < N; ++i)
+	{
+		for (int j = 0; j < M; ++j)
+		{
+			// Compute the region to crop from
+			cv::Rect roi(width * j,
+				height * i,
+				(j == (M - 1)) ? width_last_column : width,
+				(i == (N - 1)) ? height_last_row : height);
+
+			result.push_back(image(roi));
+		}
+	}
+
+	return result;
+}
+
+
+cv::Mat imageCollage(std::vector<cv::Mat>& array_of_images, int M, int N)
+{
+	// All images should be the same size
+	const cv::Size images_size = array_of_images[0].size();
+	// Create a black canvas
+	cv::Mat image_collage(images_size.height * N, images_size.width * M, array_of_images[0].type(), cv::Scalar(0, 0, 0));
+
+	for (int i = 0; i < N; ++i)
+	{
+		for (int j = 0; j < M; ++j)
+		{
+			if (((i * M) + j) >= array_of_images.size())
+				break;
+
+			cv::Rect roi(images_size.width * j, images_size.height * i, images_size.width, images_size.height);
+			array_of_images[(i * M) + j].copyTo(image_collage(roi));
+		}
+	}
+
+	return image_collage;
+}
+
+
+
 
 void compute(
 	GLuint& compute_shader_program,
-	vector<float> &output_pixels,
+	vector<float>& output_pixels,
 	Mat input_pixels,
 	const Mat& input_light_pixels,
 	const Mat& input_light_blocking_pixels)
@@ -146,10 +199,10 @@ void compute(
 
 void gpu_compute(
 	GLuint& compute_shader_program,
-	vector<float> &output_pixels,
+	vector<float>& output_pixels,
 	Mat input_mat,
-	 Mat input_light_mat_with_dynamic_lights,
-	 Mat input_light_blocking_mat)
+	Mat input_light_mat_with_dynamic_lights,
+	Mat input_light_blocking_mat)
 {
 	int pre_pot_res_x = input_mat.cols;
 	int pre_pot_res_y = input_mat.rows;
@@ -182,12 +235,56 @@ void gpu_compute(
 	Mat input_light_blocking_mat_float(pot, pot, CV_32FC4);
 	input_light_blocking_mat.convertTo(input_light_blocking_mat_float, CV_32FC4, 1.0 / 255.0);
 
-	compute(
+
+	
+		int num_tiles_per_dimension = 1;
+
+		std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat_float, num_tiles_per_dimension, num_tiles_per_dimension);
+		std::vector<cv::Mat> array_of_output_mats;
+
+		for (size_t i = 0; i < array_of_input_mats.size(); i++)
+		{
+			//string s = "_input_" + to_string(i) + ".png";
+			//imwrite(s.c_str(), array_of_input_mats[i]);
+
+
+			//Mat output_pixels(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_32FC4);
+
+
+			compute(
 		compute_shader_program,
 		output_pixels,
-		input_mat_float,
+				array_of_input_mats[i],
 		input_light_mat_float,
 		input_light_blocking_mat_float);
+
+			Mat uc_output_small(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_8UC4);
+
+			for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
+			{
+				uc_output_small.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
+				uc_output_small.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
+				uc_output_small.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
+				uc_output_small.data[x + 3] = 255;
+			}
+
+			array_of_output_mats.push_back(uc_output_small);
+
+			// These images show that something's not working right where num_tiles_per_dimension is >= 2
+			// there are duplicate output images
+			//s = "_output_" + to_string(i) + ".png";
+			//imwrite(s.c_str(), array_of_output_mats[i]);
+		}
+		
+
+
+
+	//compute(
+	//	compute_shader_program,
+	//	output_pixels,
+	//	input_mat_float,
+	//	input_light_mat_float,
+	//	input_light_blocking_mat_float);
 }
 
 
@@ -295,7 +392,7 @@ bool init_opengl_4_3(int argc, char** argv)
 }
 
 bool init_gl(int argc, char** argv,
-//	GLint tex_w, GLint tex_h,
+	//	GLint tex_w, GLint tex_h,
 	GLuint& compute_shader_program)
 {
 	// Initialize OpenGL
@@ -522,59 +619,6 @@ void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV) 
 }
 
 
-
-
-
-std::vector<cv::Mat> splitImage(cv::Mat& image, int M, int N)
-{
-	// All images should be the same size ...
-	int width = image.cols / M;
-	int height = image.rows / N;
-	// ... except for the Mth column and the Nth row
-	int width_last_column = width + (image.cols % width);
-	int height_last_row = height + (image.rows % height);
-
-	std::vector<cv::Mat> result;
-
-	for (int i = 0; i < N; ++i)
-	{
-		for (int j = 0; j < M; ++j)
-		{
-			// Compute the region to crop from
-			cv::Rect roi(width * j,
-				height * i,
-				(j == (M - 1)) ? width_last_column : width,
-				(i == (N - 1)) ? height_last_row : height);
-
-			result.push_back(image(roi));
-		}
-	}
-
-	return result;
-}
-
-
-cv::Mat imageCollage(std::vector<cv::Mat>& array_of_images, int M, int N)
-{
-	// All images should be the same size
-	const cv::Size images_size = array_of_images[0].size();
-	// Create a black canvas
-	cv::Mat image_collage(images_size.height * N, images_size.width * M, array_of_images[0].type(), cv::Scalar(0, 0, 0));
-
-	for (int i = 0; i < N; ++i)
-	{
-		for (int j = 0; j < M; ++j)
-		{
-			if (((i * M) + j) >= array_of_images.size())
-				break;
-
-			cv::Rect roi(images_size.width * j, images_size.height * i, images_size.width, images_size.height);
-			array_of_images[(i * M) + j].copyTo(image_collage(roi));
-		}
-	}
-
-	return image_collage;
-}
 
 
 

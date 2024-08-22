@@ -366,47 +366,7 @@ int main(int argc, char** argv)
 
 
 
-/*
-		int num_tiles_per_dimension = 1;
 
-		std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
-		std::vector<cv::Mat> array_of_output_mats;
-
-		for (size_t i = 0; i < array_of_input_mats.size(); i++)
-		{
-			//string s = "_input_" + to_string(i) + ".png";
-			//imwrite(s.c_str(), array_of_input_mats[i]);
-
-			vector<float> output_pixels(4 * array_of_input_mats[i].rows * array_of_input_mats[i].cols);
-
-			//Mat output_pixels(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_32FC4);
-
-
-			gpu_compute(
-				compute_shader_program,
-				reinterpret_cast<unsigned char*>(output_pixels.data()),
-				array_of_input_mats[i],
-				input_light_mat_with_dynamic_lights,
-				input_light_blocking_mat);
-
-			Mat uc_output_small(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_8UC4);
-
-			for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
-			{
-				uc_output_small.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
-				uc_output_small.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
-				uc_output_small.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
-				uc_output_small.data[x + 3] = 255;
-			}
-
-			array_of_output_mats.push_back(uc_output_small);
-
-			// These images show that something's not working right where num_tiles_per_dimension is >= 2
-			// there are duplicate output images
-			//s = "_output_" + to_string(i) + ".png";
-			//imwrite(s.c_str(), array_of_output_mats[i]);
-		}
-		*/
 		int pre_pot_res_x = input_mat.cols;
 		int pre_pot_res_y = input_mat.rows;
 
@@ -442,7 +402,7 @@ int main(int argc, char** argv)
 
 
 
-	//	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
+		//	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
 
 		uc_output = anti_alias_mat(uc_output);
 
