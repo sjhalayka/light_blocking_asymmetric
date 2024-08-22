@@ -50,18 +50,15 @@ vertex_fragment_shader ortho_shader;
 
 void compute(
 	GLuint& compute_shader_program,
-	unsigned char* output_pixels,
+	vector<float> &output_pixels,
 	Mat input_pixels,
 	const Mat& input_light_pixels,
 	const Mat& input_light_blocking_pixels)
 {
-
-
+	output_pixels.resize(4 * input_pixels.cols * input_pixels.rows);
 
 	const GLint tex_w_small = input_pixels.cols;
 	const GLint tex_h_small = input_pixels.rows;
-	const GLint tex_w_full_size = input_light_pixels.cols;
-	const GLint tex_h_full_size = input_light_pixels.rows;
 
 	glEnable(GL_TEXTURE_2D);
 
@@ -86,7 +83,7 @@ void compute(
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_full_size, tex_h_full_size, 0, GL_RGBA, GL_FLOAT, input_light_pixels.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, input_light_pixels.data);
 	glBindImageTexture(2, tex_light_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	glGenTextures(1, &tex_light_blocking_input);
@@ -96,7 +93,7 @@ void compute(
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_full_size, tex_h_full_size, 0, GL_RGBA, GL_FLOAT, input_light_blocking_pixels.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, input_light_blocking_pixels.data);
 	glBindImageTexture(3, tex_light_blocking_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	GLuint tex_output = 0;
@@ -117,7 +114,9 @@ void compute(
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_image"), 1);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_image"), 2);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_blocking_image"), 3);
-	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w_full_size, tex_h_full_size);
+	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w_small, tex_h_small);
+
+
 
 
 	// Run compute shader
@@ -132,7 +131,7 @@ void compute(
 	// Copy output pixel array to CPU as texture 0
 	glActiveTexture(GL_TEXTURE0);
 	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, output_pixels);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, output_pixels.data());
 
 
 
@@ -147,7 +146,7 @@ void compute(
 
 void gpu_compute(
 	GLuint& compute_shader_program,
-	unsigned char* output_pixels,
+	vector<float> &output_pixels,
 	Mat input_mat,
 	 Mat input_light_mat_with_dynamic_lights,
 	 Mat input_light_blocking_mat)
@@ -155,12 +154,12 @@ void gpu_compute(
 	int pre_pot_res_x = input_mat.cols;
 	int pre_pot_res_y = input_mat.rows;
 
-	int largest_dim = pre_pot_res_x;
+	int pot = pre_pot_res_x;
 
-	if (pre_pot_res_y > largest_dim)
-		largest_dim = pre_pot_res_y;
+	if (pre_pot_res_y > pot)
+		pot = pre_pot_res_y;
 
-	largest_dim = pow(2, ceil(log(largest_dim) / log(2)));
+	pot = pow(2, ceil(log(pot) / log(2)));
 
 
 
@@ -170,39 +169,35 @@ void gpu_compute(
 
 
 
-	//Mat input_square_mat(Size(largest_dim, largest_dim), CV_8UC4, Scalar(0, 0, 0, 255));
-	//input_mat.copyTo(input_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
-	//input_mat = input_square_mat.clone();
+	Mat input_square_mat(Size(pot, pot), CV_8UC4, Scalar(0, 0, 0, 255));
+	input_mat.copyTo(input_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
+	input_mat = input_square_mat.clone();
 
-	//Mat input_light_square_mat(Size(largest_dim, largest_dim), CV_8UC4, Scalar(0, 0, 0, 255));
-	//input_light_mat_with_dynamic_lights.copyTo(input_light_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
-	//input_light_mat_with_dynamic_lights = input_light_square_mat.clone();
+	Mat input_light_square_mat(Size(pot, pot), CV_8UC4, Scalar(0, 0, 0, 255));
+	input_light_mat_with_dynamic_lights.copyTo(input_light_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
+	input_light_mat_with_dynamic_lights = input_light_square_mat.clone();
 
-	//Mat input_light_blocking_square_mat(Size(largest_dim, largest_dim), CV_8UC4, Scalar(0, 0, 0, 255));
-	//input_light_blocking_mat.copyTo(input_light_blocking_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
-	//input_light_blocking_mat = input_light_blocking_square_mat.clone();
+	Mat input_light_blocking_square_mat(Size(pot, pot), CV_8UC4, Scalar(0, 0, 0, 255));
+	input_light_blocking_mat.copyTo(input_light_blocking_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
+	input_light_blocking_mat = input_light_blocking_square_mat.clone();
 
-	/*
-
-
-	imwrite("_input_mat.png", input_mat);
-	imwrite("_input_light_mat_with_dynamic_lights.png", input_light_mat_with_dynamic_lights);
-	imwrite("_input_light_blocking_mat.png", input_light_blocking_mat);
-
-	exit(0);
-	*/
+	
 
 
-	const GLint tex_w_small = input_mat.cols;
-	const GLint tex_h_small = input_mat.rows;
+	//imwrite("_input_mat.png", input_mat);
+	//imwrite("_input_light_mat_with_dynamic_lights.png", input_light_mat_with_dynamic_lights);
+	//imwrite("_input_light_blocking_mat.png", input_light_blocking_mat);
 
-	Mat input_mat_float(tex_w_small, tex_h_small, CV_32FC4);
+	//exit(0);
+	
+
+	Mat input_mat_float(pot, pot, CV_32FC4);
 	input_mat.convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
 
-	Mat input_light_mat_float(tex_w_small, tex_h_small, CV_32FC4);
+	Mat input_light_mat_float(pot, pot, CV_32FC4);
 	input_light_mat_with_dynamic_lights.convertTo(input_light_mat_float, CV_32FC4, 1.0 / 255.0);
 
-	Mat input_light_blocking_mat_float(tex_w_small, tex_h_small, CV_32FC4);
+	Mat input_light_blocking_mat_float(pot, pot, CV_32FC4);
 	input_light_blocking_mat.convertTo(input_light_blocking_mat_float, CV_32FC4, 1.0 / 255.0);
 
 	compute(
@@ -212,8 +207,9 @@ void gpu_compute(
 		input_light_mat_float,
 		input_light_blocking_mat_float);
 
-	//exit(0);
 
+
+	//return largest_dim;
 }
 
 
@@ -321,7 +317,7 @@ bool init_opengl_4_3(int argc, char** argv)
 }
 
 bool init_gl(int argc, char** argv,
-	GLint tex_w, GLint tex_h,
+//	GLint tex_w, GLint tex_h,
 	GLuint& compute_shader_program)
 {
 	// Initialize OpenGL
@@ -377,26 +373,26 @@ bool init_gl(int argc, char** argv,
 	}
 
 
-	cout << "Texture size: " << tex_w << "x" << tex_h << endl;
+	//cout << "Texture size: " << tex_w << "x" << tex_h << endl;
 
-	// Check that the global workgrounp count is greater than or equal to the input/output textures
-	GLint global_workgroup_count[2];
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &global_workgroup_count[0]);
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &global_workgroup_count[1]);
+	//// Check that the global workgrounp count is greater than or equal to the input/output textures
+	//GLint global_workgroup_count[2];
+	//glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &global_workgroup_count[0]);
+	//glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &global_workgroup_count[1]);
 
-	cout << "Max global workgroup size: " << global_workgroup_count[0] << "x" << global_workgroup_count[1] << endl;
+	//cout << "Max global workgroup size: " << global_workgroup_count[0] << "x" << global_workgroup_count[1] << endl;
 
-	if (tex_w > global_workgroup_count[0])
-	{
-		cout << "Texture width " << tex_w << " is larger than max " << global_workgroup_count[0] << endl;
-		return false;
-	}
+	//if (tex_w > global_workgroup_count[0])
+	//{
+	//	cout << "Texture width " << tex_w << " is larger than max " << global_workgroup_count[0] << endl;
+	//	return false;
+	//}
 
-	if (tex_h > global_workgroup_count[1])
-	{
-		cout << "Texture height " << tex_h << " is larger than max " << global_workgroup_count[1] << endl;
-		return false;
-	}
+	//if (tex_h > global_workgroup_count[1])
+	//{
+	//	cout << "Texture height " << tex_h << " is larger than max " << global_workgroup_count[1] << endl;
+	//	return false;
+	//}
 
 
 

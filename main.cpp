@@ -162,7 +162,7 @@ int main(int argc, char** argv)
 
 	if (false == init_gl(
 		argc, argv,
-		largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
+		//largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 		compute_shader_program))
 	{
 		cout << "Aborting" << endl;
@@ -407,18 +407,30 @@ int main(int argc, char** argv)
 			//imwrite(s.c_str(), array_of_output_mats[i]);
 		}
 		*/
+		int pre_pot_res_x = input_mat.cols;
+		int pre_pot_res_y = input_mat.rows;
+
+		int pot = pre_pot_res_x;
+
+		if (pre_pot_res_y > largest_dim)
+			pot = pre_pot_res_y;
+
+		pot = pow(2, ceil(log(pot) / log(2)));
+
+		vector<float> output_pixels;// (4 * pot * pot);// *input_mat.rows* input_mat.cols);
 
 
-		vector<float> output_pixels(4 * input_mat.rows * input_mat.cols);
 
 		gpu_compute(
 			compute_shader_program,
-			reinterpret_cast<unsigned char*>(output_pixels.data()),
+			output_pixels,
 			input_mat,
 			input_light_mat_with_dynamic_lights,
 			input_light_blocking_mat);
 
-		Mat uc_output(input_mat.rows, input_mat.cols, CV_8UC4);
+
+
+		Mat uc_output(pot, pot, CV_8UC4);
 
 		for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
 		{
