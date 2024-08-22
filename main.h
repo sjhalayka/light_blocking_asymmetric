@@ -104,14 +104,17 @@ cv::Mat imageCollage(std::vector<cv::Mat>& array_of_images, int M, int N)
 void compute(
 	GLuint& compute_shader_program,
 	vector<float>& output_pixels,
-	Mat input_pixels,
+	const Mat& input_pixels,
 	const Mat& input_light_pixels,
 	const Mat& input_light_blocking_pixels)
 {
-//	output_pixels.resize(4 * input_pixels.cols * input_pixels.rows);
-
 	const GLint tex_w_small = input_pixels.cols;
 	const GLint tex_h_small = input_pixels.rows;
+
+	const GLint tex_w_large = input_light_pixels.cols;
+	const GLint tex_h_large = input_light_pixels.rows;
+
+	output_pixels.resize(4 * tex_w_small * tex_h_small);
 
 	glEnable(GL_TEXTURE_2D);
 
@@ -136,7 +139,7 @@ void compute(
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, input_light_pixels.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_large, tex_h_large, 0, GL_RGBA, GL_FLOAT, input_light_pixels.data);
 	glBindImageTexture(2, tex_light_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	glGenTextures(1, &tex_light_blocking_input);
@@ -146,7 +149,7 @@ void compute(
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, input_light_blocking_pixels.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_large, tex_h_large, 0, GL_RGBA, GL_FLOAT, input_light_blocking_pixels.data);
 	glBindImageTexture(3, tex_light_blocking_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	GLuint tex_output = 0;
@@ -158,7 +161,7 @@ void compute(
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, output_pixels.data());
 	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	// Use the compute shader
@@ -167,7 +170,7 @@ void compute(
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_image"), 1);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_image"), 2);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_blocking_image"), 3);
-	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w_small, tex_h_small);
+	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w_large, tex_h_large);
 
 
 
@@ -237,22 +240,21 @@ void gpu_compute(
 
 
 
-	int num_tiles_per_dimension = 1;
+	int num_tiles_per_dimension = 2;
 
-	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat_float, num_tiles_per_dimension, num_tiles_per_dimension);
+	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_output_mats;
 
 	for (size_t i = 0; i < array_of_input_mats.size(); i++)
 	{
-		//string s = "_input_" + to_string(i) + ".png";
-		//imwrite(s.c_str(), array_of_input_mats[i]);
+		string s = "_input_" + to_string(i) + ".png";
+		imwrite(s.c_str(), array_of_input_mats[i] * 255.0);
 
-
-		//Mat output_pixels(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_32FC4);
+		vector<float> local_output_pixels;
 
 		compute(
 			compute_shader_program,
-			output_pixels,
+			local_output_pixels,
 			array_of_input_mats[i],
 			input_light_mat_float,
 			input_light_blocking_mat_float);
@@ -261,9 +263,9 @@ void gpu_compute(
 
 		for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
 		{
-			uc_output_small.data[x + 0] = static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
-			uc_output_small.data[x + 1] = static_cast<unsigned char>(output_pixels[x + 1] * 255.0);
-			uc_output_small.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
+			uc_output_small.data[x + 0] = static_cast<unsigned char>(local_output_pixels[x + 0] * 255.0);
+			uc_output_small.data[x + 1] = static_cast<unsigned char>(local_output_pixels[x + 1] * 255.0);
+			uc_output_small.data[x + 2] = static_cast<unsigned char>(local_output_pixels[x + 2] * 255.0);
 			uc_output_small.data[x + 3] = 255;
 		}
 
@@ -282,17 +284,8 @@ void gpu_compute(
 		output_pixels[x + 0] = uc_output.data[x + 0] / 255.0f;// static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
 		output_pixels[x + 1] = uc_output.data[x + 1] / 255.0f;
 		output_pixels[x + 2] = uc_output.data[x + 2] / 255.0f;
-		output_pixels[x + 3] = 255;
+		output_pixels[x + 3] = 1.0f;
 	}
-
-
-
-	//compute(
-	//	compute_shader_program,
-	//	output_pixels,
-	//	input_mat_float,
-	//	input_light_mat_float,
-	//	input_light_blocking_mat_float);
 }
 
 
