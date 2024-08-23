@@ -402,7 +402,7 @@ int main(int argc, char** argv)
 
 
 
-		
+
 
 		uc_output = anti_alias_mat(uc_output);
 
