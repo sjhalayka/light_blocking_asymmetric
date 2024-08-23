@@ -110,7 +110,6 @@ void compute(
 {
 	const GLint tex_w_small = input_pixels.cols;
 	const GLint tex_h_small = input_pixels.rows;
-
 	const GLint tex_w_large = input_light_pixels.cols;
 	const GLint tex_h_large = input_light_pixels.rows;
 
@@ -190,7 +189,6 @@ void compute(
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, output_pixels.data());
 
 
-
 	glDeleteTextures(1, &tex_input);
 	glDeleteTextures(1, &tex_light_input);
 	glDeleteTextures(1, &tex_light_blocking_input);
@@ -247,13 +245,14 @@ void gpu_compute(
 
 	for (size_t i = 0; i < array_of_input_mats.size(); i++)
 	{
-		string s = "_input_" + to_string(i) + ".png";
-		imwrite(s.c_str(), array_of_input_mats[i]);
-
 		vector<float> local_output_pixels;
 
 		Mat input_mat_float(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_32FC4);
 		array_of_input_mats[i].convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
+
+		string s = "_input_" + to_string(i) + ".png";
+		imwrite(s.c_str(), input_mat_float*255.0);
+
 
 		compute(
 			compute_shader_program,
@@ -284,7 +283,7 @@ void gpu_compute(
 
 	for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
 	{
-		output_pixels[x + 0] = uc_output.data[x + 0] / 255.0f;// static_cast<unsigned char>(output_pixels[x + 0] * 255.0);
+		output_pixels[x + 0] = uc_output.data[x + 0] / 255.0f;
 		output_pixels[x + 1] = uc_output.data[x + 1] / 255.0f;
 		output_pixels[x + 2] = uc_output.data[x + 2] / 255.0f;
 		output_pixels[x + 3] = 1.0f;
