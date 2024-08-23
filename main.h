@@ -240,7 +240,7 @@ void gpu_compute(
 
 
 
-	int num_tiles_per_dimension = 2;
+	int num_tiles_per_dimension = 1;
 
 	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_output_mats;
@@ -250,10 +250,10 @@ void gpu_compute(
 		string s = "_input_" + to_string(i) + ".png";
 		imwrite(s.c_str(), array_of_input_mats[i]);
 
+		vector<float> local_output_pixels;
+
 		Mat input_mat_float(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_32FC4);
 		array_of_input_mats[i].convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
-
-		vector<float> local_output_pixels;
 
 		compute(
 			compute_shader_program,
