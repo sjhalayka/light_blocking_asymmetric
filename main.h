@@ -248,14 +248,17 @@ void gpu_compute(
 	for (size_t i = 0; i < array_of_input_mats.size(); i++)
 	{
 		string s = "_input_" + to_string(i) + ".png";
-		imwrite(s.c_str(), array_of_input_mats[i]);
+		imwrite(s.c_str(), array_of_input_mats[i] * 255.0f);
+
+		Mat input_mat_float(pot, pot, CV_32FC4);
+		array_of_input_mats[i].convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
 
 		vector<float> local_output_pixels;
 
 		compute(
 			compute_shader_program,
 			local_output_pixels,
-			array_of_input_mats[i],
+			input_mat_float,
 			input_light_mat_float,
 			input_light_blocking_mat_float);
 
