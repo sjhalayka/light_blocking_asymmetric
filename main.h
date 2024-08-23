@@ -240,9 +240,9 @@ void gpu_compute(
 
 
 
-	int num_tiles_per_dimension = 1;
+	int num_tiles_per_dimension = 2;
 
-	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat_float, num_tiles_per_dimension, num_tiles_per_dimension);
+	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_output_mats;
 
 	for (size_t i = 0; i < array_of_input_mats.size(); i++)
