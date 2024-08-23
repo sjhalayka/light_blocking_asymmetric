@@ -377,7 +377,7 @@ int main(int argc, char** argv)
 
 		pot = pow(2, ceil(log(pot) / log(2)));
 
-		vector<float> output_pixels(4 * pot * pot);// *input_mat.rows* input_mat.cols);
+		vector<float> output_pixels(4 * pot * pot);
 
 		gpu_compute(
 			compute_shader_program,
@@ -395,6 +395,8 @@ int main(int argc, char** argv)
 			uc_output.data[x + 2] = static_cast<unsigned char>(output_pixels[x + 2] * 255.0);
 			uc_output.data[x + 3] = 255;
 		}
+
+		imwrite("_big.png", uc_output);
 
 		uc_output = uc_output(Range(0, pre_pot_res_y), Range(0, pre_pot_res_x));
 
