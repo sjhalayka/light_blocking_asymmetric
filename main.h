@@ -24,7 +24,6 @@ using namespace cv;
 #include <SDL.h>
 #include <SDL_opengl.h>
 
-#include <OpenImageDenoise/oidn.hpp>
 
 
 #ifdef _MSC_VER
@@ -34,7 +33,6 @@ using namespace cv;
 #pragma comment(lib, "SDL2main")
 #pragma comment(lib, "SDL2")
 #pragma comment(lib, "OpenGL32")
-#pragma comment(lib, "OpenImageDenoise")
 #endif
 
 
