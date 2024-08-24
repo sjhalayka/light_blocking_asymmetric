@@ -99,8 +99,8 @@ cv::Mat imageCollage(std::vector<cv::Mat>& array_of_images, int M, int N)
 
 
 
-void compute(
-	size_t i,
+void compute_chunk(
+	size_t chunk_index,
 	GLuint& compute_shader_program,
 	vector<float>& output_pixels,
 	const Mat& input_pixels,
@@ -112,9 +112,12 @@ void compute(
 	const GLint tex_w_large = input_light_pixels.cols;
 	const GLint tex_h_large = input_light_pixels.rows;
 
+	// These images go to show that the input at this point is valid
+	string s = "_input_" + to_string(chunk_index) + ".png";
+	imwrite(s.c_str(), input_pixels * 255.0);
 
-	//string s = "_input_" + to_string(i) + ".png";
-	//imwrite(s.c_str(), input_pixels * 255.0);
+
+
 
 
 	output_pixels.resize(4 * tex_w_small * tex_h_small);
@@ -169,14 +172,11 @@ void compute(
 
 	// Use the compute shader
 	glUseProgram(compute_shader_program);
-
+	glUniform1i(glGetUniformLocation(compute_shader_program, "output_image"), 0);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_image"), 1);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_image"), 2);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_blocking_image"), 3);
 	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w_large, tex_h_large);
-
-
-
 
 	// Run compute shader
 	glDispatchCompute((GLuint)tex_w_small, (GLuint)tex_h_small, 1);
@@ -199,21 +199,23 @@ void compute(
 	glDeleteTextures(1, &tex_output);
 
 
-	// The output pixels are the same, no matter what the input
-	//Mat uc_output_small(tex_w_small, tex_h_small, CV_8UC4);
+	
+	
+	// These images show that something's not working right where num_tiles_per_dimension is >= 2
+	// there are duplicate output images
 
-	//for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
-	//{
-	//	uc_output_small.data[x + 0] = (output_pixels[x + 0] * 255.0f);
-	//	uc_output_small.data[x + 1] = (output_pixels[x + 1] * 255.0f);
-	//	uc_output_small.data[x + 2] = (output_pixels[x + 2] * 255.0f);
-	//	uc_output_small.data[x + 3] = 255.0f;
-	//}
+	Mat uc_output_small(tex_w_small, tex_h_small, CV_8UC4);
 
-	//// These images show that something's not working right where num_tiles_per_dimension is >= 2
-	//// there are duplicate output images
-	//s = "_output_" + to_string(i) + ".png";
-	//imwrite(s.c_str(), uc_output_small);
+	for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
+	{
+		uc_output_small.data[x + 0] = (output_pixels[x + 0] * 255.0f);
+		uc_output_small.data[x + 1] = (output_pixels[x + 1] * 255.0f);
+		uc_output_small.data[x + 2] = (output_pixels[x + 2] * 255.0f);
+		uc_output_small.data[x + 3] = 255.0f;
+	}
+	 
+	s = "_output_" + to_string(chunk_index) + ".png";
+	imwrite(s.c_str(), uc_output_small);
 
 
 
@@ -275,10 +277,7 @@ void gpu_compute(
 		Mat input_mat_float(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_32FC4);
 		array_of_input_mats[i].convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
 
-		//string s = "_input_" + to_string(i) + ".png";
-		//imwrite(s.c_str(), input_mat_float*255.0);
-
-		compute(
+		compute_chunk(
 			i,
 			compute_shader_program,
 			local_output_pixels,
@@ -297,11 +296,6 @@ void gpu_compute(
 		}
 
 		array_of_output_mats.push_back(uc_output_small);
-
-		// These images show that something's not working right where num_tiles_per_dimension is >= 2
-		// there are duplicate output images
-		//string s = "_output_" + to_string(i) + ".png";
-		//imwrite(s.c_str(), array_of_output_mats[i]);
 	}
 
 	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);

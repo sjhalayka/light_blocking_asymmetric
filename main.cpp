@@ -197,11 +197,6 @@ int main(int argc, char** argv)
 
 
 
-	//	imwrite("input_mat.png", input_mat);
-
-
-
-
 
 
 
@@ -287,10 +282,6 @@ int main(int argc, char** argv)
 		input_light_mat.at<Vec4b>(loop_centres[i].y / lighting_tile_size, loop_centres[i].x / lighting_tile_size) = Vec4b(loop_colours[i].r * 255.0f, loop_colours[i].g * 255.0f, loop_colours[i].b * 255.0f, 255.0f);
 
 
-
-
-
-	//	imwrite("input_light_mat.png", input_light_mat);
 
 
 
@@ -396,7 +387,7 @@ int main(int argc, char** argv)
 			uc_output.data[x + 3] = 255;
 		}
 
-		//imwrite("_big.png", uc_output);
+		imwrite("_big.png", uc_output);
 
 		// Crop
 		uc_output = uc_output(Range(0, pre_pot_res_y), Range(0, pre_pot_res_x));
@@ -465,7 +456,6 @@ int main(int argc, char** argv)
 		std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
 
 		cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds" << endl;
-		//imwrite("out.png", uc_output);
 	}
 
 	// Clean up all memory
