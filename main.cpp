@@ -396,8 +396,9 @@ int main(int argc, char** argv)
 			uc_output.data[x + 3] = 255;
 		}
 
-		imwrite("_big.png", uc_output);
+		//imwrite("_big.png", uc_output);
 
+		// Crop
 		uc_output = uc_output(Range(0, pre_pot_res_y), Range(0, pre_pot_res_x));
 
 

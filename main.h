@@ -100,6 +100,7 @@ cv::Mat imageCollage(std::vector<cv::Mat>& array_of_images, int M, int N)
 
 
 void compute(
+	size_t i,
 	GLuint& compute_shader_program,
 	vector<float>& output_pixels,
 	const Mat& input_pixels,
@@ -110,6 +111,11 @@ void compute(
 	const GLint tex_h_small = input_pixels.rows;
 	const GLint tex_w_large = input_light_pixels.cols;
 	const GLint tex_h_large = input_light_pixels.rows;
+
+
+	//string s = "_input_" + to_string(i) + ".png";
+	//imwrite(s.c_str(), input_pixels * 255.0);
+
 
 	output_pixels.resize(4 * tex_w_small * tex_h_small);
 
@@ -158,7 +164,7 @@ void compute(
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, output_pixels.data());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, NULL);
 	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	// Use the compute shader
@@ -191,6 +197,27 @@ void compute(
 	glDeleteTextures(1, &tex_light_input);
 	glDeleteTextures(1, &tex_light_blocking_input);
 	glDeleteTextures(1, &tex_output);
+
+
+	// The output pixels are the same, no matter what the input
+	//Mat uc_output_small(tex_w_small, tex_h_small, CV_8UC4);
+
+	//for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
+	//{
+	//	uc_output_small.data[x + 0] = (output_pixels[x + 0] * 255.0f);
+	//	uc_output_small.data[x + 1] = (output_pixels[x + 1] * 255.0f);
+	//	uc_output_small.data[x + 2] = (output_pixels[x + 2] * 255.0f);
+	//	uc_output_small.data[x + 3] = 255.0f;
+	//}
+
+	//// These images show that something's not working right where num_tiles_per_dimension is >= 2
+	//// there are duplicate output images
+	//s = "_output_" + to_string(i) + ".png";
+	//imwrite(s.c_str(), uc_output_small);
+
+
+
+
 }
 
 
@@ -236,7 +263,7 @@ void gpu_compute(
 
 
 
-	int num_tiles_per_dimension = 1;
+	int num_tiles_per_dimension = 2;
 
 	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_output_mats;
@@ -248,11 +275,11 @@ void gpu_compute(
 		Mat input_mat_float(array_of_input_mats[i].rows, array_of_input_mats[i].cols, CV_32FC4);
 		array_of_input_mats[i].convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
 
-		string s = "_input_" + to_string(i) + ".png";
-		imwrite(s.c_str(), input_mat_float*255.0);
-
+		//string s = "_input_" + to_string(i) + ".png";
+		//imwrite(s.c_str(), input_mat_float*255.0);
 
 		compute(
+			i,
 			compute_shader_program,
 			local_output_pixels,
 			input_mat_float,
@@ -273,8 +300,8 @@ void gpu_compute(
 
 		// These images show that something's not working right where num_tiles_per_dimension is >= 2
 		// there are duplicate output images
-		s = "_output_" + to_string(i) + ".png";
-		imwrite(s.c_str(), array_of_output_mats[i]);
+		//string s = "_output_" + to_string(i) + ".png";
+		//imwrite(s.c_str(), array_of_output_mats[i]);
 	}
 
 	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
