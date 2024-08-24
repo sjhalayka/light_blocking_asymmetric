@@ -201,8 +201,8 @@ void compute_chunk(
 
 	
 	
-	// These images show that something's not working right where num_tiles_per_dimension is >= 2
-	// there are duplicate output images
+	// These images show that something's not working right where num_tiles_per_dimension is >= 2...
+	// there are duplicate output images, like the input is not being updated properly
 
 	Mat uc_output_small(tex_w_small, tex_h_small, CV_8UC4);
 
