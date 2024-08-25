@@ -22,8 +22,8 @@ GLEW:
 - The .dll files are in C:\temp\glew-2.1.0\bin\Release\x64
 
 SDL:
-- Download 
-- Extract to 
-- The .h files are in 
-- The .lib files are in 
-- The .dll files are in 
+- Download https://github.com/libsdl-org/SDL/releases/download/release-2.30.6/SDL2-devel-2.30.6-VC.zip
+- Extract to C:\temp\SDL2-2.30.6
+- The .h files are in C:\temp\SDL2-2.30.6\include
+- The .lib files are in C:\temp\SDL2-2.30.6\lib\x64
+- The .dll files are in C:\temp\SDL2-2.30.6\lib\x64
