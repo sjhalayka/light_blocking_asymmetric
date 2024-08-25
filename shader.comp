@@ -2,10 +2,12 @@
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout(binding = 0, rgba32f) writeonly uniform image2D output_image;
-layout(binding = 1, rgba32f) readonly uniform image2D input_image;
-layout(binding = 2, rgba32f) readonly uniform image2D input_light_image;
-layout(binding = 3, rgba32f) readonly uniform image2D input_light_blocking_image;
+layout(binding = 0, rgba32f) writeonly uniform image2D output_image; // small tex
+layout(binding = 1, rgba32f) readonly uniform image2D input_image; // small tex
+layout(binding = 2, rgba32f) readonly uniform image2D input_light_image; // large tex
+layout(binding = 3, rgba32f) readonly uniform image2D input_light_blocking_image; // large tex
+layout(binding = 4, rgba32f) readonly uniform image2D input_coordinates_image; // small tex
+
 
 uniform ivec2 u_size;
 uniform ivec2 u_size_small;
@@ -16,7 +18,8 @@ uniform ivec2 u_chunk_index;
 
 void main()
 {
-	const ivec2 per_compute_pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+	ivec2 per_compute_pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+	//per_compute_pixel_coords -= u_size_small * u_chunk_index;
 
 	vec4 image_sample = imageLoad(input_image, per_compute_pixel_coords);
 
@@ -26,7 +29,8 @@ void main()
 		imageStore(output_image, per_compute_pixel_coords, vec4(0, 0, 0, 1));
 		return;
 	}
-
+	
+	//per_compute_pixel_coords += u_size_small * u_chunk_index; 
 
 	vec3 lighting = vec3(0, 0, 0);
 
@@ -35,9 +39,6 @@ void main()
 		for(int j = 0; j < u_size.y; j++)
 		{
 			ivec2 per_image_pixel_coords = ivec2(i, j);
-
-			//per_image_pixel_coords += u_size_small * u_chunk_index;
-
 
 			vec4 light_image_sample = imageLoad(input_light_image, per_image_pixel_coords);
 
@@ -78,7 +79,7 @@ void main()
 			for(int s = 0; s < num_steps; s++)
 			{
 				curr_uv = mix(start, end, float(s)/float(num_steps - 1));
-				
+
 				curr_uv_i.x = int(curr_uv.x);
 				curr_uv_i.y = int(curr_uv.y);
 

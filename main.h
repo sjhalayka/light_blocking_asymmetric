@@ -106,7 +106,8 @@ void compute_chunk(
 	vector<float>& output_pixels,
 	const Mat& input_pixels,
 	const Mat& input_light_pixels,
-	const Mat& input_light_blocking_pixels)
+	const Mat& input_light_blocking_pixels,
+	const Mat& input_coordinates_pixels)
 {
 	const GLint tex_w_small = input_pixels.cols;
 	const GLint tex_h_small = input_pixels.rows;
@@ -128,6 +129,7 @@ void compute_chunk(
 	GLuint tex_input = 0;
 	GLuint tex_light_input = 0;
 	GLuint tex_light_blocking_input = 0;
+	GLuint tex_coordinates_input = 0;
 
 	glGenTextures(1, &tex_input);
 	glActiveTexture(GL_TEXTURE1);
@@ -159,6 +161,18 @@ void compute_chunk(
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_large, tex_h_large, 0, GL_RGBA, GL_FLOAT, input_light_blocking_pixels.data);
 	glBindImageTexture(3, tex_light_blocking_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
+	glGenTextures(1, &tex_coordinates_input);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, tex_coordinates_input);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, input_coordinates_pixels.data);
+	glBindImageTexture(4, tex_coordinates_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
+
+
 	GLuint tex_output = 0;
 
 	glGenTextures(1, &tex_output);
@@ -182,7 +196,6 @@ void compute_chunk(
 	glUniform2i(glGetUniformLocation(compute_shader_program, "u_chunk_index"), chunk_index_x, chunk_index_y);
 
 	
-	//	glUniform2i(glGetUniformLocation(compute_shader_program, "u_small_size"), tex_w_small, tex_h_small);
 
 	// Run compute shader
 	glDispatchCompute((GLuint)tex_w_small / 16, (GLuint)tex_h_small / 16, 1);
@@ -272,7 +285,23 @@ void gpu_compute(
 
 
 
+
+
 	const int num_tiles_per_dimension = 2;
+
+
+	Mat input_coordinates_mat_float(pot, pot, CV_32FC4);
+
+	for (size_t i = 0; i < pot; i++)
+		for (size_t j = 0; j < pot; j++)
+			input_coordinates_mat_float.at<Vec4f>(j, i) = Vec4f(i, j, 0, 1);
+
+	std::vector<cv::Mat> array_of_input_coordinate_mats = splitImage(input_coordinates_mat_float, num_tiles_per_dimension, num_tiles_per_dimension);
+
+
+
+
+
 
 	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_output_mats;
@@ -295,7 +324,8 @@ void gpu_compute(
 				local_output_pixels,
 				input_mat_float,
 				input_light_mat_float,
-				input_light_blocking_mat_float);
+				input_light_blocking_mat_float,
+				input_coordinates_mat_float);
 
 			Mat uc_output_small(array_of_input_mats[index].rows, array_of_input_mats[index].cols, CV_8UC4);
 
