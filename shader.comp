@@ -34,10 +34,9 @@ void main()
 	{
 		for(int j = 0; j < u_size.y; j++)
 		{
-			ivec2 per_image_pixel_coords;
-			per_image_pixel_coords.x = i;// + u_size_small.x * u_chunk_index.x;
-			per_image_pixel_coords.y = j;// + u_size_small.y * u_chunk_index.y;
+			ivec2 per_image_pixel_coords = ivec2(i, j);
 
+			//per_image_pixel_coords += u_size_small * u_chunk_index;
 
 
 			vec4 light_image_sample = imageLoad(input_light_image, per_image_pixel_coords);
