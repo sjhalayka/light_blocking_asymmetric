@@ -8,6 +8,8 @@ layout(binding = 2, rgba32f) readonly uniform image2D input_light_image;
 layout(binding = 3, rgba32f) readonly uniform image2D input_light_blocking_image;
 
 uniform ivec2 u_size;
+uniform ivec2 u_size_small;
+uniform ivec2 u_chunk_index;
 
 
 
@@ -33,8 +35,10 @@ void main()
 		for(int j = 0; j < u_size.y; j++)
 		{
 			ivec2 per_image_pixel_coords;
-			per_image_pixel_coords.x = i;
-			per_image_pixel_coords.y = j;
+			per_image_pixel_coords.x = i;// + u_size_small.x * u_chunk_index.x;
+			per_image_pixel_coords.y = j;// + u_size_small.y * u_chunk_index.y;
+
+
 
 			vec4 light_image_sample = imageLoad(input_light_image, per_image_pixel_coords);
 
