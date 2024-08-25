@@ -102,6 +102,7 @@ cv::Mat imageCollage(std::vector<cv::Mat>& array_of_images, int M, int N)
 void compute_chunk(
 	const int chunk_index_x,
 	const int chunk_index_y,
+	const int num_tiles_per_dimension,
 	const GLuint& compute_shader_program,
 	vector<float>& output_pixels,
 	const Mat& input_pixels,
@@ -118,7 +119,10 @@ void compute_chunk(
 	//string s = "_input_" + to_string(chunk_index) + ".png";
 	//imwrite(s.c_str(), input_pixels * 255.0f);
 
+	size_t chunk_index = chunk_index_x * num_tiles_per_dimension + chunk_index_y;
 
+	//string s = "_coordinates_" + to_string(chunk_index) + ".png";
+	//imwrite(s.c_str(), input_coordinates_pixels * 255.0f);
 
 
 
@@ -216,6 +220,7 @@ void compute_chunk(
 	glDeleteTextures(1, &tex_light_input);
 	glDeleteTextures(1, &tex_light_blocking_input);
 	glDeleteTextures(1, &tex_output);
+	glDeleteTextures(1, &tex_coordinates_input);
 
 
 	
@@ -294,7 +299,9 @@ void gpu_compute(
 
 	for (size_t i = 0; i < pot; i++)
 		for (size_t j = 0; j < pot; j++)
-			input_coordinates_mat_float.at<Vec4f>(j, i) = Vec4f(i, j, 0, 1);
+			input_coordinates_mat_float.at<Vec4f>(j, i) = Vec4f(j, i, j, i);
+
+	imwrite("_input_float.png", input_coordinates_mat_float);
 
 	std::vector<cv::Mat> array_of_input_coordinate_mats = splitImage(input_coordinates_mat_float, num_tiles_per_dimension, num_tiles_per_dimension);
 
@@ -320,12 +327,13 @@ void gpu_compute(
 			compute_chunk(
 				x,
 				y,
+				num_tiles_per_dimension,
 				compute_shader_program,
 				local_output_pixels,
 				input_mat_float,
 				input_light_mat_float,
 				input_light_blocking_mat_float,
-				input_coordinates_mat_float);
+				array_of_input_coordinate_mats[index]);
 
 			Mat uc_output_small(array_of_input_mats[index].rows, array_of_input_mats[index].cols, CV_8UC4);
 
