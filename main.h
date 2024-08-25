@@ -121,8 +121,8 @@ void compute_chunk(
 
 	size_t chunk_index = chunk_index_x * num_tiles_per_dimension + chunk_index_y;
 
-	//string s = "_coordinates_" + to_string(chunk_index) + ".png";
-	//imwrite(s.c_str(), input_coordinates_pixels * 255.0f);
+	string s = "_coordinates_" + to_string(chunk_index) + ".png";
+	imwrite(s.c_str(), input_coordinates_pixels);
 
 
 
@@ -299,14 +299,17 @@ void gpu_compute(
 
 	for (size_t i = 0; i < pot; i++)
 		for (size_t j = 0; j < pot; j++)
-			input_coordinates_mat_float.at<Vec4f>(j, i) = Vec4f(j, i, j, i);
+			input_coordinates_mat_float.at<Vec4f>(j, i) = Vec4f(0.0f, static_cast<float>(j), static_cast<float>(i), 1.0f);
 
 	imwrite("_input_float.png", input_coordinates_mat_float);
 
 	std::vector<cv::Mat> array_of_input_coordinate_mats = splitImage(input_coordinates_mat_float, num_tiles_per_dimension, num_tiles_per_dimension);
 
-
-
+	//for (size_t i = 0; i < array_of_input_coordinate_mats.size(); i++)
+	//{
+	//	string s = "_coordinates_" + to_string(i) + ".png";
+	//	imwrite(s.c_str(), array_of_input_coordinate_mats[i]);
+	//}
 
 
 
