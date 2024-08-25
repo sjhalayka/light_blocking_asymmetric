@@ -14,4 +14,16 @@ Freeglut:
 - The .lib files are in C:\temp\freeglut\lib\x64
 - The .dll files are in C:\temp\freeglut\bin\x64
 
-- 
+GLEW:
+- Download https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0-win32.zip/download
+- Extract to C:\temp\glew-2.1.0
+- The .h files are in C:\temp\glew-2.1.0\include
+- The .lib files are in C:\temp\glew-2.1.0\lib\Release\x64
+- The .dll files are in C:\temp\glew-2.1.0\bin\Release\x64
+
+SDL:
+- Download 
+- Extract to 
+- The .h files are in 
+- The .lib files are in 
+- The .dll files are in 
