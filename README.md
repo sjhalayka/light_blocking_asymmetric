@@ -28,7 +28,7 @@ SDL:
 - The .lib files are in C:\temp\SDL2-2.30.6\lib\x64
 - The .dll files are in C:\temp\SDL2-2.30.6\lib\x64
 
-- GLM:
+GLM:
 - Download https://github.com/g-truc/glm/archive/refs/tags/1.0.1.zip
 - Extract to C:\temp\glm-1.0.1
 - The .h files are in C:\temp\glm-1.0.1\glm
