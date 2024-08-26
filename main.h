@@ -115,12 +115,9 @@ void compute_chunk(
 	const GLint tex_w_large = input_light_pixels.cols;
 	const GLint tex_h_large = input_light_pixels.rows;
 
-	// These images show that the input at this point is valid
-	//string s = "_input_" + to_string(chunk_index) + ".png";
-	//imwrite(s.c_str(), input_pixels * 255.0f);
-
-
-
+	//size_t index = chunk_index_x * num_tiles_per_dimension + chunk_index_y;
+	//string s = "_coord_float_mat" + to_string(index) + ".png";
+	//imwrite(s.c_str(), input_coordinates_pixels * 255.0f);
 
 
 	output_pixels.resize(4 * tex_w_small * tex_h_small);
@@ -192,6 +189,8 @@ void compute_chunk(
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_image"), 1);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_image"), 2);
 	glUniform1i(glGetUniformLocation(compute_shader_program, "input_light_blocking_image"), 3);
+	glUniform1i(glGetUniformLocation(compute_shader_program, "input_coordinates_image"), 4);
+
 	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size"), tex_w_large, tex_h_large);
 	glUniform2i(glGetUniformLocation(compute_shader_program, "u_size_small"), tex_w_small, tex_h_small);
 	glUniform2i(glGetUniformLocation(compute_shader_program, "u_chunk_index"), chunk_index_x, chunk_index_y);
@@ -216,8 +215,8 @@ void compute_chunk(
 	glDeleteTextures(1, &tex_input);
 	glDeleteTextures(1, &tex_light_input);
 	glDeleteTextures(1, &tex_light_blocking_input);
-	glDeleteTextures(1, &tex_output);
 	glDeleteTextures(1, &tex_coordinates_input);
+	glDeleteTextures(1, &tex_output);
 
 
 
@@ -357,15 +356,6 @@ void gpu_compute(
 		coordinates_compute_shader_program);
 
 	std::vector<cv::Mat> array_of_input_coordinate_mats = splitImage(uc_output_large, num_tiles_per_dimension, num_tiles_per_dimension);
-
-	for (size_t i = 0; i < array_of_input_coordinate_mats.size(); i++)
-	{
-		string s = "_coordinates_" + to_string(i) + ".png";
-		imwrite(s.c_str(), array_of_input_coordinate_mats[i]);
-	}
-
-
-
 	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_output_mats;
 
@@ -389,7 +379,7 @@ void gpu_compute(
 
 
 
-
+			
 
 
 			compute_chunk(

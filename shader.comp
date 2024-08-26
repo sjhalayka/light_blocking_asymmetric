@@ -29,13 +29,10 @@ void main()
 		return;
 	}
 	
-	ivec2 backup_per_compute_pixel_coords = per_compute_pixel_coords; 
-
-	vec4 coords_float = imageLoad(input_coordinates_image, per_compute_pixel_coords);
 	
-	ivec2 coords = ivec2(int(coords_float.r), int(coords_float.g));
-
-	// do lookup using coords
+	
+	const vec4 coords_float = imageLoad(input_coordinates_image, per_compute_pixel_coords);
+	const ivec2 global_per_compute_pixel_coords = per_compute_pixel_coords;//ivec2(int(coords_float.r), int(coords_float.g));
 
 
 
@@ -62,8 +59,8 @@ void main()
 			int num_steps = 0;
 
 			vec2 pixel_diff;
-			pixel_diff.x = distance(per_compute_pixel_coords.x, per_image_pixel_coords.x);
-			pixel_diff.y = distance(per_compute_pixel_coords.y, per_image_pixel_coords.y);
+			pixel_diff.x = distance(global_per_compute_pixel_coords.x, per_image_pixel_coords.x);
+			pixel_diff.y = distance(global_per_compute_pixel_coords.y, per_image_pixel_coords.y);
 
 			if(pixel_diff.x > pixel_diff.y)
 				num_steps = int(pixel_diff.x);
@@ -77,7 +74,7 @@ void main()
 			vec2 light_pos = per_image_pixel_coords;		
 
 			ivec2 start = per_image_pixel_coords;
-			ivec2 end = per_compute_pixel_coords;
+			ivec2 end = global_per_compute_pixel_coords;
 
 			bool found_light_blocker = false;
 			vec2 curr_uv;
@@ -119,5 +116,5 @@ void main()
 	lighting = max(lighting, 0.001); // Throw in some ambient lighting
 	
 
-	imageStore(output_image, backup_per_compute_pixel_coords, vec4(lighting, 1.0));
+	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
 }
