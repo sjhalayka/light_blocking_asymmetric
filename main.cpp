@@ -159,11 +159,14 @@ int main(int argc, char** argv)
 		largest_dim = res_y;
 
 	GLuint compute_shader_program = 0;
+	GLuint coordinates_compute_shader_program = 0;
+
 
 	if (false == init_gl(
 		argc, argv,
 		//largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
-		compute_shader_program))
+		compute_shader_program,
+		coordinates_compute_shader_program))
 	{
 		cout << "Aborting" << endl;
 		return -1;
@@ -372,6 +375,7 @@ int main(int argc, char** argv)
 
 		gpu_compute(
 			compute_shader_program,
+			coordinates_compute_shader_program,
 			output_pixels,
 			input_mat,
 			input_light_mat_with_dynamic_lights,
