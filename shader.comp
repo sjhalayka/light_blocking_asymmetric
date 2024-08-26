@@ -19,7 +19,6 @@ uniform ivec2 u_chunk_index;
 void main()
 {
 	ivec2 per_compute_pixel_coords = ivec2(gl_GlobalInvocationID.xy);
-	//per_compute_pixel_coords -= u_size_small * u_chunk_index;
 
 	vec4 image_sample = imageLoad(input_image, per_compute_pixel_coords);
 
@@ -30,7 +29,15 @@ void main()
 		return;
 	}
 	
-	//per_compute_pixel_coords += u_size_small * u_chunk_index; 
+	ivec2 backup_per_compute_pixel_coords = per_compute_pixel_coords; 
+
+	vec4 coords = imageLoad(input_coordinates_image, per_compute_pixel_coords);
+ 
+	//per_compute_pixel_coords.x = int(coords.x);
+	//per_compute_pixel_coords.y = int(coords.y);
+
+
+
 
 	vec3 lighting = vec3(0, 0, 0);
 
@@ -112,5 +119,5 @@ void main()
 	lighting = max(lighting, 0.001); // Throw in some ambient lighting
 	
 
-	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
+	imageStore(output_image, backup_per_compute_pixel_coords, vec4(lighting, 1.0));
 }

@@ -119,10 +119,7 @@ void compute_chunk(
 	//string s = "_input_" + to_string(chunk_index) + ".png";
 	//imwrite(s.c_str(), input_pixels * 255.0f);
 
-	size_t chunk_index = chunk_index_x * num_tiles_per_dimension + chunk_index_y;
 
-	string s = "_coordinates_" + to_string(chunk_index) + ".png";
-	imwrite(s.c_str(), input_coordinates_pixels);
 
 
 
@@ -359,17 +356,13 @@ void gpu_compute(
 		pot,
 		coordinates_compute_shader_program);
 
-
-
-//	imwrite("_input_coordinates_mat_float.png", input_coordinates_mat_float);
-
 	std::vector<cv::Mat> array_of_input_coordinate_mats = splitImage(uc_output_large, num_tiles_per_dimension, num_tiles_per_dimension);
 
-	//for (size_t i = 0; i < array_of_input_coordinate_mats.size(); i++)
-	//{
-	//	string s = "_coordinates_" + to_string(i) + ".png";
-	//	imwrite(s.c_str(), array_of_input_coordinate_mats[i]);
-	//}
+	for (size_t i = 0; i < array_of_input_coordinate_mats.size(); i++)
+	{
+		string s = "_coordinates_" + to_string(i) + ".png";
+		imwrite(s.c_str(), array_of_input_coordinate_mats[i]);
+	}
 
 
 
@@ -421,7 +414,6 @@ void gpu_compute(
 			}
 
 			array_of_output_mats.push_back(uc_output_small);
-
 		}
 	}
 
