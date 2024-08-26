@@ -31,11 +31,11 @@ void main()
 	
 	ivec2 backup_per_compute_pixel_coords = per_compute_pixel_coords; 
 
-	vec4 coords = imageLoad(input_coordinates_image, per_compute_pixel_coords);
- 
-	//per_compute_pixel_coords.x = int(coords.x);
-	//per_compute_pixel_coords.y = int(coords.y);
+	vec4 coords_float = imageLoad(input_coordinates_image, per_compute_pixel_coords);
+	
+	ivec2 coords = ivec2(int(coords_float.r), int(coords_float.g));
 
+	// do lookup using coords
 
 
 
