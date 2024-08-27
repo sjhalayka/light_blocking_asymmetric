@@ -248,43 +248,43 @@ Mat compute_coords(
 	const int size_y,
 	const GLuint& coordinates_compute_shader_program)
 {
-	vector<float>output_pixels(4 * size_x * size_y);
+	//vector<float>output_pixels(4 * size_x * size_y);
 
-	glEnable(GL_TEXTURE_2D);
+	//glEnable(GL_TEXTURE_2D);
 
-	GLuint tex_output = 0;
+	//GLuint tex_output = 0;
 
-	glGenTextures(1, &tex_output);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex_output);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size_x, size_y, 0, GL_RGBA, GL_FLOAT, NULL);
-	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	//glGenTextures(1, &tex_output);
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, tex_output);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, size_x, size_y, 0, GL_RGBA, GL_FLOAT, NULL);
+	//glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
-	// Use the compute shader
-	glUseProgram(coordinates_compute_shader_program);
-	glUniform1i(glGetUniformLocation(coordinates_compute_shader_program, "output_image"), 0);
-
-
-
-	// Run compute shader
-	glDispatchCompute((GLuint)size_x / 16, (GLuint)size_y / 16, 1);
-
-	// Wait for compute shader to finish
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	//// Use the compute shader
+	//glUseProgram(coordinates_compute_shader_program);
+	//glUniform1i(glGetUniformLocation(coordinates_compute_shader_program, "output_image"), 0);
 
 
 
+	//// Run compute shader
+	//glDispatchCompute((GLuint)size_x / 16, (GLuint)size_y / 16, 1);
 
-	// Copy output pixel array to CPU as texture 0
-	glActiveTexture(GL_TEXTURE0);
-	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, &output_pixels[0]);
+	//// Wait for compute shader to finish
+	//glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-	glDeleteTextures(1, &tex_output);
+
+
+
+	//// Copy output pixel array to CPU as texture 0
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, &output_pixels[0]);
+
+	//glDeleteTextures(1, &tex_output);
 
 	Mat uc_output_small(size_x, size_y, CV_16UC4);
 
@@ -312,7 +312,7 @@ Mat compute_coords(
 	//	uc_output_small.data[x + 3] = (output_pixels[x + 3]);
 	//}
 
-	cout << uc_output_small << endl;
+//	cout << uc_output_small << endl;
 
 	return uc_output_small;
 }
