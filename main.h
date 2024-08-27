@@ -271,7 +271,7 @@ Mat compute_coords(
 
 
 	// Run compute shader
-	glDispatchCompute((GLuint)size_x, (GLuint)size_y, 1);
+	glDispatchCompute((GLuint)size_x / 16, (GLuint)size_y / 16, 1);
 
 	// Wait for compute shader to finish
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -288,40 +288,32 @@ Mat compute_coords(
 
 	Mat uc_output_small(size_x, size_y, CV_16UC4);
 
-	//for (size_t y = 0; y < size_y; y++)
-	//{
-	//	for (size_t x = 0; x < size_x; x++)
-	//	{
-	//		size_t uc_index = 4 * (x * size_y + y);
-
-	//		Vec4b pixelValue;
-
-	//		pixelValue[0] = x;
-	//		pixelValue[1] = 65535 - y;
-	//		pixelValue[2] = 0;
-	//		pixelValue[3] = 0;
-
-	//		//input_pixels[uc_index + 0] = pixelValue[0] / 255.0f;// input_mat.data[uc_index + 0] / 255.0f;
-	//		//input_pixels[uc_index + 1] = pixelValue[1] / 255.0f;// input_mat.data[uc_index + 1] / 255.0f;
-	//		//input_pixels[uc_index + 2] = pixelValue[2] / 255.0f;// input_mat.data[uc_index + 2] / 255.0f;
-	//		//input_pixels[uc_index + 3] = 1.0;
-
-	//		uc_output_small.at<Vec4b>(x, y) = pixelValue;
-	//	}
-	//}
-
-
-
-	for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
+	for (unsigned short int x = 0; x < size_x; x++)
 	{
-		uc_output_small.data[x + 0] = (output_pixels[x + 0]);
-		uc_output_small.data[x + 1] = (output_pixels[x + 1]);
-		uc_output_small.data[x + 2] = (output_pixels[x + 2]);
-		uc_output_small.data[x + 3] = (output_pixels[x + 3]);
+		for (unsigned short int y = 0; y < size_y; y++)
+		{
+			Vec4s pixelValue;
+			pixelValue[0] = x;
+			pixelValue[1] = y;
+			pixelValue[2] = 0;
+			pixelValue[3] = 0;
+
+			uc_output_small.at<Vec4s>(y, x) = pixelValue;
+		}
 	}
 
+
+
+	//for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
+	//{
+	//	uc_output_small.data[x + 0] = (output_pixels[x + 0]);
+	//	uc_output_small.data[x + 1] = (output_pixels[x + 1]);
+	//	uc_output_small.data[x + 2] = (output_pixels[x + 2]);
+	//	uc_output_small.data[x + 3] = (output_pixels[x + 3]);
+	//}
+
 	cout << uc_output_small << endl;
-	
+
 	return uc_output_small;
 }
 
@@ -369,7 +361,7 @@ void gpu_compute(
 
 
 
-	const int num_tiles_per_dimension = 2;
+	const int num_tiles_per_dimension = 4;
 
 
 
@@ -398,7 +390,7 @@ void gpu_compute(
 			array_of_input_mats[index].convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
 
 			Mat input_coordinates_mat_float(array_of_input_coordinate_mats[index].rows, array_of_input_coordinate_mats[index].cols, CV_32FC4);
-			array_of_input_coordinate_mats[index].convertTo(input_coordinates_mat_float, CV_32FC4, 1.0 / 65535.0);
+			array_of_input_coordinate_mats[index].convertTo(input_coordinates_mat_float, CV_32FC4, 1.0);
 
 			compute_chunk(
 				x,
