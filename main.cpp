@@ -373,7 +373,7 @@ int main(int argc, char** argv)
 
 		vector<float> output_pixels(4 * pot * pot);
 
-		gpu_compute(
+		compute(
 			compute_shader_program,
 			coordinates_compute_shader_program,
 			output_pixels,
@@ -391,7 +391,7 @@ int main(int argc, char** argv)
 			uc_output.data[x + 3] = 255;
 		}
 
-		imwrite("_big.png", uc_output);
+		//imwrite("_big.png", uc_output);
 
 		// Crop
 		uc_output = uc_output(Range(0, pre_pot_res_y), Range(0, pre_pot_res_x));
