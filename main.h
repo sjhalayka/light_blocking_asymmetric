@@ -121,7 +121,7 @@ void cpu_compute_chunk(
 	const GLint tex_w_large = input_light_pixels.cols;
 	const GLint tex_h_large = input_light_pixels.rows;
 
-	output_pixels.resize(4 * tex_w_small * tex_h_small, 1.0);
+	output_pixels.resize(4 * tex_w_small * tex_h_small);
 
 	for (unsigned short int x = 0; x < tex_w_small; x++)
 	{
@@ -218,7 +218,7 @@ void cpu_compute_chunk(
 						// so that attenuation works much better
 						const float coordinate_change = 1.0 / 5.0;
 
-						const float dist = distance(light_pos, curr_uv) * coordinate_change;
+						const float dist = glm::distance(light_pos, curr_uv) * coordinate_change;
 						const float dist_coefficient = 1;
 						const float dist_squared_coefficient = 1;
 
