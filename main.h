@@ -405,8 +405,7 @@ void gpu_compute_chunk(
 
 Mat compute_global_coords(
 	const int size_x,
-	const int size_y,
-	const GLuint& coordinates_compute_shader_program)
+	const int size_y)
 {
 	// Assumes that texture values are 65535 or less
 	Mat output_mat(size_x, size_y, CV_16UC4);
@@ -474,16 +473,7 @@ void compute(
 
 	const int num_tiles_per_dimension = 4; // this squared is the number of tiles
 
-
-
-
-	//	vector<float> coord_pixels(4 * pot * pot);
-
-	Mat uc_output_large = compute_global_coords(
-		pot,
-		pot,
-		coordinates_compute_shader_program);
-
+	Mat uc_output_large = compute_global_coords(pot, pot);
 
 	std::vector<cv::Mat> array_of_input_coordinate_mats = splitImage(uc_output_large, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
