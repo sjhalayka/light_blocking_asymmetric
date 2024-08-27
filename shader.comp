@@ -31,9 +31,8 @@ void main()
 	
 	
 	
-	const vec4 coords_float = imageLoad(input_coordinates_image, per_compute_pixel_coords);
-	const ivec2 global_per_compute_pixel_coords = per_compute_pixel_coords;//ivec2(int(coords_float.r), int(coords_float.g));
-
+	const vec2 coords_float = imageLoad(input_coordinates_image, per_compute_pixel_coords).rg;
+	ivec2 global_per_compute_pixel_coords = ivec2(int(coords_float.r), int(coords_float.g));
 
 
 	vec3 lighting = vec3(0, 0, 0);

@@ -115,9 +115,9 @@ void compute_chunk(
 	const GLint tex_w_large = input_light_pixels.cols;
 	const GLint tex_h_large = input_light_pixels.rows;
 
-	//size_t index = chunk_index_x * num_tiles_per_dimension + chunk_index_y;
-	//string s = "_coord_float_mat" + to_string(index) + ".png";
-	//imwrite(s.c_str(), input_coordinates_pixels * 255.0f);
+	size_t index = chunk_index_x * num_tiles_per_dimension + chunk_index_y;
+	string s = "_coord_float_mat" + to_string(index) + ".png";
+	imwrite(s.c_str(), input_coordinates_pixels);
 
 
 	output_pixels.resize(4 * tex_w_small * tex_h_small);
@@ -198,7 +198,7 @@ void compute_chunk(
 
 
 	// Run compute shader
-	glDispatchCompute((GLuint)tex_w_small / 16, (GLuint)tex_h_small / 16, 1);
+	glDispatchCompute((GLuint)tex_w_small, (GLuint)tex_h_small, 1);
 
 	// Wait for compute shader to finish
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -271,7 +271,7 @@ Mat compute_coords(
 
 
 	// Run compute shader
-	glDispatchCompute((GLuint)size_x / 16, (GLuint)size_y / 16, 1);
+	glDispatchCompute((GLuint)size_x, (GLuint)size_y, 1);
 
 	// Wait for compute shader to finish
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -286,15 +286,41 @@ Mat compute_coords(
 
 	glDeleteTextures(1, &tex_output);
 
-	Mat uc_output_small(size_x, size_y, CV_8UC4);
+	Mat uc_output_small(size_x, size_y, CV_16UC4);
+
+	//for (size_t y = 0; y < size_y; y++)
+	//{
+	//	for (size_t x = 0; x < size_x; x++)
+	//	{
+	//		size_t uc_index = 4 * (x * size_y + y);
+
+	//		Vec4b pixelValue;
+
+	//		pixelValue[0] = x;
+	//		pixelValue[1] = 65535 - y;
+	//		pixelValue[2] = 0;
+	//		pixelValue[3] = 0;
+
+	//		//input_pixels[uc_index + 0] = pixelValue[0] / 255.0f;// input_mat.data[uc_index + 0] / 255.0f;
+	//		//input_pixels[uc_index + 1] = pixelValue[1] / 255.0f;// input_mat.data[uc_index + 1] / 255.0f;
+	//		//input_pixels[uc_index + 2] = pixelValue[2] / 255.0f;// input_mat.data[uc_index + 2] / 255.0f;
+	//		//input_pixels[uc_index + 3] = 1.0;
+
+	//		uc_output_small.at<Vec4b>(x, y) = pixelValue;
+	//	}
+	//}
+
+
 
 	for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
 	{
-		uc_output_small.data[x + 0] = (output_pixels[x + 0] * 255.0f);
-		uc_output_small.data[x + 1] = (output_pixels[x + 1] * 255.0f);
-		uc_output_small.data[x + 2] = (output_pixels[x + 2] * 255.0f);
-		uc_output_small.data[x + 3] = 255.0f;
+		uc_output_small.data[x + 0] = (output_pixels[x + 0]);
+		uc_output_small.data[x + 1] = (output_pixels[x + 1]);
+		uc_output_small.data[x + 2] = (output_pixels[x + 2]);
+		uc_output_small.data[x + 3] = (output_pixels[x + 3]);
 	}
+
+	cout << uc_output_small << endl;
 	
 	return uc_output_small;
 }
@@ -348,12 +374,13 @@ void gpu_compute(
 
 
 
-//	vector<float> coord_pixels(4 * pot * pot);
+	//	vector<float> coord_pixels(4 * pot * pot);
 
 	Mat uc_output_large = compute_coords(
 		pot,
 		pot,
 		coordinates_compute_shader_program);
+
 
 	std::vector<cv::Mat> array_of_input_coordinate_mats = splitImage(uc_output_large, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
@@ -370,17 +397,8 @@ void gpu_compute(
 			Mat input_mat_float(array_of_input_mats[index].rows, array_of_input_mats[index].cols, CV_32FC4);
 			array_of_input_mats[index].convertTo(input_mat_float, CV_32FC4, 1.0 / 255.0);
 
-
-
-
-
 			Mat input_coordinates_mat_float(array_of_input_coordinate_mats[index].rows, array_of_input_coordinate_mats[index].cols, CV_32FC4);
-			array_of_input_coordinate_mats[index].convertTo(input_coordinates_mat_float, CV_32FC4, 1.0 / 255.0);
-
-
-
-			
-
+			array_of_input_coordinate_mats[index].convertTo(input_coordinates_mat_float, CV_32FC4, 1.0 / 65535.0);
 
 			compute_chunk(
 				x,
@@ -528,7 +546,7 @@ bool init_opengl_4_3(int argc, char** argv)
 bool init_gl(int argc, char** argv,
 	//	GLint tex_w, GLint tex_h,
 	GLuint& compute_shader_program,
-	GLuint & coordinates_compute_shader_program)
+	GLuint& coordinates_compute_shader_program)
 {
 	// Initialize OpenGL
 	//if (false == init_opengl_4_3(argc, argv))
