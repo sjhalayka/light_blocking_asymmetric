@@ -244,37 +244,6 @@ void cpu_compute_chunk(
 
 		}
 	}
-
-
-			//size_t index = 4 * (y * tex_w_small + x);
-
-			//output_pixels[index + 0] = global_per_compute_pixel_coords.x;
-			//output_pixels[index + 1] = global_per_compute_pixel_coords.y;
-			//output_pixels[index + 2] = pixelValue[2];
-			//output_pixels[index + 3] = pixelValue[3];
-
-
-			//size_t index = 4 * (y * tex_w_small + x);
-
-			//	output_pixels[index + 0] = pixelValue[0];
-			//	output_pixels[index + 1] = pixelValue[1];
-			//	output_pixels[index + 2] = pixelValue[2];
-			//	output_pixels[index + 3] = pixelValue[3];
-	//	}
-	//}
-
-
-
-//	string s = "_input_" + to_string(index) + ".png";
-//	imwrite(s.c_str(), input_pixels * 255.0);
-	//exit(0);
-
-
-
-
-
-
-
 }
 
 
@@ -415,9 +384,6 @@ void gpu_compute_chunk(
 
 
 
-	// These images show that something's not working right where num_tiles_per_dimension is >= 2...
-	// there are duplicate output images, like the input is not being updated properly or something between
-	// dispatch calls
 
 	//Mat uc_output_small(tex_w_small, tex_h_small, CV_8UC4);
 
@@ -521,7 +487,7 @@ void compute(
 
 	std::vector<cv::Mat> array_of_input_coordinate_mats = splitImage(uc_output_large, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
-	std::vector<cv::Mat> array_of_output_mats;
+	std::vector<cv::Mat> array_of_output_mats(num_tiles_per_dimension * num_tiles_per_dimension);
 
 	for (size_t x = 0; x < num_tiles_per_dimension; x++)
 	{
@@ -548,20 +514,6 @@ void compute(
 				input_light_blocking_mat_float,
 				input_coordinates_mat_float);
 
-
-
-
-			//gpu_compute_chunk(
-			//	x,
-			//	y,
-			//	num_tiles_per_dimension,
-			//	compute_shader_program,
-			//	local_output_pixels,
-			//	input_mat_float,
-			//	input_light_mat_float,
-			//	input_light_blocking_mat_float,
-			//	input_coordinates_mat_float);
-
 			Mat uc_output_small(array_of_input_mats[index].rows, array_of_input_mats[index].cols, CV_8UC4);
 
 			for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
@@ -572,7 +524,7 @@ void compute(
 				uc_output_small.data[x + 3] = 255.0f;
 			}
 
-			array_of_output_mats.push_back(uc_output_small);
+			array_of_output_mats[index] = uc_output_small;
 		}
 	}
 
