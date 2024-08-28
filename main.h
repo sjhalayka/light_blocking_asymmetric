@@ -521,7 +521,7 @@ void compute(
 	input_light_blocking_mat.convertTo(input_light_blocking_mat_float, CV_32FC4, 1.0 / 255.0);
 
 
-	const int num_tiles_per_dimension = 8; // this squared is the number of tiles
+	const int num_tiles_per_dimension = 1; // this squared is the number of tiles
 
 	Mat uc_output_large = compute_global_coords(pot, pot);
 
@@ -562,7 +562,7 @@ void compute(
 
 	mutex m;
 	vector<thread> threads;
-	int num_cpu_threads = std::thread::hardware_concurrency();
+	int num_cpu_threads = 0;// std::thread::hardware_concurrency();
 
 	for(int i = 0; i < num_cpu_threads; i++)
 		threads.push_back(thread(thread_func, ref(m), ref(v_ccp)));
