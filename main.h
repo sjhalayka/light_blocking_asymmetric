@@ -278,7 +278,11 @@ void gpu_compute_chunk(
 	const GLint tex_w_large = input_light_pixels.cols;
 	const GLint tex_h_large = input_light_pixels.rows;
 
-	//size_t index = chunk_index_x * num_tiles_per_dimension + chunk_index_y;
+	size_t index = chunk_index_x * num_tiles_per_dimension + chunk_index_y;
+
+
+
+
 	//string s = "_coord_float_mat" + to_string(index) + ".png";
 	//imwrite(s.c_str(), input_coordinates_pixels);
 
@@ -384,18 +388,18 @@ void gpu_compute_chunk(
 
 
 
-	//Mat uc_output_small(tex_w_small, tex_h_small, CV_8UC4);
+	Mat uc_output_small(tex_w_small, tex_h_small, CV_8UC4);
 
-	//for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
-	//{
-	//	uc_output_small.data[x + 0] = (output_pixels[x + 0] * 255.0f);
-	//	uc_output_small.data[x + 1] = (output_pixels[x + 1] * 255.0f);
-	//	uc_output_small.data[x + 2] = (output_pixels[x + 2] * 255.0f);
-	//	uc_output_small.data[x + 3] = 255.0f;
-	//}
-	// 
-	//s = "_output_" + to_string(chunk_index) + ".png";
-	//imwrite(s.c_str(), uc_output_small);
+	for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
+	{
+		uc_output_small.data[x + 0] = (output_pixels[x + 0] * 255.0f);
+		uc_output_small.data[x + 1] = (output_pixels[x + 1] * 255.0f);
+		uc_output_small.data[x + 2] = (output_pixels[x + 2] * 255.0f);
+		uc_output_small.data[x + 3] = 255.0f;
+	}
+	 
+	string s = "_output_" + to_string(index) + ".png";
+	imwrite(s.c_str(), uc_output_small);
 }
 
 
@@ -458,9 +462,10 @@ void thread_func(atomic_bool &use_cpu,
 						v_ccp[i].input_coordinates_pixels);
 				}
 
+
+
 				v_ccp[i].previously_computed = true;
 				found_work = true;
-				break;
 			}
 		}
 
@@ -619,12 +624,6 @@ void compute(
 
 	threads[0].join();
 
-	//for (size_t i = 0; i < num_cpu_threads; i++)
-	//	threads[i].join();
-
-
-
-
 	for (size_t i = 0; i < v_ccp.size(); i++)
 	{
 		size_t index = v_ccp[i].chunk_index_x * v_ccp[i].num_tiles_per_dimension + v_ccp[i].chunk_index_y;
@@ -641,7 +640,6 @@ void compute(
 
 		string s = "_uc_output_small" + to_string(index) + ".png";
 		imwrite(s.c_str(), uc_output_small);
-
 
 		array_of_output_mats[index] = uc_output_small;
 	}
