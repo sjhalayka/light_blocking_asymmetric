@@ -121,18 +121,7 @@ public:
 
 
 void cpu_compute_chunk(
-
 	compute_chunk_params& ccp)
-
-	//const int chunk_index_x,
-	//const int chunk_index_y,
-	//const int num_tiles_per_dimension,
-	//const GLuint& compute_shader_program,
-	//vector<float>& output_pixels,
-	//const Mat& input_pixels,
-	//const Mat& input_light_pixels,
-	//const Mat& input_light_blocking_pixels,
-	//const Mat& input_coordinates_pixels)
 {
 	const GLint tex_w_small = ccp.input_pixels.cols;
 	const GLint tex_h_small = ccp.input_pixels.rows;
@@ -140,6 +129,23 @@ void cpu_compute_chunk(
 	const GLint tex_h_large = ccp.input_light_pixels.rows;
 
 	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small);
+
+
+	bool found_non_black = false;
+
+	for (size_t x = 0; x < (4 * ccp.input_pixels.rows * ccp.input_pixels.cols); x += 4)
+	{
+		if (ccp.input_pixels.data[x + 0] != 0 ||
+			ccp.input_pixels.data[x + 1] != 0 ||
+			ccp.input_pixels.data[x + 2] != 0)
+		{
+			found_non_black = true;
+			break;
+		}
+	}
+
+	if (!found_non_black)
+		return;
 
 	for (unsigned short int x = 0; x < tex_w_small; x++)
 	{
@@ -287,9 +293,26 @@ void gpu_compute_chunk(
 	const GLint tex_w_large = ccp.input_light_pixels.cols;
 	const GLint tex_h_large = ccp.input_light_pixels.rows;
 
+	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small);
+
+	bool found_non_black = false;
+
+	for (size_t x = 0; x < (4 * ccp.input_pixels.rows * ccp.input_pixels.cols); x += 4)
+	{
+		if (ccp.input_pixels.data[x + 0] != 0 ||
+			ccp.input_pixels.data[x + 1] != 0 ||
+			ccp.input_pixels.data[x + 2] != 0)
+		{
+			found_non_black = true;
+			break;
+		}
+	}
+
+	if (!found_non_black)
+		return;
+
 	size_t index = ccp.chunk_index_x * ccp.num_tiles_per_dimension + ccp.chunk_index_y;
 
-	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small);
 
 	glEnable(GL_TEXTURE_2D);
 
@@ -521,7 +544,7 @@ void compute(
 	input_light_blocking_mat.convertTo(input_light_blocking_mat_float, CV_32FC4, 1.0 / 255.0);
 
 
-	const int num_tiles_per_dimension = 1; // this squared is the number of tiles
+	const int num_tiles_per_dimension = 4; // this squared is the number of tiles
 
 	Mat uc_output_large = compute_global_coords(pot, pot);
 
