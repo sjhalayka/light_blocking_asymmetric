@@ -360,7 +360,7 @@ void gpu_compute_chunk(
 
 
 	// Run compute shader
-	glDispatchCompute((GLuint)tex_w_small, (GLuint)tex_h_small, 1);
+	glDispatchCompute((GLuint)tex_w_small / 16, (GLuint)tex_h_small / 16, 1);
 
 	// Wait for compute shader to finish
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -396,11 +396,53 @@ void gpu_compute_chunk(
 	// 
 	//s = "_output_" + to_string(chunk_index) + ".png";
 	//imwrite(s.c_str(), uc_output_small);
-
-
-
-
 }
+
+
+
+class compute_chunk_params
+{
+public:
+	int chunk_index_x;
+	int chunk_index_y;
+	int num_tiles_per_dimension;
+	GLuint compute_shader_program;
+	vector<float> output_pixels;
+	Mat input_pixels;
+	Mat input_light_pixels;
+	Mat input_light_blocking_pixels;
+	Mat input_coordinates_pixels;
+};
+
+void thread_func(atomic_bool use_cpu,
+	mutex& m,
+	vector<compute_chunk_params> &v_ccp)
+{
+	bool found_work = false;
+
+	m.lock();
+
+	for (size_t i = 0; i < v_ccp.size(); i++)
+	{
+		//if(
+
+	}
+		//cout << *ci << endl;
+
+	//vs.clear();
+
+	m.unlock();
+
+
+	if (!found_work)
+		return;
+}
+
+
+
+
+
+
 
 Mat compute_global_coords(
 	const int size_x,
@@ -427,21 +469,6 @@ Mat compute_global_coords(
 }
 
 
-
-
-class compute_chunk_params
-{
-public:
-	int chunk_index_x;
-	int chunk_index_y;
-	int num_tiles_per_dimension;
-	GLuint compute_shader_program;
-	vector<float> output_pixels;
-	Mat input_pixels;
-	Mat input_light_pixels;
-	Mat input_light_blocking_pixels;
-	Mat input_coordinates_pixels;
-};
 
 
 
