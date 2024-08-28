@@ -128,24 +128,23 @@ void cpu_compute_chunk(
 	const GLint tex_w_large = ccp.input_light_pixels.cols;
 	const GLint tex_h_large = ccp.input_light_pixels.rows;
 
-	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small);
+	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small, 0.0f);
 
+	//bool found_non_black = false;
 
-	bool found_non_black = false;
+	//for (size_t x = 0; x < (4 * ccp.input_pixels.rows * ccp.input_pixels.cols); x += 4)
+	//{
+	//	if (ccp.input_pixels.data[x + 0] != 0 ||
+	//		ccp.input_pixels.data[x + 1] != 0 ||
+	//		ccp.input_pixels.data[x + 2] != 0)
+	//	{
+	//		found_non_black = true;
+	//		break;
+	//	}
+	//}
 
-	for (size_t x = 0; x < (4 * ccp.input_pixels.rows * ccp.input_pixels.cols); x += 4)
-	{
-		if (ccp.input_pixels.data[x + 0] != 0 ||
-			ccp.input_pixels.data[x + 1] != 0 ||
-			ccp.input_pixels.data[x + 2] != 0)
-		{
-			found_non_black = true;
-			break;
-		}
-	}
-
-	if (!found_non_black)
-		return;
+	//if (!found_non_black)
+	//	return;
 
 	for (unsigned short int x = 0; x < tex_w_small; x++)
 	{
@@ -293,23 +292,23 @@ void gpu_compute_chunk(
 	const GLint tex_w_large = ccp.input_light_pixels.cols;
 	const GLint tex_h_large = ccp.input_light_pixels.rows;
 
-	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small);
+	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small, 0.0f);
 
-	bool found_non_black = false;
+	//bool found_non_black = false;
 
-	for (size_t x = 0; x < (4 * ccp.input_pixels.rows * ccp.input_pixels.cols); x += 4)
-	{
-		if (ccp.input_pixels.data[x + 0] != 0 ||
-			ccp.input_pixels.data[x + 1] != 0 ||
-			ccp.input_pixels.data[x + 2] != 0)
-		{
-			found_non_black = true;
-			break;
-		}
-	}
+	//for (size_t x = 0; x < (4 * ccp.input_pixels.rows * ccp.input_pixels.cols); x += 4)
+	//{
+	//	if (ccp.input_pixels.data[x + 0] != 0 ||
+	//		ccp.input_pixels.data[x + 1] != 0 ||
+	//		ccp.input_pixels.data[x + 2] != 0)
+	//	{
+	//		found_non_black = true;
+	//		break;
+	//	}
+	//}
 
-	if (!found_non_black)
-		return;
+	//if (!found_non_black)
+	//	return;
 
 	size_t index = ccp.chunk_index_x * ccp.num_tiles_per_dimension + ccp.chunk_index_y;
 
@@ -544,7 +543,7 @@ void compute(
 	input_light_blocking_mat.convertTo(input_light_blocking_mat_float, CV_32FC4, 1.0 / 255.0);
 
 
-	const int num_tiles_per_dimension = 4; // this squared is the number of tiles
+	const int num_tiles_per_dimension = 1; // this squared is the number of tiles
 
 	Mat uc_output_large = compute_global_coords(pot, pot);
 
