@@ -441,17 +441,9 @@ void thread_func(
 
 
 		if (!found_work)
-		{
 			return;
-		}
 		else
-		{
-			//if (use_cpu)
-				cpu_compute_chunk(v_ccp[i]);
-			//else
-			//	gpu_compute_chunk(v_ccp[i]);
-		}
-
+			cpu_compute_chunk(v_ccp[i]);
 	}
 }
 
@@ -570,10 +562,7 @@ void compute(
 
 	mutex m;
 	vector<thread> threads;
-
-	atomic_bool use_cpu = true;
-
-	int num_cpu_threads = 8;
+	int num_cpu_threads = std::thread::hardware_concurrency();
 
 	for(int i = 0; i < num_cpu_threads; i++)
 		threads.push_back(thread(thread_func, ref(m), ref(v_ccp)));
@@ -590,7 +579,7 @@ void compute(
 		{
 			if (v_ccp[i].previously_computed == false)
 			{
-				v_ccp[i].previously_computed == true;
+				v_ccp[i].previously_computed = true;
 				all_done = false;
 				break;
 			}
