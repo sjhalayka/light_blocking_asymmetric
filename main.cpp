@@ -145,7 +145,6 @@ int main(int argc, char** argv)
 		}
 	}
 
-	//	cout << array_of_images.size() << endl;
 
 	cv::Mat image_collage = imageCollage(array_of_images, num_tiles_x, num_tiles_y);
 
@@ -163,7 +162,6 @@ int main(int argc, char** argv)
 
 	if (false == init_gl(
 		argc, argv,
-		//largest_dim / lighting_tile_size, largest_dim / lighting_tile_size,
 		compute_shader_program))
 	{
 		cout << "Aborting" << endl;
