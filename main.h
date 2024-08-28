@@ -261,7 +261,6 @@ void cpu_compute_chunk(
 
 
 
-
 void gpu_compute_chunk(
 	const int chunk_index_x,
 	const int chunk_index_y,
@@ -428,9 +427,27 @@ Mat compute_global_coords(
 }
 
 
+
+
+class compute_chunk_params
+{
+public:
+	int chunk_index_x;
+	int chunk_index_y;
+	int num_tiles_per_dimension;
+	GLuint compute_shader_program;
+	vector<float> output_pixels;
+	Mat input_pixels;
+	Mat input_light_pixels;
+	Mat input_light_blocking_pixels;
+	Mat input_coordinates_pixels;
+};
+
+
+
+
 void compute(
 	GLuint& compute_shader_program,
-	GLuint& coordinates_compute_shader_program,
 	vector<float>& output_pixels,
 	Mat input_mat,
 	Mat input_light_mat_with_dynamic_lights,
@@ -479,6 +496,8 @@ void compute(
 	std::vector<cv::Mat> array_of_input_mats = splitImage(input_mat, num_tiles_per_dimension, num_tiles_per_dimension);
 	std::vector<cv::Mat> array_of_output_mats(num_tiles_per_dimension * num_tiles_per_dimension);
 
+	vector<compute_chunk_params> v_ccp;
+
 	for (size_t x = 0; x < num_tiles_per_dimension; x++)
 	{
 		for (size_t y = 0; y < num_tiles_per_dimension; y++)
@@ -493,30 +512,51 @@ void compute(
 			Mat input_coordinates_mat_float(array_of_input_coordinate_mats[index].rows, array_of_input_coordinate_mats[index].cols, CV_32FC4);
 			array_of_input_coordinate_mats[index].convertTo(input_coordinates_mat_float, CV_32FC4, 1.0);
 
-			cpu_compute_chunk(
-				x,
-				y,
-				num_tiles_per_dimension,
-				compute_shader_program,
-				local_output_pixels,
-				input_mat_float,
-				input_light_mat_float,
-				input_light_blocking_mat_float,
-				input_coordinates_mat_float);
+			compute_chunk_params ccp;
 
-			Mat uc_output_small(array_of_input_mats[index].rows, array_of_input_mats[index].cols, CV_8UC4);
+			ccp.chunk_index_x = x;
+			ccp.chunk_index_y = y;
+			ccp.num_tiles_per_dimension = num_tiles_per_dimension;
+			ccp.compute_shader_program = compute_shader_program;
+			ccp.output_pixels = local_output_pixels;
+			ccp.input_pixels = input_mat_float;
+			ccp.input_light_pixels = input_light_mat_float;
+			ccp.input_light_blocking_pixels = input_light_blocking_mat_float;
+			ccp.input_coordinates_pixels = input_coordinates_mat_float;
 
-			for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
-			{
-				uc_output_small.data[x + 0] = static_cast<unsigned char>(local_output_pixels[x + 0] * 255.0f);
-				uc_output_small.data[x + 1] = static_cast<unsigned char>(local_output_pixels[x + 1] * 255.0f);
-				uc_output_small.data[x + 2] = static_cast<unsigned char>(local_output_pixels[x + 2] * 255.0f);
-				uc_output_small.data[x + 3] = 255.0f;
-			}
-
-			array_of_output_mats[index] = uc_output_small;
+			v_ccp.push_back(ccp);
 		}
 	}
+
+	for (size_t i = 0; i < v_ccp.size(); i++)
+	{
+		size_t index = v_ccp[i].chunk_index_x * v_ccp[i].num_tiles_per_dimension + v_ccp[i].chunk_index_y;
+
+		gpu_compute_chunk(
+			v_ccp[i].chunk_index_x,
+			v_ccp[i].chunk_index_y,
+			v_ccp[i].num_tiles_per_dimension,
+			v_ccp[i].compute_shader_program,
+			v_ccp[i].output_pixels,
+			v_ccp[i].input_pixels,
+			v_ccp[i].input_light_pixels,
+			v_ccp[i].input_light_blocking_pixels,
+			v_ccp[i].input_coordinates_pixels);
+
+		Mat uc_output_small(v_ccp[i].input_pixels.rows, v_ccp[i].input_pixels.cols, CV_8UC4);
+
+		for (size_t x = 0; x < (4 * uc_output_small.rows * uc_output_small.cols); x += 4)
+		{
+			uc_output_small.data[x + 0] = static_cast<unsigned char>(v_ccp[i].output_pixels[x + 0] * 255.0f);
+			uc_output_small.data[x + 1] = static_cast<unsigned char>(v_ccp[i].output_pixels[x + 1] * 255.0f);
+			uc_output_small.data[x + 2] = static_cast<unsigned char>(v_ccp[i].output_pixels[x + 2] * 255.0f);
+			uc_output_small.data[x + 3] = 255.0f;
+		}
+
+		array_of_output_mats[index] = uc_output_small;
+	}
+
+
 
 
 
@@ -638,8 +678,7 @@ bool init_opengl_4_3(int argc, char** argv)
 
 bool init_gl(int argc, char** argv,
 	//	GLint tex_w, GLint tex_h,
-	GLuint& compute_shader_program,
-	GLuint& coordinates_compute_shader_program)
+	GLuint& compute_shader_program)
 {
 	// Initialize OpenGL
 	//if (false == init_opengl_4_3(argc, argv))
@@ -694,16 +733,7 @@ bool init_gl(int argc, char** argv,
 	}
 
 
-	coordinates_compute_shader_program = 0;
-
-	if (false == compile_and_link_compute_shader("get_coords.comp", coordinates_compute_shader_program))
-	{
-		cout << "Failed to initialize coordinates compute shader" << endl;
-		return false;
-	}
-
-
-
+	
 	//cout << "Texture size: " << tex_w << "x" << tex_h << endl;
 
 	//// Check that the global workgrounp count is greater than or equal to the input/output textures
