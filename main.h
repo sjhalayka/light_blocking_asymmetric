@@ -388,10 +388,10 @@ void gpu_compute_chunk(
 	glDeleteTextures(1, &tex_output);
 
 
-	for (size_t x = 0; x < (4 * tex_w_small * tex_h_small); x += 4)
-	{
-		cout << ccp.output_pixels[x + 0] << " " << ccp.output_pixels[x + 1] << " " << ccp.output_pixels[x + 2] << " " << ccp.output_pixels[x + 3] << endl;
-	}
+	//for (size_t x = 0; x < (4 * tex_w_small * tex_h_small); x += 4)
+	//{
+	//	cout << ccp.output_pixels[x + 0] << " " << ccp.output_pixels[x + 1] << " " << ccp.output_pixels[x + 2] << " " << ccp.output_pixels[x + 3] << endl;
+	//}
 
 
 	//Mat uc_output_small(tex_w_small, tex_h_small, CV_8UC4);
@@ -415,7 +415,7 @@ void gpu_compute_chunk(
 
 
 
-void thread_func(atomic_bool &use_cpu,
+void thread_func(
 	mutex& m,
 	vector<compute_chunk_params> &v_ccp)
 {
@@ -446,10 +446,10 @@ void thread_func(atomic_bool &use_cpu,
 		}
 		else
 		{
-			if (use_cpu)
+			//if (use_cpu)
 				cpu_compute_chunk(v_ccp[i]);
-			else
-				gpu_compute_chunk(v_ccp[i]);
+			//else
+			//	gpu_compute_chunk(v_ccp[i]);
 		}
 
 	}
@@ -573,10 +573,10 @@ void compute(
 
 	atomic_bool use_cpu = true;
 
-	int num_cpu_threads = 7;
+	int num_cpu_threads = 8;
 
 	for(int i = 0; i < num_cpu_threads; i++)
-		threads.push_back(thread(thread_func, ref(use_cpu), ref(m), ref(v_ccp)));
+		threads.push_back(thread(thread_func, ref(m), ref(v_ccp)));
 
 	while (1)
 	{
@@ -584,10 +584,13 @@ void compute(
 
 		m.lock();
 
-		for (size_t i = 0; i < v_ccp.size(); i++)
+		size_t i = 0;
+
+		for (i = 0; i < v_ccp.size(); i++)
 		{
 			if (v_ccp[i].previously_computed == false)
 			{
+				v_ccp[i].previously_computed == true;
 				all_done = false;
 				break;
 			}
@@ -597,6 +600,8 @@ void compute(
 
 		if (all_done)
 			break;
+		else
+			gpu_compute_chunk(v_ccp[i]);
 	}
 
 	for (int i = 0; i < num_cpu_threads; i++)
