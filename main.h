@@ -12,6 +12,7 @@
 #include <fstream>
 #include <cmath>
 #include <cstdlib>
+#include <thread>
 using namespace std;
 
 #include <GL/glew.h>
@@ -281,7 +282,6 @@ void gpu_compute_chunk(
 	//string s = "_coord_float_mat" + to_string(index) + ".png";
 	//imwrite(s.c_str(), input_coordinates_pixels);
 
-
 	output_pixels.resize(4 * tex_w_small * tex_h_small);
 
 	glEnable(GL_TEXTURE_2D);
@@ -403,6 +403,7 @@ void gpu_compute_chunk(
 class compute_chunk_params
 {
 public:
+	bool previously_computed;
 	int chunk_index_x;
 	int chunk_index_y;
 	int num_tiles_per_dimension;
@@ -414,28 +415,60 @@ public:
 	Mat input_coordinates_pixels;
 };
 
-void thread_func(atomic_bool use_cpu,
+
+
+void thread_func(atomic_bool &use_cpu,
 	mutex& m,
 	vector<compute_chunk_params> &v_ccp)
 {
-	bool found_work = false;
-
-	m.lock();
-
-	for (size_t i = 0; i < v_ccp.size(); i++)
+	while (1)
 	{
-		//if(
+		bool found_work = false;
 
+		m.lock();
+
+		for (size_t i = 0; i < v_ccp.size(); i++)
+		{
+			if (v_ccp[i].previously_computed == false)
+			{
+				if (use_cpu)
+				{
+					cpu_compute_chunk(
+						v_ccp[i].chunk_index_x,
+						v_ccp[i].chunk_index_y,
+						v_ccp[i].num_tiles_per_dimension,
+						v_ccp[i].compute_shader_program,
+						v_ccp[i].output_pixels,
+						v_ccp[i].input_pixels,
+						v_ccp[i].input_light_pixels,
+						v_ccp[i].input_light_blocking_pixels,
+						v_ccp[i].input_coordinates_pixels);
+				}
+				else
+				{
+					gpu_compute_chunk(
+						v_ccp[i].chunk_index_x,
+						v_ccp[i].chunk_index_y,
+						v_ccp[i].num_tiles_per_dimension,
+						v_ccp[i].compute_shader_program,
+						v_ccp[i].output_pixels,
+						v_ccp[i].input_pixels,
+						v_ccp[i].input_light_pixels,
+						v_ccp[i].input_light_blocking_pixels,
+						v_ccp[i].input_coordinates_pixels);
+				}
+
+				v_ccp[i].previously_computed = true;
+				found_work = true;
+				break;
+			}
+		}
+
+		m.unlock();
+
+		if (!found_work)
+			return;
 	}
-		//cout << *ci << endl;
-
-	//vs.clear();
-
-	m.unlock();
-
-
-	if (!found_work)
-		return;
 }
 
 
@@ -515,7 +548,7 @@ void compute(
 
 
 
-	const int num_tiles_per_dimension = 4; // this squared is the number of tiles
+	const int num_tiles_per_dimension = 2; // this squared is the number of tiles
 
 	Mat uc_output_large = compute_global_coords(pot, pot);
 
@@ -541,6 +574,7 @@ void compute(
 
 			compute_chunk_params ccp;
 
+			ccp.previously_computed = false;
 			ccp.chunk_index_x = x;
 			ccp.chunk_index_y = y;
 			ccp.num_tiles_per_dimension = num_tiles_per_dimension;
@@ -555,20 +589,45 @@ void compute(
 		}
 	}
 
+
+	mutex m;
+	vector<thread> threads;
+
+	atomic_bool use_cpu = false;
+	threads.push_back(thread(thread_func, ref(use_cpu), ref(m), ref(v_ccp)));
+
+	while (1)
+	{
+		bool all_done = true;
+
+		m.lock();
+
+		for (size_t i = 0; i < v_ccp.size(); i++)
+		{
+			if (v_ccp[i].previously_computed == false)
+			{
+				all_done = false;
+				break;
+			}
+		}
+
+		m.unlock();
+
+		if (all_done)
+			break;
+	}
+
+	threads[0].join();
+
+	//for (size_t i = 0; i < num_cpu_threads; i++)
+	//	threads[i].join();
+
+
+
+
 	for (size_t i = 0; i < v_ccp.size(); i++)
 	{
 		size_t index = v_ccp[i].chunk_index_x * v_ccp[i].num_tiles_per_dimension + v_ccp[i].chunk_index_y;
-
-		gpu_compute_chunk(
-			v_ccp[i].chunk_index_x,
-			v_ccp[i].chunk_index_y,
-			v_ccp[i].num_tiles_per_dimension,
-			v_ccp[i].compute_shader_program,
-			v_ccp[i].output_pixels,
-			v_ccp[i].input_pixels,
-			v_ccp[i].input_light_pixels,
-			v_ccp[i].input_light_blocking_pixels,
-			v_ccp[i].input_coordinates_pixels);
 
 		Mat uc_output_small(v_ccp[i].input_pixels.rows, v_ccp[i].input_pixels.cols, CV_8UC4);
 
@@ -579,6 +638,10 @@ void compute(
 			uc_output_small.data[x + 2] = static_cast<unsigned char>(v_ccp[i].output_pixels[x + 2] * 255.0f);
 			uc_output_small.data[x + 3] = 255.0f;
 		}
+
+		string s = "_uc_output_small" + to_string(index) + ".png";
+		imwrite(s.c_str(), uc_output_small);
+
 
 		array_of_output_mats[index] = uc_output_small;
 	}
