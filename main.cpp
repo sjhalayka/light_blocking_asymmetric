@@ -64,8 +64,7 @@ int main(int argc, char** argv)
 
 
 
-
-
+	
 
 
 
@@ -306,6 +305,12 @@ int main(int argc, char** argv)
 
 
 
+
+	if (false == init_character_set())
+	{
+		cout << "Could not initialize font" << endl;;
+		return 0;
+	}
 
 
 

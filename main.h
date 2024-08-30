@@ -38,7 +38,7 @@ using namespace cv;
 
 
 #include "vertex_fragment_shader.h"
-
+#include "font_draw.h"
 
 
 vertex_fragment_shader ortho_shader;
@@ -389,7 +389,7 @@ void gpu_compute_chunk(
 
 
 	// Run compute shader
-	glDispatchCompute((GLuint)tex_w_small / 16, (GLuint)tex_h_small / 16, 1);
+	glDispatchCompute((GLuint)tex_w_small / 32, (GLuint)tex_h_small / 32, 1);
 
 	// Wait for compute shader to finish
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
