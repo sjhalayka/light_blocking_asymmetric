@@ -308,7 +308,7 @@ int main(int argc, char** argv)
 
 	if (false == init_character_set())
 	{
-		cout << "Could not initialize font" << endl;;
+		cout << "Could not initialize font" << endl;
 		return 0;
 	}
 
@@ -320,6 +320,10 @@ int main(int argc, char** argv)
 
 	while (false == done)
 	{
+		int window_w = 0, window_h = 0;
+		SDL_GetWindowSize(window, &window_w, &window_h);
+
+
 		auto start_time = std::chrono::high_resolution_clock::now();
 
 		SDL_Event event;
@@ -344,8 +348,8 @@ int main(int argc, char** argv)
 		int mouse_x = 0, mouse_y = 0;
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 
-		int window_w = 0, window_h = 0;
-		SDL_GetWindowSize(window, &window_w, &window_h);
+		//int window_w = 0, window_h = 0;
+		//SDL_GetWindowSize(window, &window_w, &window_h);
 
 		float res_x_ratio = res_x * (1.0 / window_w);
 		float res_y_ratio = res_y * (1.0 / window_h);
@@ -451,6 +455,16 @@ int main(int argc, char** argv)
 		draw_full_screen_tex(0, tex_uc_output);
 
 		glDeleteTextures(1, &tex_uc_output);
+
+
+
+
+		size_t sentence_width = get_sentence_width(1, mimgs, "Test");
+
+		print_sentence(1.0f, mimgs, ortho_shader.get_program(), window_w, window_h, window_w / 2 - sentence_width / 2, window_h / 3, "Test");
+
+
+
 
 		SDL_GL_SwapWindow(window);
 

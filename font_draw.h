@@ -323,7 +323,6 @@ bool init_character_set(void)
 
 			mimgs.push_back(img);
 
-			cout << "test" << endl;
 
 		}
 		else
@@ -384,8 +383,6 @@ bool init_character_set(void)
 
 			mimgs.push_back(img);
 		}
-
-
 	}
 
 
