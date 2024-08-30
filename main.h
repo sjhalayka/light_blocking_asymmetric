@@ -119,155 +119,139 @@ public:
 
 
 
-
-void cpu_compute_chunk(
-	compute_chunk_params& ccp)
-{
-	const GLint tex_w_small = ccp.input_pixels.cols;
-	const GLint tex_h_small = ccp.input_pixels.rows;
-	const GLint tex_w_large = ccp.input_light_pixels.cols;
-	const GLint tex_h_large = ccp.input_light_pixels.rows;
-
-	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small, 0.0f);
-
-	//bool found_non_black = false;
-
-	//for (size_t x = 0; x < (4 * ccp.input_pixels.rows * ccp.input_pixels.cols); x += 4)
-	//{
-	//	if (ccp.input_pixels.data[x + 0] != 0 ||
-	//		ccp.input_pixels.data[x + 1] != 0 ||
-	//		ccp.input_pixels.data[x + 2] != 0)
-	//	{
-	//		found_non_black = true;
-	//		break;
-	//	}
-	//}
-
-	//if (!found_non_black)
-	//	return;
-
-	for (unsigned short int x = 0; x < tex_w_small; x++)
-	{
-		for (unsigned short int y = 0; y < tex_h_small; y++)
-		{
-			Vec4f pixelValue = ccp.input_pixels.at<Vec4f>(y, x);
-			const glm::vec4 image_sample = glm::vec4(pixelValue[0], pixelValue[1], pixelValue[2], pixelValue[3]);
-
-			if (image_sample.x == 0 && image_sample.y == 0 && image_sample.z == 0)
-			{
-				size_t index = 4 * (y * tex_w_small + x);
-
-				ccp.output_pixels[index + 0] = 0;
-				ccp.output_pixels[index + 1] = 0;
-				ccp.output_pixels[index + 2] = 0;
-				ccp.output_pixels[index + 3] = 0;
-
-				continue;
-			}
-
-
-			glm::ivec2 per_compute_pixel_coords = glm::ivec2(x, y);// glm::ivec2(gl_GlobalInvocationID.xy);
-
-			pixelValue = ccp.input_coordinates_pixels.at<Vec4f>(y, x);
-			const glm::vec2 coords_float = glm::vec2(pixelValue[0], pixelValue[1]);
-			const glm::ivec2 global_per_compute_pixel_coords = glm::ivec2(int(coords_float.r), int(coords_float.g));
-
-			glm::vec3 lighting = glm::vec3(0, 0, 0);
-
-			for (int i = 0; i < tex_w_large; i++)
-			{
-				for (int j = 0; j < tex_h_large; j++)
-				{
-					glm::ivec2 per_image_pixel_coords = glm::ivec2(i, j);
-
-					pixelValue = ccp.input_light_pixels.at<Vec4f>(j, i);
-					const glm::vec4 light_image_sample = glm::vec4(pixelValue[0], pixelValue[1], pixelValue[2], pixelValue[3]);
-
-					// Not a light
-					if (light_image_sample.x == 0 && light_image_sample.y == 0 && light_image_sample.z == 0)
-						continue;
-
-					pixelValue = ccp.input_light_blocking_pixels.at<Vec4f>(j, i);
-					const glm::vec4 light_blocking_image_sample = glm::vec4(pixelValue[0], pixelValue[1], pixelValue[2], pixelValue[3]);
-
-					// A light blocker doesn't receive light
-					if (light_blocking_image_sample.x == 1 && light_blocking_image_sample.y == 1 && light_blocking_image_sample.z == 1)
-						continue;
-
-					int num_steps = 0;
-
-					glm::vec2 pixel_diff;
-					pixel_diff.x = glm::distance(float(global_per_compute_pixel_coords.x), float(per_image_pixel_coords.x));
-					pixel_diff.y = glm::distance(float(global_per_compute_pixel_coords.y), float(per_image_pixel_coords.y));
-
-					if (pixel_diff.x > pixel_diff.y)
-						num_steps = int(pixel_diff.x);
-					else
-						num_steps = int(pixel_diff.y);
-
-					// Please forgive my use of a magic number
-					if (num_steps < 10)
-						num_steps = 10;
-
-					glm::vec2 light_pos = per_image_pixel_coords;
-
-					glm::ivec2 start = per_image_pixel_coords;
-					glm::ivec2 end = global_per_compute_pixel_coords;
-
-					bool found_light_blocker = false;
-					glm::vec2 curr_uv;
-					glm::ivec2 curr_uv_i;
-
-					for (int s = 0; s < num_steps; s++)
-					{
-						curr_uv = glm::mix(start, end, float(s) / float(num_steps - 1));
-
-						curr_uv_i.x = int(curr_uv.x);
-						curr_uv_i.y = int(curr_uv.y);
-
-						pixelValue = ccp.input_light_blocking_pixels.at<Vec4f>(curr_uv_i.y, curr_uv_i.x);
-						const glm::vec4 light_blocking_image_sample = glm::vec4(pixelValue[0], pixelValue[1], pixelValue[2], pixelValue[3]);
-
-						if (light_blocking_image_sample.x == 1 && light_blocking_image_sample.y == 1 && light_blocking_image_sample.z == 1)
-						{
-							found_light_blocker = true;
-							break;
-						}
-					}
-
-					if (found_light_blocker == false)
-					{
-						// Convert from screen space to some other coordinate system,
-						// so that attenuation works much better
-						const float coordinate_change = 1.0 / 5.0;
-
-						const float dist = glm::distance(light_pos, curr_uv) * coordinate_change;
-						const float dist_coefficient = 1;
-						const float dist_squared_coefficient = 1;
-
-						const float attenuation = 1.0 / (1.0f + dist_coefficient * dist + dist_squared_coefficient * dist * dist);
-						
-						lighting.x += light_image_sample.x * attenuation;
-						lighting.y += light_image_sample.y * attenuation;
-						lighting.z += light_image_sample.z * attenuation;
-					}
-				}
-			}
-
-			lighting = glm::clamp(lighting, 0.0f, 1.0f);
-
-			lighting = glm::max(lighting, 0.001f); // Throw in some ambient lighting
-
-			size_t index = 4 * (y * tex_w_small + x);
-
-			ccp.output_pixels[index + 0] = lighting.x;
-			ccp.output_pixels[index + 1] = lighting.y;
-			ccp.output_pixels[index + 2] = lighting.z;
-			ccp.output_pixels[index + 3] = 1.0;
-
-		}
-	}
-}
+//
+//void cpu_compute_chunk(
+//	compute_chunk_params& ccp)
+//{
+//	const GLint tex_w_small = ccp.input_pixels.cols;
+//	const GLint tex_h_small = ccp.input_pixels.rows;
+//	const GLint tex_w_large = ccp.input_light_pixels.cols;
+//	const GLint tex_h_large = ccp.input_light_pixels.rows;
+//
+//	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small, 0.0f);
+//
+//	for (unsigned short int x = 0; x < tex_w_small; x++)
+//	{
+//		for (unsigned short int y = 0; y < tex_h_small; y++)
+//		{
+//			Vec4f pixelValue = ccp.input_pixels.at<Vec4f>(y, x);
+//			const glm::vec4 image_sample = glm::vec4(pixelValue[0], pixelValue[1], pixelValue[2], pixelValue[3]);
+//
+//			if (image_sample.x == 0 && image_sample.y == 0 && image_sample.z == 0)
+//			{
+//				size_t index = 4 * (y * tex_w_small + x);
+//
+//				ccp.output_pixels[index + 0] = 0;
+//				ccp.output_pixels[index + 1] = 0;
+//				ccp.output_pixels[index + 2] = 0;
+//				ccp.output_pixels[index + 3] = 0;
+//
+//				continue;
+//			}
+//
+//
+//			glm::ivec2 per_compute_pixel_coords = glm::ivec2(x, y);// glm::ivec2(gl_GlobalInvocationID.xy);
+//
+//			pixelValue = ccp.input_coordinates_pixels.at<Vec4f>(y, x);
+//			const glm::vec2 coords_float = glm::vec2(pixelValue[0], pixelValue[1]);
+//			const glm::ivec2 global_per_compute_pixel_coords = glm::ivec2(int(coords_float.r), int(coords_float.g));
+//
+//			glm::vec3 lighting = glm::vec3(0, 0, 0);
+//
+//			for (int i = 0; i < tex_w_large; i++)
+//			{
+//				for (int j = 0; j < tex_h_large; j++)
+//				{
+//					glm::ivec2 per_image_pixel_coords = glm::ivec2(i, j);
+//
+//					pixelValue = ccp.input_light_pixels.at<Vec4f>(j, i);
+//					const glm::vec4 light_image_sample = glm::vec4(pixelValue[0], pixelValue[1], pixelValue[2], pixelValue[3]);
+//
+//					// Not a light
+//					if (light_image_sample.x == 0 && light_image_sample.y == 0 && light_image_sample.z == 0)
+//						continue;
+//
+//					pixelValue = ccp.input_light_blocking_pixels.at<Vec4f>(j, i);
+//					const glm::vec4 light_blocking_image_sample = glm::vec4(pixelValue[0], pixelValue[1], pixelValue[2], pixelValue[3]);
+//
+//					// A light blocker doesn't receive light
+//					if (light_blocking_image_sample.x == 1 && light_blocking_image_sample.y == 1 && light_blocking_image_sample.z == 1)
+//						continue;
+//
+//					int num_steps = 0;
+//
+//					glm::vec2 pixel_diff;
+//					pixel_diff.x = glm::distance(float(global_per_compute_pixel_coords.x), float(per_image_pixel_coords.x));
+//					pixel_diff.y = glm::distance(float(global_per_compute_pixel_coords.y), float(per_image_pixel_coords.y));
+//
+//					if (pixel_diff.x > pixel_diff.y)
+//						num_steps = int(pixel_diff.x);
+//					else
+//						num_steps = int(pixel_diff.y);
+//
+//					// Please forgive my use of a magic number
+//					if (num_steps < 10)
+//						num_steps = 10;
+//
+//					glm::vec2 light_pos = per_image_pixel_coords;
+//
+//					glm::ivec2 start = per_image_pixel_coords;
+//					glm::ivec2 end = global_per_compute_pixel_coords;
+//
+//					bool found_light_blocker = false;
+//					glm::vec2 curr_uv;
+//					glm::ivec2 curr_uv_i;
+//
+//					for (int s = 0; s < num_steps; s++)
+//					{
+//						curr_uv = glm::mix(start, end, float(s) / float(num_steps - 1));
+//
+//						curr_uv_i.x = int(curr_uv.x);
+//						curr_uv_i.y = int(curr_uv.y);
+//
+//						pixelValue = ccp.input_light_blocking_pixels.at<Vec4f>(curr_uv_i.y, curr_uv_i.x);
+//						const glm::vec4 light_blocking_image_sample = glm::vec4(pixelValue[0], pixelValue[1], pixelValue[2], pixelValue[3]);
+//
+//						if (light_blocking_image_sample.x == 1 && light_blocking_image_sample.y == 1 && light_blocking_image_sample.z == 1)
+//						{
+//							found_light_blocker = true;
+//							break;
+//						}
+//					}
+//
+//					if (found_light_blocker == false)
+//					{
+//						// Convert from screen space to some other coordinate system,
+//						// so that attenuation works much better
+//						const float coordinate_change = 1.0 / 5.0;
+//
+//						const float dist = glm::distance(light_pos, curr_uv) * coordinate_change;
+//						const float dist_coefficient = 1;
+//						const float dist_squared_coefficient = 1;
+//
+//						const float attenuation = 1.0 / (1.0f + dist_coefficient * dist + dist_squared_coefficient * dist * dist);
+//						
+//						lighting.x += light_image_sample.x * attenuation;
+//						lighting.y += light_image_sample.y * attenuation;
+//						lighting.z += light_image_sample.z * attenuation;
+//					}
+//				}
+//			}
+//
+//			lighting = glm::clamp(lighting, 0.0f, 1.0f);
+//
+//			lighting = glm::max(lighting, 0.001f); // Throw in some ambient lighting
+//
+//			size_t index = 4 * (y * tex_w_small + x);
+//
+//			ccp.output_pixels[index + 0] = lighting.x;
+//			ccp.output_pixels[index + 1] = lighting.y;
+//			ccp.output_pixels[index + 2] = lighting.z;
+//			ccp.output_pixels[index + 3] = 1.0;
+//
+//		}
+//	}
+//}
 
 
 
@@ -436,38 +420,38 @@ void gpu_compute_chunk(
 
 
 
-
-void thread_func(
-	mutex& m,
-	vector<compute_chunk_params> &v_ccp)
-{
-	while (1)
-	{
-		bool found_work = false;
-
-		m.lock();
-
-		size_t i = 0;
-
-		for (i = 0; i < v_ccp.size(); i++)
-		{
-			if (v_ccp[i].previously_computed == false)
-			{
-				v_ccp[i].previously_computed = true;
-				found_work = true;
-				break;
-			}
-		}
-
-		m.unlock();
-
-
-		if (!found_work)
-			return;
-		else
-			cpu_compute_chunk(v_ccp[i]);
-	}
-}
+//
+//void thread_func(
+//	mutex& m,
+//	vector<compute_chunk_params> &v_ccp)
+//{
+//	while (1)
+//	{
+//		bool found_work = false;
+//
+//		m.lock();
+//
+//		size_t i = 0;
+//
+//		for (i = 0; i < v_ccp.size(); i++)
+//		{
+//			if (v_ccp[i].previously_computed == false)
+//			{
+//				v_ccp[i].previously_computed = true;
+//				found_work = true;
+//				break;
+//			}
+//		}
+//
+//		m.unlock();
+//
+//
+//		if (!found_work)
+//			return;
+//		else
+//			cpu_compute_chunk(v_ccp[i]);
+//	}
+//}
 
 
 
@@ -582,18 +566,18 @@ void compute(
 	}
 
 
-	mutex m;
-	vector<thread> threads;
-	int num_cpu_threads = 0;// std::thread::hardware_concurrency();
+	//mutex m;
+	//vector<thread> threads;
+	//int num_cpu_threads = 0;// std::thread::hardware_concurrency();
 
-	for(int i = 0; i < num_cpu_threads; i++)
-		threads.push_back(thread(thread_func, ref(m), ref(v_ccp)));
+	//for(int i = 0; i < num_cpu_threads; i++)
+	//	threads.push_back(thread(thread_func, ref(m), ref(v_ccp)));
 
 	while (1)
 	{
 		bool all_done = true;
 
-		m.lock();
+		//m.lock();
 
 		size_t i = 0;
 
@@ -607,7 +591,7 @@ void compute(
 			}
 		}
 
-		m.unlock();
+		//m.unlock();
 
 		if (all_done)
 			break;
@@ -615,8 +599,8 @@ void compute(
 			gpu_compute_chunk(v_ccp[i]);
 	}
 
-	for (int i = 0; i < num_cpu_threads; i++)
-		threads[i].join();
+	//for (int i = 0; i < num_cpu_threads; i++)
+	//	threads[i].join();
 
 	for (size_t i = 0; i < v_ccp.size(); i++)
 	{
