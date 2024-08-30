@@ -1,6 +1,6 @@
 #version 430
 
-layout(local_size_x = 16, local_size_y = 16) in;
+layout(local_size_x = 32, local_size_y = 32) in;
 
 layout(binding = 0, rgba32f) writeonly uniform image2D output_image; // small tex
 layout(binding = 1, rgba32f) readonly uniform image2D input_image; // small tex
@@ -16,24 +16,17 @@ uniform ivec2 u_chunk_index;
 
 
 
-void main()
+
+
+
+
+
+
+
+vec3 get_direct_light_at_screen_coord(ivec2 per_compute_pixel_coords)
 {
-	ivec2 per_compute_pixel_coords = ivec2(gl_GlobalInvocationID.xy);
-
-	vec4 image_sample = imageLoad(input_image, per_compute_pixel_coords);
-
-	// Black pixels are still black when lit, so skip lighting altogether
-	if(image_sample.x == 0 && image_sample.y == 0 && image_sample.z == 0)
-	{
-		imageStore(output_image, per_compute_pixel_coords, vec4(0, 0, 0, 1));
-		return;
-	}
-	
-	
-	
 	const vec2 coords_float = imageLoad(input_coordinates_image, per_compute_pixel_coords).rg;
 	ivec2 global_per_compute_pixel_coords = ivec2(int(coords_float.r), int(coords_float.g));
-
 
 	vec3 lighting = vec3(0, 0, 0);
 
@@ -110,6 +103,32 @@ void main()
 			}
 		}
 	}
+
+	return lighting;
+}
+
+
+
+
+
+
+void main()
+{
+	ivec2 per_compute_pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+	vec4 image_sample = imageLoad(input_image, per_compute_pixel_coords);
+
+	// Black pixels are still black when lit, so skip lighting altogether
+	if(image_sample.x == 0 && image_sample.y == 0 && image_sample.z == 0)
+	{
+		imageStore(output_image, per_compute_pixel_coords, vec4(0, 0, 0, 1));
+		return;
+	}
+	
+	vec3 lighting = get_direct_light_at_screen_coord(per_compute_pixel_coords);
+	
+
+
 
 	lighting = clamp(lighting, 0, 1);
 	lighting = max(lighting, 0.001); // Throw in some ambient lighting
