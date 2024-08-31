@@ -639,6 +639,7 @@ void compute(
 
 	pot = pow(2, ceil(log(pot) / log(2)));
 
+
 	Mat input_square_mat(Size(pot, pot), CV_8UC4, Scalar(0, 0, 0, 255));
 	input_mat.copyTo(input_square_mat(Rect(0, 0, pre_pot_res_x, pre_pot_res_y)));
 	input_mat = input_square_mat.clone();
@@ -694,6 +695,13 @@ void compute(
 			ccp.input_light_pixels = input_light_mat_float;
 			ccp.input_light_blocking_pixels = input_light_blocking_mat_float;
 			ccp.input_coordinates_pixels = input_coordinates_mat_float;
+
+			cout << input_mat_float.rows << " " << input_mat_float.cols << endl;
+
+			cout << input_light_mat_float.rows << " " << input_light_mat_float.cols << endl;
+			cout << input_light_blocking_mat_float.rows << " " << input_light_blocking_mat_float.cols << endl;
+
+			cout << input_coordinates_mat_float.rows << " " << input_coordinates_mat_float.cols << endl;
 
 			v_ccp.push_back(ccp);
 		}
@@ -760,18 +768,20 @@ void compute(
 
 	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
 
-	
-	Mat light_mat_float(pot, pot, CV_32FC4);
+//	cout << uc_output.rows << " " << uc_output.cols << endl;
+
+	// Do indirect lighting
+	// 
+	Mat light_mat_float(uc_output.cols, uc_output.rows, CV_32FC4);
 	uc_output.convertTo(light_mat_float, CV_32FC4, 1.0 / 255.0);
 
-//	v_ccp[0].compute_shader_program = compute_shader_program2;
-//	v_ccp[0].input_pixels = input_mat_float;
-//	//v_ccp[0].input_light_pixels = input_light_mat_float;
-//	v_ccp[0].input_light_blocking_pixels = input_light_blocking_mat_float;
-//	v_ccp[0].output_light_pixels = light_mat_float;
-//	gpu_compute_chunk_2(v_ccp[0]);
-//
-////	imwrite("_output_float.png", light_mat_float * 255.0f);
+	v_ccp[0].compute_shader_program = compute_shader_program2;
+	v_ccp[0].input_pixels = input_mat_float;
+	//v_ccp[0].input_light_pixels = input_light_mat_float; // Not needed in shader2.comp
+	v_ccp[0].input_light_blocking_pixels = input_light_blocking_mat_float;
+	v_ccp[0].output_light_pixels = light_mat_float;	
+
+	gpu_compute_chunk_2(v_ccp[0]);
 
 
 

@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 
 
 
-	const int lighting_tile_size = 18;
+	const int lighting_tile_size = 9;
 	const int background_tile_size = 36;
 
 
@@ -375,6 +375,8 @@ int main(int argc, char** argv)
 
 		if (pre_pot_res_y > largest_dim)
 			pot = pre_pot_res_y;
+
+		cout << pre_pot_res_x << " " << pre_pot_res_y << endl;
 
 		pot = pow(2, ceil(log(pot) / log(2)));
 

@@ -51,7 +51,7 @@ vec3 get_indirect_light_at_screen_coord(int samples, ivec2 per_compute_pixel_coo
 {
 	ivec2 global_per_compute_pixel_coords = per_compute_pixel_coords;
 
-	prng_state = global_per_compute_pixel_coords.y * u_size.x + global_per_compute_pixel_coords.x;
+	prng_state = global_per_compute_pixel_coords.y * u_size_small.x + global_per_compute_pixel_coords.x;
 
 	float energy = 0;
 
@@ -62,17 +62,23 @@ vec3 get_indirect_light_at_screen_coord(int samples, ivec2 per_compute_pixel_coo
 		int random_x = int(stepAndOutputRNGFloat(prng_state)*(u_size_small.x - 1.0f));
 		int random_y = int(stepAndOutputRNGFloat(prng_state)*(u_size_small.y - 1.0f));
 	
+		vec4 light_image_sample = imageLoad(input_light_image, ivec2(random_x, random_y));
+
+		// A light
+		if(light_image_sample.x != 0 || light_image_sample.y != 0 || light_image_sample.z != 0) 
+			continue;
+
 
 			vec2 pixel_diff;
 			pixel_diff.x = distance(global_per_compute_pixel_coords.x, random_x);
 			pixel_diff.y = distance(global_per_compute_pixel_coords.y, random_y);
 
-			int num_steps = 0;
+			int num_steps = int(length(pixel_diff));
 
-			if(pixel_diff.x > pixel_diff.y)
-				num_steps = int(pixel_diff.x);
-			else
-				num_steps = int(pixel_diff.y);
+		//	if(pixel_diff.x > pixel_diff.y)
+		//		num_steps = int(pixel_diff.x);
+		//	else
+		//		num_steps = int(pixel_diff.y);
 
 			// Please forgive my use of a magic number
 			if(num_steps < 10)
@@ -101,19 +107,24 @@ vec3 get_indirect_light_at_screen_coord(int samples, ivec2 per_compute_pixel_coo
 				}
 			}
 
-			if(found_light_blocker == true)
-			{
-				// Convert from screen space to some other coordinate system,
+							// Convert from screen space to some other coordinate system,
 				// so that attenuation works much better
-				const float coordinate_change = 1.0 / 15.0;
+				const float coordinate_change = 1.0 / 5.0;
 				
-				const float dist = distance(start, curr_uv) * coordinate_change; 
-				const float dist_coefficient = 100;
-				const float dist_squared_coefficient = 100;
+				const float dist = distance(start, curr_uv_i) * coordinate_change; 
+				const float dist_coefficient = 1;
+				const float dist_squared_coefficient = 1;
 
 				const float attenuation = 1.0 / (1.0f + dist_coefficient * dist + dist_squared_coefficient * dist*dist);
 
-				lighting += get_direct_light_at_screen_coord(ivec2(curr_uv))*attenuation;
+
+			if(found_light_blocker == true)
+			{
+				lighting += get_direct_light_at_screen_coord(curr_uv_i)*attenuation;
+			}
+			else
+			{
+				lighting += get_direct_light_at_screen_coord(ivec2(start *0.5 + end * 0.5));//*attenuation;
 			}
 	
 	}
@@ -137,7 +148,9 @@ void main()
 		imageStore(output_image, per_compute_pixel_coords, vec4(0, 0, 0, 1));
 		return;
 	}
-	
+
+
+
 	vec3 lighting = get_direct_light_at_screen_coord(per_compute_pixel_coords);
 	
 	lighting += 1000*get_indirect_light_at_screen_coord(1000, per_compute_pixel_coords);
