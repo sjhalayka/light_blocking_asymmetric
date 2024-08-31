@@ -114,6 +114,7 @@ public:
 	Mat input_light_pixels;
 	Mat input_light_blocking_pixels;
 	Mat input_coordinates_pixels;
+	Mat output_light_pixels;
 };
 
 
@@ -266,6 +267,151 @@ public:
 
 
 
+void gpu_compute_chunk_2(
+	compute_chunk_params& ccp)
+{
+	const GLint tex_w_large = ccp.input_light_pixels.cols;
+	const GLint tex_h_large = ccp.input_light_pixels.rows;
+
+	ccp.output_pixels.resize(4 * tex_w_large * tex_h_large, 0.0f);
+
+	size_t index = ccp.chunk_index_x * ccp.num_tiles_per_dimension + ccp.chunk_index_y;
+
+	glEnable(GL_TEXTURE_2D);
+
+	GLuint tex_input = 0;
+	GLuint tex_light_input = 0;
+	GLuint tex_light_blocking_input = 0;
+//	GLuint tex_coordinates_input = 0;
+	GLuint tex_light_output = 0;
+
+	glGenTextures(1, &tex_input);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, tex_input);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_large, tex_h_large, 0, GL_RGBA, GL_FLOAT, ccp.input_pixels.data);
+	glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
+	glGenTextures(1, &tex_light_input);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, tex_light_input);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_large, tex_h_large, 0, GL_RGBA, GL_FLOAT, ccp.input_light_pixels.data);
+	glBindImageTexture(2, tex_light_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
+	glGenTextures(1, &tex_light_blocking_input);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, tex_light_blocking_input);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_large, tex_h_large, 0, GL_RGBA, GL_FLOAT, ccp.input_light_blocking_pixels.data);
+	glBindImageTexture(3, tex_light_blocking_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
+	//glGenTextures(1, &tex_coordinates_input);
+	//glActiveTexture(GL_TEXTURE4);
+	//glBindTexture(GL_TEXTURE_2D, tex_coordinates_input);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_small, tex_h_small, 0, GL_RGBA, GL_FLOAT, ccp.input_coordinates_pixels.data);
+	//glBindImageTexture(4, tex_coordinates_input, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
+	glGenTextures(1, &tex_light_output);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, tex_light_output);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_large, tex_h_large, 0, GL_RGBA, GL_FLOAT, ccp.output_light_pixels.data);
+	glBindImageTexture(5, tex_light_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
+
+	GLuint tex_output = 0;
+
+	glGenTextures(1, &tex_output);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex_output);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w_large, tex_h_large, 0, GL_RGBA, GL_FLOAT, NULL);
+	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+	// Use the compute shader
+	glUseProgram(ccp.compute_shader_program);
+
+	glUniform1i(glGetUniformLocation(ccp.compute_shader_program, "output_image"), 0);
+	glUniform1i(glGetUniformLocation(ccp.compute_shader_program, "input_image"), 1);
+	glUniform1i(glGetUniformLocation(ccp.compute_shader_program, "input_light_image"), 2);
+	glUniform1i(glGetUniformLocation(ccp.compute_shader_program, "input_light_blocking_image"), 3);
+//	glUniform1i(glGetUniformLocation(ccp.compute_shader_program, "input_coordinates_image"), 4);
+	glUniform1i(glGetUniformLocation(ccp.compute_shader_program, "output_light_image"), 5);
+
+
+	glUniform2i(glGetUniformLocation(ccp.compute_shader_program, "u_size"), tex_w_large, tex_h_large);
+//	glUniform2i(glGetUniformLocation(ccp.compute_shader_program, "u_size_small"), tex_w_small, tex_h_small);
+	glUniform2i(glGetUniformLocation(ccp.compute_shader_program, "u_chunk_index"), ccp.chunk_index_x, ccp.chunk_index_y);
+
+
+
+	// Run compute shader
+	glDispatchCompute((GLuint)tex_w_large / 32, (GLuint)tex_h_large / 32, 1);
+
+	// Wait for compute shader to finish
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+
+
+
+	// Copy output pixel array to CPU as texture 0
+	glActiveTexture(GL_TEXTURE0);
+	glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, &ccp.output_pixels[0]);
+
+
+	glDeleteTextures(1, &tex_input);
+	glDeleteTextures(1, &tex_light_input);
+	glDeleteTextures(1, &tex_light_blocking_input);
+//	glDeleteTextures(1, &tex_coordinates_input);
+	glDeleteTextures(1, &tex_light_output);
+
+	glDeleteTextures(1, &tex_output);
+
+
+	//for (size_t x = 0; x < (4 * tex_w_small * tex_h_small); x += 4)
+	//{
+	//	cout << ccp.output_pixels[x + 0] << " " << ccp.output_pixels[x + 1] << " " << ccp.output_pixels[x + 2] << " " << ccp.output_pixels[x + 3] << endl;
+	//}
+
+
+	Mat uc_output(tex_w_large, tex_h_large, CV_8UC4);
+
+	for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
+	{
+		//cout << ccp.output_pixels[x + 0] << " " << ccp.output_pixels[x + 1] << " " << ccp.output_pixels[x + 2] << " " << ccp.output_pixels[x + 3] << endl;
+
+		uc_output.data[x + 0] = (ccp.output_pixels[x + 0] * 255.0f);
+		uc_output.data[x + 1] = (ccp.output_pixels[x + 1] * 255.0f);
+		uc_output.data[x + 2] = (ccp.output_pixels[x + 2] * 255.0f);
+		uc_output.data[x + 3] = 255.0f;
+	}
+
+	string s = "_output_" + to_string(index) + ".png";
+	imwrite(s.c_str(), uc_output);
+}
+
+
 
 
 void gpu_compute_chunk(
@@ -277,22 +423,6 @@ void gpu_compute_chunk(
 	const GLint tex_h_large = ccp.input_light_pixels.rows;
 
 	ccp.output_pixels.resize(4 * tex_w_small * tex_h_small, 0.0f);
-
-	//bool found_non_black = false;
-
-	//for (size_t x = 0; x < (4 * ccp.input_pixels.rows * ccp.input_pixels.cols); x += 4)
-	//{
-	//	if (ccp.input_pixels.data[x + 0] != 0 ||
-	//		ccp.input_pixels.data[x + 1] != 0 ||
-	//		ccp.input_pixels.data[x + 2] != 0)
-	//	{
-	//		found_non_black = true;
-	//		break;
-	//	}
-	//}
-
-	//if (!found_non_black)
-	//	return;
 
 	size_t index = ccp.chunk_index_x * ccp.num_tiles_per_dimension + ccp.chunk_index_y;
 
@@ -490,6 +620,7 @@ Mat compute_global_coords(
 
 void compute(
 	GLuint& compute_shader_program,
+	GLuint& compute_shader_program2,
 	vector<float>& output_pixels,
 	Mat input_mat,
 	Mat input_light_mat_with_dynamic_lights,
@@ -626,6 +757,24 @@ void compute(
 
 	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
 
+
+	Mat light_mat_float(pot, pot, CV_32FC4);
+	uc_output.convertTo(light_mat_float, CV_32FC4, 1.0 / 255.0);
+
+
+	v_ccp[0].compute_shader_program = compute_shader_program2;
+	v_ccp[0].input_pixels = input_mat_float;
+	v_ccp[0].input_light_pixels = input_light_mat_float;
+	v_ccp[0].input_light_blocking_pixels = input_light_blocking_mat_float;
+	v_ccp[0].output_light_pixels = light_mat_float;
+	gpu_compute_chunk_2(v_ccp[0]);
+
+	// Do indirect lighting here
+	// uc_output contains lighting texture
+	//input_mat_float
+	//input_light_mat_with_dynamic_lights
+	//input_light_blocking_mat
+
 	for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
 	{
 		output_pixels[x + 0] = uc_output.data[x + 0] / 255.0f;
@@ -633,6 +782,9 @@ void compute(
 		output_pixels[x + 2] = uc_output.data[x + 2] / 255.0f;
 		output_pixels[x + 3] = 1.0f;
 	}
+
+
+
 }
 
 
@@ -741,16 +893,9 @@ bool init_opengl_4_3(int argc, char** argv)
 
 bool init_gl(int argc, char** argv,
 	//	GLint tex_w, GLint tex_h,
-	GLuint& compute_shader_program)
+	GLuint& compute_shader_program,
+	GLuint& compute_shader_program2)
 {
-	// Initialize OpenGL
-	//if (false == init_opengl_4_3(argc, argv))
-	//{
-	//	cout << "OpenGL 4.3 initialization failure" << endl;
-	//	return false;
-	//}
-
-
 	if (!(GLEW_OK == glewInit() &&
 		GLEW_VERSION_4_3))
 	{
@@ -762,27 +907,6 @@ bool init_gl(int argc, char** argv,
 		cout << "OpenGL 4.3 initialization OK" << endl;
 	}
 
-	//if (!GLEW_ARB_texture_non_power_of_two)
-	//{
-	//	cout << "System does not support non-POT textures" << endl;
-	//	return false;
-	//}
-	//else
-	//{
-	//	cout << "System supports non-POT textures" << endl;
-	//}
-
-	//if (!GLEW_ARB_texture_rectangle)
-	//{
-	//	cout << "System does not support rectangular textures" << endl;
-	//	return false;
-	//}
-	//else
-	//{
-	//	cout << "System supports rectangular textures" << endl;
-	//}
-
-	//
 
 
 
@@ -795,6 +919,13 @@ bool init_gl(int argc, char** argv,
 		return false;
 	}
 
+	compute_shader_program2 = 0;
+
+	if (false == compile_and_link_compute_shader("shader2.comp", compute_shader_program2))
+	{
+		cout << "Failed to initialize compute shader 2" << endl;
+		return false;
+	}
 
 	
 	//cout << "Texture size: " << tex_w << "x" << tex_h << endl;
