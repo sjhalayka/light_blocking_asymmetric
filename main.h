@@ -270,6 +270,9 @@ public:
 void gpu_compute_chunk_2(
 	compute_chunk_params& ccp)
 {
+	const GLint tex_w_small = ccp.input_coordinates_pixels.cols;
+	const GLint tex_h_small = ccp.input_coordinates_pixels.rows;
+
 	const GLint tex_w_large = ccp.input_light_pixels.cols;
 	const GLint tex_h_large = ccp.input_light_pixels.rows;
 
@@ -360,7 +363,7 @@ void gpu_compute_chunk_2(
 
 
 	glUniform2i(glGetUniformLocation(ccp.compute_shader_program, "u_size"), tex_w_large, tex_h_large);
-//	glUniform2i(glGetUniformLocation(ccp.compute_shader_program, "u_size_small"), tex_w_small, tex_h_small);
+	glUniform2i(glGetUniformLocation(ccp.compute_shader_program, "u_size_small"), tex_w_small, tex_h_small);
 	glUniform2i(glGetUniformLocation(ccp.compute_shader_program, "u_chunk_index"), ccp.chunk_index_x, ccp.chunk_index_y);
 
 
@@ -395,17 +398,17 @@ void gpu_compute_chunk_2(
 	//}
 
 
-	Mat uc_output(tex_w_large, tex_h_large, CV_8UC4);
+	//Mat uc_output(tex_w_large, tex_h_large, CV_8UC4);
 
-	for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
-	{
-		//cout << ccp.output_pixels[x + 0] << " " << ccp.output_pixels[x + 1] << " " << ccp.output_pixels[x + 2] << " " << ccp.output_pixels[x + 3] << endl;
+	//for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
+	//{
+	//	//cout << ccp.output_pixels[x + 0] << " " << ccp.output_pixels[x + 1] << " " << ccp.output_pixels[x + 2] << " " << ccp.output_pixels[x + 3] << endl;
 
-		uc_output.data[x + 0] = (ccp.output_pixels[x + 0] * 255.0f);
-		uc_output.data[x + 1] = (ccp.output_pixels[x + 1] * 255.0f);
-		uc_output.data[x + 2] = (ccp.output_pixels[x + 2] * 255.0f);
-		uc_output.data[x + 3] = 255.0f;
-	}
+	//	uc_output.data[x + 0] = (ccp.output_pixels[x + 0] * 255.0f);
+	//	uc_output.data[x + 1] = (ccp.output_pixels[x + 1] * 255.0f);
+	//	uc_output.data[x + 2] = (ccp.output_pixels[x + 2] * 255.0f);
+	//	uc_output.data[x + 3] = 255.0f;
+	//}
 
 	//string s = "_output_" + to_string(index) + ".png";
 	//imwrite(s.c_str(), uc_output);
@@ -757,16 +760,21 @@ void compute(
 
 	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
 
-
+	
 	Mat light_mat_float(pot, pot, CV_32FC4);
 	uc_output.convertTo(light_mat_float, CV_32FC4, 1.0 / 255.0);
 
-	v_ccp[0].compute_shader_program = compute_shader_program2;
-	v_ccp[0].input_pixels = input_mat_float;
-	v_ccp[0].input_light_pixels = input_light_mat_float;
-	v_ccp[0].input_light_blocking_pixels = input_light_blocking_mat_float;
-	v_ccp[0].output_light_pixels = light_mat_float;
-	gpu_compute_chunk_2(v_ccp[0]);
+//	v_ccp[0].compute_shader_program = compute_shader_program2;
+//	v_ccp[0].input_pixels = input_mat_float;
+//	//v_ccp[0].input_light_pixels = input_light_mat_float;
+//	v_ccp[0].input_light_blocking_pixels = input_light_blocking_mat_float;
+//	v_ccp[0].output_light_pixels = light_mat_float;
+//	gpu_compute_chunk_2(v_ccp[0]);
+//
+////	imwrite("_output_float.png", light_mat_float * 255.0f);
+
+
+
 
 	for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
 	{
@@ -776,6 +784,7 @@ void compute(
 		output_pixels[x + 3] = 1.0f;
 	}
 
+	
 
 
 }
