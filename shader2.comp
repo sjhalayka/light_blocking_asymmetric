@@ -229,9 +229,9 @@ void main()
 		return;
 	}
 	
-	//vec3 lighting = get_direct_light_at_screen_coord(per_compute_pixel_coords);
+	vec3 lighting = get_direct_light_at_screen_coord(per_compute_pixel_coords);
 	
-	vec3 lighting = get_indirect_light_at_screen_coord(100, per_compute_pixel_coords);
+	lighting += get_indirect_light_at_screen_coord(100, per_compute_pixel_coords);
 
 	if(length(lighting) > 1)
 	lighting = normalize(lighting);
