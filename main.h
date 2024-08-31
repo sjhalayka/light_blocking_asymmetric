@@ -407,8 +407,8 @@ void gpu_compute_chunk_2(
 		uc_output.data[x + 3] = 255.0f;
 	}
 
-	string s = "_output_" + to_string(index) + ".png";
-	imwrite(s.c_str(), uc_output);
+	//string s = "_output_" + to_string(index) + ".png";
+	//imwrite(s.c_str(), uc_output);
 }
 
 
@@ -761,7 +761,6 @@ void compute(
 	Mat light_mat_float(pot, pot, CV_32FC4);
 	uc_output.convertTo(light_mat_float, CV_32FC4, 1.0 / 255.0);
 
-
 	v_ccp[0].compute_shader_program = compute_shader_program2;
 	v_ccp[0].input_pixels = input_mat_float;
 	v_ccp[0].input_light_pixels = input_light_mat_float;
@@ -769,17 +768,11 @@ void compute(
 	v_ccp[0].output_light_pixels = light_mat_float;
 	gpu_compute_chunk_2(v_ccp[0]);
 
-	// Do indirect lighting here
-	// uc_output contains lighting texture
-	//input_mat_float
-	//input_light_mat_with_dynamic_lights
-	//input_light_blocking_mat
-
 	for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
 	{
-		output_pixels[x + 0] = uc_output.data[x + 0] / 255.0f;
-		output_pixels[x + 1] = uc_output.data[x + 1] / 255.0f;
-		output_pixels[x + 2] = uc_output.data[x + 2] / 255.0f;
+		output_pixels[x + 0] = v_ccp[0].output_pixels[x + 0];
+		output_pixels[x + 1] = v_ccp[0].output_pixels[x + 1];
+		output_pixels[x + 2] = v_ccp[0].output_pixels[x + 2];
 		output_pixels[x + 3] = 1.0f;
 	}
 
