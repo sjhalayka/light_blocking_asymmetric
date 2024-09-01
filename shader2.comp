@@ -51,7 +51,7 @@ vec3 get_indirect_light_at_screen_coord(int samples, ivec2 per_compute_pixel_coo
 {
 	ivec2 global_per_compute_pixel_coords = per_compute_pixel_coords;
 
-	prng_state = global_per_compute_pixel_coords.y * u_size_small.x + global_per_compute_pixel_coords.x;
+	prng_state = global_per_compute_pixel_coords.y * u_size.x + global_per_compute_pixel_coords.x;
 
 	float energy = 0;
 
@@ -59,8 +59,8 @@ vec3 get_indirect_light_at_screen_coord(int samples, ivec2 per_compute_pixel_coo
 
 	for(int s = 0; s < samples; s++)
 	{
-		int random_x = int(stepAndOutputRNGFloat(prng_state)*(u_size_small.x - 1.0f));
-		int random_y = int(stepAndOutputRNGFloat(prng_state)*(u_size_small.y - 1.0f));
+		int random_x = int(stepAndOutputRNGFloat(prng_state)*(u_size.x - 1.0f));
+		int random_y = int(stepAndOutputRNGFloat(prng_state)*(u_size.y - 1.0f));
 	
 		vec4 light_image_sample = imageLoad(input_light_image, ivec2(random_x, random_y));
 
@@ -143,19 +143,13 @@ void main()
 		imageStore(output_image, per_compute_pixel_coords, vec4(0, 0, 0, 1));
 		return;
 	}
-
-
-
-	vec3 lighting = get_direct_light_at_screen_coord(per_compute_pixel_coords);
 	
-	lighting += 1000*get_indirect_light_at_screen_coord(1000, per_compute_pixel_coords);
+	vec3 lighting = 1000*get_indirect_light_at_screen_coord(1000, per_compute_pixel_coords);
 
 	if(length(lighting) > 1)
 	lighting = normalize(lighting);
 
-//	lighting = clamp(lighting, 0, 1);
-	lighting = max(lighting, 0.001); // Throw in some ambient lighting
+	lighting = max(lighting, 0.1); // Throw in some ambient lighting
 	
-
 	imageStore(output_image, per_compute_pixel_coords, vec4(lighting, 1.0));
 }

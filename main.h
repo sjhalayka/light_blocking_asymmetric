@@ -800,7 +800,7 @@ void compute(
 			v_ccp[0].output_pixels[x + 2],
 			1.0);
 
-		glm::vec4 output = mix(uc_data, gi_data, 0.25f);
+		glm::vec4 output = glm::mix(uc_data, gi_data, 0.5f);
 
 		output_pixels[x + 0] = output.r;
 		output_pixels[x + 1] = output.g;
