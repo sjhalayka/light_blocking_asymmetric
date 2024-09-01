@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 
 
 
-	const int lighting_tile_size = 9;
+	const int lighting_tile_size = 18;
 	const int background_tile_size = 36;
 
 
