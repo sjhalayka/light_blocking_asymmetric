@@ -696,12 +696,12 @@ void compute(
 			ccp.input_light_blocking_pixels = input_light_blocking_mat_float;
 			ccp.input_coordinates_pixels = input_coordinates_mat_float;
 
-			cout << input_mat_float.rows << " " << input_mat_float.cols << endl;
+			//cout << input_mat_float.rows << " " << input_mat_float.cols << endl;
 
-			cout << input_light_mat_float.rows << " " << input_light_mat_float.cols << endl;
-			cout << input_light_blocking_mat_float.rows << " " << input_light_blocking_mat_float.cols << endl;
+			//cout << input_light_mat_float.rows << " " << input_light_mat_float.cols << endl;
+			//cout << input_light_blocking_mat_float.rows << " " << input_light_blocking_mat_float.cols << endl;
 
-			cout << input_coordinates_mat_float.rows << " " << input_coordinates_mat_float.cols << endl;
+			//cout << input_coordinates_mat_float.rows << " " << input_coordinates_mat_float.cols << endl;
 
 			v_ccp.push_back(ccp);
 		}
@@ -772,7 +772,7 @@ void compute(
 
 	// Do indirect lighting
 	// 
-	Mat light_mat_float(uc_output.cols, uc_output.rows, CV_32FC4);
+	Mat light_mat_float(uc_output.rows, uc_output.cols, CV_32FC4);
 	uc_output.convertTo(light_mat_float, CV_32FC4, 1.0 / 255.0);
 
 	v_ccp[0].compute_shader_program = compute_shader_program2;
@@ -788,9 +788,23 @@ void compute(
 
 	for (size_t x = 0; x < (4 * uc_output.rows * uc_output.cols); x += 4)
 	{
-		output_pixels[x + 0] = v_ccp[0].output_pixels[x + 0];
-		output_pixels[x + 1] = v_ccp[0].output_pixels[x + 1];
-		output_pixels[x + 2] = v_ccp[0].output_pixels[x + 2];
+		glm::vec4 uc_data(
+			uc_output.data[x + 0] / 255.0f,
+			uc_output.data[x + 1] / 255.0f,
+			uc_output.data[x + 2] / 255.0f,
+			1.0);
+
+		glm::vec4 gi_data(
+			v_ccp[0].output_pixels[x + 0],
+			v_ccp[0].output_pixels[x + 1],
+			v_ccp[0].output_pixels[x + 2],
+			1.0);
+
+		glm::vec4 output = mix(uc_data, gi_data, 0.25f);
+
+		output_pixels[x + 0] = output.r;
+		output_pixels[x + 1] = output.g;
+		output_pixels[x + 2] = output.b;
 		output_pixels[x + 3] = 1.0f;
 	}
 

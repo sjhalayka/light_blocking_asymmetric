@@ -75,11 +75,6 @@ vec3 get_indirect_light_at_screen_coord(int samples, ivec2 per_compute_pixel_coo
 
 			int num_steps = int(length(pixel_diff));
 
-		//	if(pixel_diff.x > pixel_diff.y)
-		//		num_steps = int(pixel_diff.x);
-		//	else
-		//		num_steps = int(pixel_diff.y);
-
 			// Please forgive my use of a magic number
 			if(num_steps < 10)
 				num_steps = 10;
@@ -107,11 +102,11 @@ vec3 get_indirect_light_at_screen_coord(int samples, ivec2 per_compute_pixel_coo
 				}
 			}
 
-							// Convert from screen space to some other coordinate system,
+				// Convert from screen space to some other coordinate system,
 				// so that attenuation works much better
-				const float coordinate_change = 1.0 / 5.0;
+				//const float coordinate_change = 1.0 / 1.0;
 				
-				const float dist = distance(start, curr_uv_i) * coordinate_change; 
+				const float dist = distance(start, curr_uv_i);// * coordinate_change; 
 				const float dist_coefficient = 1;
 				const float dist_squared_coefficient = 1;
 
@@ -124,7 +119,7 @@ vec3 get_indirect_light_at_screen_coord(int samples, ivec2 per_compute_pixel_coo
 			}
 			else
 			{
-				lighting += get_direct_light_at_screen_coord(ivec2(start *0.5 + end * 0.5));//*attenuation;
+				lighting += get_direct_light_at_screen_coord(ivec2(mix(start, end, 0.5f)));//*attenuation;
 			}
 	
 	}

@@ -376,7 +376,7 @@ int main(int argc, char** argv)
 		if (pre_pot_res_y > largest_dim)
 			pot = pre_pot_res_y;
 
-		cout << pre_pot_res_x << " " << pre_pot_res_y << endl;
+	//	cout << pre_pot_res_x << " " << pre_pot_res_y << endl;
 
 		pot = pow(2, ceil(log(pot) / log(2)));
 
