@@ -26,6 +26,12 @@ using namespace cv;
 #include <SDL_opengl.h>
 
 
+#include "dear imgui/imgui.h"
+#include "dear imgui/imgui_impl_sdl.h"
+#include "dear imgui/imgui_impl_opengl3.h"
+// #include "dear imgui/imgui_stdlib.h"
+
+
 
 #ifdef _MSC_VER
 #pragma comment(lib, "opencv_world4100")
@@ -696,13 +702,6 @@ void compute(
 			ccp.input_light_blocking_pixels = input_light_blocking_mat_float;
 			ccp.input_coordinates_pixels = input_coordinates_mat_float;
 
-			//cout << input_mat_float.rows << " " << input_mat_float.cols << endl;
-
-			//cout << input_light_mat_float.rows << " " << input_light_mat_float.cols << endl;
-			//cout << input_light_blocking_mat_float.rows << " " << input_light_blocking_mat_float.cols << endl;
-
-			//cout << input_coordinates_mat_float.rows << " " << input_coordinates_mat_float.cols << endl;
-
 			v_ccp.push_back(ccp);
 		}
 	}
@@ -762,19 +761,12 @@ void compute(
 	}
 
 
-
-
-
-
 	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
 
-//	cout << uc_output.rows << " " << uc_output.cols << endl;
 
+	float gi_factor = 0.0f;
 
-
-	bool do_global_illumination = false;
-
-	if (do_global_illumination)
+	if (gi_factor > 0.0f)
 	{
 		// Do indirect lighting
 		// 
@@ -803,7 +795,7 @@ void compute(
 				v_ccp[0].output_pixels[x + 2],
 				1.0);
 
-			glm::vec4 output = glm::mix(uc_data, gi_data, 0.5f);
+			glm::vec4 output = glm::mix(uc_data, gi_data, gi_factor);
 
 			output_pixels[x + 0] = output.r;
 			output_pixels[x + 1] = output.g;

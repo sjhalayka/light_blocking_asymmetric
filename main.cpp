@@ -315,6 +315,28 @@ int main(int argc, char** argv)
 	}
 
 
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	//ImGuiIO& io = ImGui::GetIO();
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	////io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	//io.WantCaptureMouse = true;
+
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
+	io.WantCaptureMouse = true;
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	//SDL_CaptureMouse();
 
 
 
@@ -376,8 +398,6 @@ int main(int argc, char** argv)
 		if (pre_pot_res_y > largest_dim)
 			pot = pre_pot_res_y;
 
-	//	cout << pre_pot_res_x << " " << pre_pot_res_y << endl;
-
 		pot = pow(2, ceil(log(pot) / log(2)));
 
 		vector<float> output_pixels(4 * pot * pot);
@@ -436,14 +456,17 @@ int main(int argc, char** argv)
 
 		// Crop
 		uc_output = uc_output(Range(0, res_y), Range(0, res_x));
-
-
+		
+		//SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
 
 
 		// Draw
 		glViewport(0, 0, window_w, window_h);
 		glClearColor(1.0, 0.5, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+
+
 
 		GLuint tex_uc_output = 0;
 		glGenTextures(1, &tex_uc_output);
@@ -471,16 +494,77 @@ int main(int argc, char** argv)
 
 
 
-		SDL_GL_SwapWindow(window);
 
 		auto end_time = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<float, std::milli> elapsed = end_time - start_time;
 
 		cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds" << endl;
+
+
+
+
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame(window);
+		ImGui::NewFrame();
+
+		ImGui::Begin("Example ");
+		
+		
+		if (ImGui::BeginMainMenuBar()) {
+			if (ImGui::BeginMenu("Settings")) {
+				//ImGui::MenuItem("Log mouse events", nullptr, &log_mouse_events_);
+				//ImGui::MenuItem("DPI scaling", nullptr, &show_dpi);
+				//ImGui::MenuItem("Show fps", nullptr, &show_fps);
+				//ImGui::MenuItem("Cap fps", nullptr, &cap_fps);
+				//ImGui::MenuItem("Log level", nullptr, &show_log_level);
+				ImGui::EndMenu();
+			}
+			ImGui::EndMainMenuBar();
+		}
+		
+		//if (ImGui::BeginTabBar("##tabbar"), ImGuiTabBarFlags_::ImGuiTabBarFlags_NoTooltip)
+		//{
+		//	ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+		//	if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
+		//	{
+		//		if (ImGui::BeginTabItem("Avocado"))
+		//		{
+		//			ImGui::Text("This is the Avocado tab!\nblah blah blah blah blah");
+		//			ImGui::EndTabItem();
+		//		}
+		//		if (ImGui::BeginTabItem("Broccoli"))
+		//		{
+		//			ImGui::Text("This is the Broccoli tab!\nblah blah blah blah blah");
+		//			ImGui::EndTabItem();
+		//		}
+		//		if (ImGui::BeginTabItem("Cucumber"))
+		//		{
+		//			ImGui::Text("This is the Cucumber tab!\nblah blah blah blah blah");
+		//			ImGui::EndTabItem();
+		//		}
+		//		ImGui::EndTabBar();
+		//	}
+		//}
+
+		ImGui::End();
+
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+
+		SDL_GL_SwapWindow(window);
+
+
 	}
 
 	// Clean up all memory
 	glDeleteProgram(compute_shader_program);
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 
 	SDL_GL_DeleteContext(gl_context);
 	SDL_DestroyWindow(window);
