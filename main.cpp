@@ -508,44 +508,33 @@ int main(int argc, char** argv)
 		ImGui_ImplSDL2_NewFrame(window);
 		ImGui::NewFrame();
 
-		ImGui::Begin("Example ");
-		
-		
-		if (ImGui::BeginMainMenuBar()) {
-			if (ImGui::BeginMenu("Settings")) {
-				//ImGui::MenuItem("Log mouse events", nullptr, &log_mouse_events_);
-				//ImGui::MenuItem("DPI scaling", nullptr, &show_dpi);
-				//ImGui::MenuItem("Show fps", nullptr, &show_fps);
-				//ImGui::MenuItem("Cap fps", nullptr, &cap_fps);
-				//ImGui::MenuItem("Log level", nullptr, &show_log_level);
-				ImGui::EndMenu();
+		ImGui::Begin("Debug");
+
+		// Todo: use tree to list screens, etc.
+		if (ImGui::BeginTabBar("##tabbar"), ImGuiTabBarFlags_::ImGuiTabBarFlags_NoTooltip)
+		{
+			ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+
+			if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
+			{
+				if (ImGui::BeginTabItem("Screens"))
+				{
+					ImGui::Text("Screens tab");
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Characters"))
+				{
+					ImGui::Text("Characters tab");
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Portal Pairs"))
+				{
+					ImGui::Text("Portal pairs tab");
+					ImGui::EndTabItem();
+				}
+				ImGui::EndTabBar();
 			}
-			ImGui::EndMainMenuBar();
 		}
-		
-		//if (ImGui::BeginTabBar("##tabbar"), ImGuiTabBarFlags_::ImGuiTabBarFlags_NoTooltip)
-		//{
-		//	ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
-		//	if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
-		//	{
-		//		if (ImGui::BeginTabItem("Avocado"))
-		//		{
-		//			ImGui::Text("This is the Avocado tab!\nblah blah blah blah blah");
-		//			ImGui::EndTabItem();
-		//		}
-		//		if (ImGui::BeginTabItem("Broccoli"))
-		//		{
-		//			ImGui::Text("This is the Broccoli tab!\nblah blah blah blah blah");
-		//			ImGui::EndTabItem();
-		//		}
-		//		if (ImGui::BeginTabItem("Cucumber"))
-		//		{
-		//			ImGui::Text("This is the Cucumber tab!\nblah blah blah blah blah");
-		//			ImGui::EndTabItem();
-		//		}
-		//		ImGui::EndTabBar();
-		//	}
-		//}
 
 		ImGui::End();
 
