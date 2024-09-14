@@ -5,6 +5,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <Windows.h>
+#include "sqlite/sqlite3.h"
 
 #include <iostream>
 #include <vector>
@@ -50,6 +52,35 @@ using namespace cv;
 vertex_fragment_shader ortho_shader;
 
 
+bool openFileDialog(std::string& fileName)
+{
+	// common dialog box structure, setting all fields to 0 is important
+	OPENFILENAME ofn = { 0 };
+	TCHAR szFile[9600] = { 0 };
+
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = NULL; // <-- maybe needing HANDLE here ?
+	ofn.lpstrFile = szFile;
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = L"All files\0*.*\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = 0;// OFN_PATHMUSTEXIST;// | OFN_FILEMUSTEXIST;
+
+	if (GetOpenFileName(&ofn) == TRUE)
+	{
+//		std::cout << "file selected : " << ofn.lpstrFile << std::endl;
+
+		wstring f = wstring(ofn.lpstrFile);
+
+		fileName = string(f.begin(), f.end());// ofn.lpstrFile);// [0] , ofn.lpstrFile[wcslen(ofn.lpstrFile) - 1]);
+		return true;
+	}
+
+	return false;
+}
 
 
 std::vector<cv::Mat> splitImage(cv::Mat& image, int M, int N)
@@ -764,7 +795,7 @@ void compute(
 	cv::Mat uc_output = imageCollage(array_of_output_mats, num_tiles_per_dimension, num_tiles_per_dimension);
 
 
-	float gi_factor = 0.0f;
+	float gi_factor = 0;
 
 	if (gi_factor > 0.0f)
 	{

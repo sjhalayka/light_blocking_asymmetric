@@ -10,13 +10,345 @@
 
 
 
+
+
+
+
+
+// https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
+int InsertFile(const string& db_name, const string &file_name)
+{
+	ifstream file(file_name.c_str(), ios::in | ios::binary);
+	if (!file) {
+		cerr << "An error occurred opening the file\n";
+		return 12345;
+	}
+	file.seekg(0, ifstream::end);
+	streampos size = file.tellg();
+	file.seekg(0);
+
+	char* buffer = new char[size];
+	file.read(buffer, size);
+
+	sqlite3* db = NULL;
+	int rc = sqlite3_open_v2(db_name.c_str(), &db, SQLITE_OPEN_READWRITE, NULL);
+	if (rc != SQLITE_OK) {
+		cerr << "db open failed: " << sqlite3_errmsg(db) << endl;
+	}
+	else {
+		sqlite3_stmt* stmt = NULL;
+		rc = sqlite3_prepare_v2(db,
+			"INSERT INTO DEMO_TABLE(DEMO_FILE)"
+			" VALUES(?)",
+			-1, &stmt, NULL);
+		if (rc != SQLITE_OK) {
+			cerr << "prepare failed: " << sqlite3_errmsg(db) << endl;
+		}
+		else {
+			// SQLITE_STATIC because the statement is finalized
+			// before the buffer is freed:
+			rc = sqlite3_bind_blob(stmt, 1, buffer, size, SQLITE_STATIC);
+			if (rc != SQLITE_OK) {
+				cerr << "bind failed: " << sqlite3_errmsg(db) << endl;
+			}
+			else {
+				rc = sqlite3_step(stmt);
+				if (rc != SQLITE_DONE)
+					cerr << "execution failed: " << sqlite3_errmsg(db) << endl;
+			}
+		}
+		sqlite3_finalize(stmt);
+	}
+	sqlite3_close(db);
+
+	delete[] buffer;
+}
+
+// https://stackoverflow.com/a/11238683/3634553
+
+
+
+
+
+int retrieve_table_schema(const string& db_name, const string &table_name)
+{
+	sqlite3* db;
+	sqlite3_stmt* stmt;
+	string sql = "SELECT sql FROM sqlite_schema WHERE name = '" + table_name + "';";
+	int rc = sqlite3_open(db_name.c_str(), &db);
+
+	if (rc)
+	{
+		std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+		return rc;
+	}
+
+	rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+
+	if (rc != SQLITE_OK)
+	{
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		sqlite3_close(db);
+		return rc;
+	}
+
+	bool done = false;
+	unsigned char* text = 0;
+
+	while (!done)
+	{
+		switch (sqlite3_step(stmt))
+		{
+		case SQLITE_ROW:
+			text = const_cast<unsigned char*>(sqlite3_column_text(stmt, 0));
+			cout << text << endl;
+			break;
+
+		case SQLITE_DONE:
+			done = true;
+			break;
+
+		default:
+			done = true;
+			cout << "Failure" << endl;
+			break;
+		}
+	}
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+
+	return 0;
+}
+
+
+
+int retrieve_table_names(const string& db_name, vector<string> &names)
+{
+	sqlite3* db;
+	sqlite3_stmt* stmt;
+	string sql = "SELECT name FROM sqlite_master WHERE type='table';";
+	int rc = sqlite3_open(db_name.c_str(), &db);
+
+	if (rc)
+	{
+		std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+		return rc;
+	}
+
+	rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+
+	if (rc != SQLITE_OK)
+	{
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		sqlite3_close(db);
+		return rc;
+	}
+
+	bool done = false;
+	unsigned char* text = 0;
+
+	while (!done) 
+	{
+		switch (sqlite3_step(stmt))
+		{
+			case SQLITE_ROW:
+			{
+				const int s = sqlite3_column_bytes(stmt, 0);
+
+				const unsigned char* c = const_cast<unsigned char *>(sqlite3_column_text(stmt, 0));
+
+				names.push_back(reinterpret_cast<const char*>(c));
+
+				break;
+			}
+			case SQLITE_DONE:
+			{
+				done = true;
+				break;
+			}
+			default:
+			{
+				done = true;
+				// failure
+				break;
+			}
+		}
+	}
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+int retrieve_file(const string& db_name, const string& file_name)
+{
+	sqlite3* db;
+	sqlite3_stmt* stmt;
+	string sql = "SELECT demo_file, id FROM demo_table WHERE id = ?";
+	int rc = sqlite3_open(db_name.c_str(), &db);
+
+	if (rc) 
+	{
+		std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+		return rc;
+	}
+
+	rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+
+	if (rc != SQLITE_OK) 
+	{
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		sqlite3_close(db);
+		return rc;
+	}
+
+	int param_value = 1; // Example value
+	sqlite3_bind_int(stmt, 1, param_value);
+
+	rc = sqlite3_step(stmt);
+
+	if (rc == SQLITE_ROW) 
+	{
+		const void* blob = sqlite3_column_blob(stmt, 0);
+		int blob_size = sqlite3_column_bytes(stmt, 0);
+
+		std::vector<unsigned char> blobData((unsigned char*)blob, (unsigned char*)blob + blob_size);
+
+		ofstream f(file_name.c_str(), ios_base::binary);
+		f.write(reinterpret_cast<char*>(&blobData[0]), blobData.size() * sizeof(unsigned char));
+		f.close();
+
+		cout << "ID: " << sqlite3_column_text(stmt, 1) << endl;
+
+	}
+	else if (rc == SQLITE_DONE) 
+	{
+		std::cout << "No rows found." << std::endl;
+	}
+	else 
+	{
+		std::cerr << "Failed to step statement: " << sqlite3_errmsg(db) << std::endl;
+	}
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+
+	return 0;
+}
+
+
+
 int main(int argc, char** argv)
 {
+	//string filename = "";
+
+	//if(openFileDialog(filename))
+	//	cout << filename << endl;	
+
+	//InsertFile("test.db", "C:/temp/1.png");
+	//int x = retrieve_file("test.db", "C:/temp/1_out.png");
+
+	//cout << x << endl;
+
+	//return 0;
+
+	
+
+	vector<pair<string, string>> table_name_code_pairs;
+
+	pair<string, string> s;
+
+
+	s.first = "screens";
+	s.second = "";
+	s.second += "CREATE TABLE screens\n";
+	s.second += "(\n";
+	s.second += "	screen_id INTEGER PRIMARY KEY NOT NULL,\n";
+	s.second += "\n";
+	s.second += "	input_image BLOB,\n";
+	s.second += "	input_light_image BLOB,\n";
+	s.second += "	input_light_blocker_image BLOB,\n";
+	s.second += "	input_traversable_image BLOB,\n";
+	s.second += "\n";
+	s.second += "	nickname TEXT,\n";
+	s.second += "\n";
+	s.second += "	north_neighbour_id INTEGER,\n";
+	s.second += "	east_neighbour_id INTEGER,\n";
+	s.second += "	south_neighbour_id INTEGER,\n";
+	s.second += "	west_neighbour_id INTEGER,\n";
+	s.second += "\n";
+	s.second += "	FOREIGN KEY(north_neighbour_id) REFERENCES screens(screen_id),\n";
+	s.second += "	FOREIGN KEY(east_neighbour_id) REFERENCES screens(screen_id),\n";
+	s.second += "	FOREIGN KEY(south_neighbour_id) REFERENCES screens(screen_id),\n";
+	s.second += "	FOREIGN KEY(west_neighbour_id) REFERENCES screens(screen_id)\n";
+	s.second += ");";
+
+	table_name_code_pairs.push_back(s);
+
+
+	s.first = "portals";
+	s.second = "";
+	s.second += "CREATE TABLE portals\n";
+	s.second += "(\n";
+	s.second += "portal_id INTEGER PRIMARY KEY NOT NULL,\n";
+	s.second += "\n";
+	s.second += "	nickname TEXT,\n";
+	s.second += "\n";
+	s.second += "	coordinate_x INTEGER,\n";
+	s.second += "	coordinate_y INTEGER,\n";
+	s.second += "\n";
+	s.second += "	screen_id INTEGER NOT NULL,\n";
+	s.second += "\n";
+	s.second += "	FOREIGN KEY(screen_id) REFERENCES screens(screen_id)\n";
+	s.second += ");\n";
+
+	table_name_code_pairs.push_back(s);
+
+
+
+	s.first = "portal_pairs";
+	s.second = "";
+	s.second += "CREATE TABLE portal_pairs\n";
+	s.second += "(\n";
+	s.second += "	portal_pair_id INTEGER PRIMARY KEY NOT NULL,\n";
+	s.second += "\n";
+	s.second += "	nickname TEXT,\n";
+	s.second += "\n";
+	s.second += "	portal_pointer_A INTEGER NOT NULL,\n";
+	s.second += "	portal_pointer_B INTEGER NOT NULL,\n";
+	s.second += "\n";
+	s.second += "	FOREIGN KEY(portal_pointer_A) REFERENCES portals(portal_id),\n";
+	s.second += "	FOREIGN KEY(portal_pointer_B) REFERENCES portals(portal_id)\n";
+	s.second += ");\n";
 
 
 
 
 
+	vector<string> found_table_names;
+	retrieve_table_names("test.db", found_table_names);
+
+	for (size_t i = 0; i < found_table_names.size(); i++)
+	{
+		retrieve_table_schema("test.db", found_table_names[i]);
+	}
+
+
+	return 0;
 
 
 
@@ -457,7 +789,6 @@ int main(int argc, char** argv)
 		// Crop
 		uc_output = uc_output(Range(0, res_y), Range(0, res_x));
 		
-		//SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
 
 
 		// Draw
@@ -532,11 +863,30 @@ int main(int argc, char** argv)
 					ImGui::Text("Portal pairs tab");
 					ImGui::EndTabItem();
 				}
+				if (ImGui::BeginTabItem("Cinematics"))
+				{
+					ImGui::Text("Cinematics");
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Global booleans"))
+				{
+					ImGui::Text("Global booleans");
+					ImGui::EndTabItem();
+				}
 				ImGui::EndTabBar();
 			}
 		}
 
 		ImGui::End();
+
+
+
+
+
+	//	ImGui::ShowDemoWindow();
+
+
+
 
 
 		ImGui::Render();

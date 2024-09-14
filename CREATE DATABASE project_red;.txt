@@ -1,0 +1,54 @@
+https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
+
+
+CREATE TABLE screens
+(
+	screen_id INTEGER PRIMARY KEY NOT NULL,
+	
+	input_image BLOB,
+	input_light_image BLOB,
+	input_light_blocker_image BLOB,
+	input_traversable_image BLOB,
+
+	nickname TEXT,
+
+	north_neighbour_id INTEGER,
+	east_neighbour_id INTEGER,
+	south_neighbour_id INTEGER,
+	west_neighbour_id INTEGER,
+
+	FOREIGN KEY (north_neighbour_id) REFERENCES screens(screen_id),
+	FOREIGN KEY (east_neighbour_id) REFERENCES screens(screen_id),
+	FOREIGN KEY (south_neighbour_id) REFERENCES screens(screen_id),
+	FOREIGN KEY (west_neighbour_id) REFERENCES screens(screen_id)
+);
+
+
+CREATE TABLE portals
+(
+	portal_id INTEGER PRIMARY KEY NOT NULL,
+
+	nickname TEXT,
+	
+	coordinate_x INTEGER,
+	coordinate_y INTEGER,
+
+	screen_id INTEGER NOT NULL,
+	
+	FOREIGN KEY (screen_id) REFERENCES screens(screen_id)
+);
+
+
+CREATE TABLE portal_pairs
+(
+	portal_pair_id INTEGER PRIMARY KEY NOT NULL,
+
+	nickname TEXT,
+	
+	portal_pointer_A INTEGER NOT NULL,
+	portal_pointer_B INTEGER NOT NULL,
+	
+	FOREIGN KEY (portal_pointer_A) REFERENCES portals(portal_id),
+	FOREIGN KEY (portal_pointer_B) REFERENCES portals(portal_id)
+);
+
