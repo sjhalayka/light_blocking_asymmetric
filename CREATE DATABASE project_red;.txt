@@ -21,7 +21,7 @@ CREATE TABLE screens
 	FOREIGN KEY (east_neighbour_id) REFERENCES screens(screen_id),
 	FOREIGN KEY (south_neighbour_id) REFERENCES screens(screen_id),
 	FOREIGN KEY (west_neighbour_id) REFERENCES screens(screen_id)
-);
+)
 
 
 CREATE TABLE portals
@@ -36,7 +36,7 @@ CREATE TABLE portals
 	screen_id INTEGER NOT NULL,
 	
 	FOREIGN KEY (screen_id) REFERENCES screens(screen_id)
-);
+)
 
 
 CREATE TABLE portal_pairs
@@ -50,5 +50,5 @@ CREATE TABLE portal_pairs
 	
 	FOREIGN KEY (portal_pointer_A) REFERENCES portals(portal_id),
 	FOREIGN KEY (portal_pointer_B) REFERENCES portals(portal_id)
-);
+)
 

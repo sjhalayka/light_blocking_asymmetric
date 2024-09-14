@@ -70,8 +70,12 @@ int InsertFile(const string& db_name, const string &file_name)
 
 
 
-int retrieve_table_schema(const string& db_name, const string &table_name)
+
+
+string retrieve_table_schema(const string& db_name, const string &table_name)
 {
+	string ret;
+
 	sqlite3* db;
 	sqlite3_stmt* stmt;
 	string sql = "SELECT sql FROM sqlite_schema WHERE name = '" + table_name + "';";
@@ -80,7 +84,7 @@ int retrieve_table_schema(const string& db_name, const string &table_name)
 	if (rc)
 	{
 		std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
-		return rc;
+		return "";
 	}
 
 	rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
@@ -89,37 +93,113 @@ int retrieve_table_schema(const string& db_name, const string &table_name)
 	{
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		sqlite3_close(db);
-		return rc;
+		return "";
 	}
 
 	bool done = false;
-	unsigned char* text = 0;
 
 	while (!done)
 	{
 		switch (sqlite3_step(stmt))
 		{
-		case SQLITE_ROW:
-			text = const_cast<unsigned char*>(sqlite3_column_text(stmt, 0));
-			cout << text << endl;
-			break;
-
-		case SQLITE_DONE:
-			done = true;
-			break;
-
-		default:
-			done = true;
-			cout << "Failure" << endl;
-			break;
+			case SQLITE_ROW:
+			{	
+				const unsigned char* c = const_cast<unsigned char*>(sqlite3_column_text(stmt, 0));
+				ret = reinterpret_cast<const char*>(c);
+				break;
+			}
+			case SQLITE_DONE:
+			{
+				done = true;
+				break;
+			}
+			default:
+			{
+				done = true;
+				cout << "Failure" << endl;
+				break;
+			}
 		}
 	}
 
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 
-	return 0;
+	return ret;
 }
+
+
+
+
+
+string run_sql(const string& db_name, const string& table_name, const string &sql)
+{
+	string ret;
+
+	sqlite3* db;
+	sqlite3_stmt* stmt;
+//	string sql = "SELECT sql FROM sqlite_schema WHERE name = '" + table_name + "';";
+	int rc = sqlite3_open(db_name.c_str(), &db);
+
+	if (rc)
+	{
+		std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+		return "";
+	}
+
+	rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+
+	if (rc != SQLITE_OK)
+	{
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		sqlite3_close(db);
+		return "";
+	}
+
+	bool done = false;
+
+	while (!done)
+	{
+		switch (sqlite3_step(stmt))
+		{
+			case SQLITE_ROW:
+			{
+				const unsigned char* c = const_cast<unsigned char*>(sqlite3_column_text(stmt, 0));
+				ret = reinterpret_cast<const char*>(c);
+				break;
+			}
+			case SQLITE_DONE:
+			{
+				done = true;
+				break;
+			}
+			default:
+			{
+				done = true;
+				cout << "Failure" << endl;
+				break;
+			}
+		}
+	}
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+
+	return ret;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -295,7 +375,7 @@ int main(int argc, char** argv)
 	s.second += "	FOREIGN KEY(east_neighbour_id) REFERENCES screens(screen_id),\n";
 	s.second += "	FOREIGN KEY(south_neighbour_id) REFERENCES screens(screen_id),\n";
 	s.second += "	FOREIGN KEY(west_neighbour_id) REFERENCES screens(screen_id)\n";
-	s.second += ");";
+	s.second += ")";
 
 	table_name_code_pairs.push_back(s);
 
@@ -304,7 +384,7 @@ int main(int argc, char** argv)
 	s.second = "";
 	s.second += "CREATE TABLE portals\n";
 	s.second += "(\n";
-	s.second += "portal_id INTEGER PRIMARY KEY NOT NULL,\n";
+	s.second += "	portal_id INTEGER PRIMARY KEY NOT NULL,\n";
 	s.second += "\n";
 	s.second += "	nickname TEXT,\n";
 	s.second += "\n";
@@ -314,7 +394,7 @@ int main(int argc, char** argv)
 	s.second += "	screen_id INTEGER NOT NULL,\n";
 	s.second += "\n";
 	s.second += "	FOREIGN KEY(screen_id) REFERENCES screens(screen_id)\n";
-	s.second += ");\n";
+	s.second += ")";
 
 	table_name_code_pairs.push_back(s);
 
@@ -333,8 +413,9 @@ int main(int argc, char** argv)
 	s.second += "\n";
 	s.second += "	FOREIGN KEY(portal_pointer_A) REFERENCES portals(portal_id),\n";
 	s.second += "	FOREIGN KEY(portal_pointer_B) REFERENCES portals(portal_id)\n";
-	s.second += ");\n";
+	s.second += ")";
 
+	table_name_code_pairs.push_back(s);
 
 
 
@@ -342,9 +423,18 @@ int main(int argc, char** argv)
 	vector<string> found_table_names;
 	retrieve_table_names("test.db", found_table_names);
 
-	for (size_t i = 0; i < found_table_names.size(); i++)
+	for (size_t i = 0; i < table_name_code_pairs.size(); i++)
 	{
-		retrieve_table_schema("test.db", found_table_names[i]);
+		if(found_table_names.end() == find(found_table_names.begin(), found_table_names.end(), table_name_code_pairs[i].first))
+			run_sql("test.db", table_name_code_pairs[i].first, table_name_code_pairs[i].second);
+	}
+
+	for (size_t i = 0; i < table_name_code_pairs.size(); i++)
+	{
+		string schema = retrieve_table_schema("test.db", table_name_code_pairs[i].first);
+
+		if (schema != table_name_code_pairs[i].second)
+			cout << "Schema warning" << endl;
 	}
 
 
