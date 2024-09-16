@@ -566,7 +566,7 @@ int main(int argc, char** argv)
 
 		// Crop
 		uc_output = uc_output(Range(0, res_y), Range(0, res_x));
-		
+
 
 
 		// Draw
@@ -620,7 +620,9 @@ int main(int argc, char** argv)
 		ImGui::Begin("Debug");
 
 
-		static bool first_tab_was_selected = false;
+
+		enum selected_tab { no_tab, screens_tab, portals_tab, portal_pairs_tab };
+		static selected_tab sel_tab = no_tab;
 		static vector<screen> vs;
 
 		if (ImGui::BeginTabBar("##tabbar"), ImGuiTabBarFlags_::ImGuiTabBarFlags_NoTooltip)
@@ -631,13 +633,17 @@ int main(int argc, char** argv)
 			{
 				if (ImGui::BeginTabItem("Screens"))
 				{
-
-
-					if (vs.size() == 0 || first_tab_was_selected == false)
+					if (sel_tab != screens_tab)
 					{
 						vs = retrieve_screens("test.db");
 
-						first_tab_was_selected = true;
+						for (size_t i = 0; i < vs.size(); i++)
+						{
+							vs[i].nickname += " ";
+							vs[i].nickname += to_string(i);
+						}
+
+						sel_tab = screens_tab;
 
 						cout << "retrieving screens" << endl;
 					}
@@ -645,43 +651,54 @@ int main(int argc, char** argv)
 					vector<char*> vcharp(vs.size(), NULL);
 
 					for (size_t i = 0; i < vs.size(); i++)
+					{
 						vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
+					}
 
-					//static const char* items[]{ "One","Two","three" };
 					static int selected = 0;
 					if (ImGui::Combo("My Combo", &selected, &vcharp[0], vcharp.size()))
 					{
-						//MessageBoxA(NULL, vcharp[selected], "", MB_OK);
+						MessageBoxA(NULL, vcharp[selected], "", MB_OK);
 					}
-
 
 					ImGui::EndTabItem();
 				}
-				if (ImGui::BeginTabItem("Characters"))
+				if (ImGui::BeginTabItem("Portals"))
 				{
-					first_tab_was_selected = false;
-
-					ImGui::Text("Characters tab");
+					sel_tab = portals_tab;
+					ImGui::Text("Portals tab");
 					ImGui::EndTabItem();
 				}
 				if (ImGui::BeginTabItem("Portal Pairs"))
 				{
-					first_tab_was_selected = false;
+					sel_tab = portal_pairs_tab;
 					ImGui::Text("Portal pairs tab");
 					ImGui::EndTabItem();
 				}
-				if (ImGui::BeginTabItem("Cinematics"))
-				{
-					first_tab_was_selected = false;
-					ImGui::Text("Cinematics");
-					ImGui::EndTabItem();
-				}
-				if (ImGui::BeginTabItem("Global booleans"))
-				{
-					first_tab_was_selected = false;
-					ImGui::Text("Global booleans");
-					ImGui::EndTabItem();
-				}
+
+				//if (ImGui::BeginTabItem("Characters"))
+				//{
+				//	screens_tab_was_selected = false;
+
+				//	ImGui::Text("Characters tab");
+				//	ImGui::EndTabItem();
+				//}
+
+				//if (ImGui::BeginTabItem("Cinematics"))
+				//{
+				//	screens_tab_was_selected = false;
+				//	ImGui::Text("Cinematics");
+				//	ImGui::EndTabItem();
+				//}
+				//if (ImGui::BeginTabItem("Global booleans"))
+				//{
+				//	screens_tab_was_selected = false;
+				//	ImGui::Text("Global booleans");
+				//	ImGui::EndTabItem();
+				//}
+
+
+
 				ImGui::EndTabBar();
 			}
 		}
