@@ -8,6 +8,7 @@
 #include <Windows.h>
 #include "sqlite/sqlite3.h"
 
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -47,7 +48,7 @@ using namespace cv;
 
 #include "vertex_fragment_shader.h"
 #include "font_draw.h"
-
+#include "mysql_functions.h"
 
 vertex_fragment_shader ortho_shader;
 
@@ -67,7 +68,7 @@ bool openFileDialog(std::string& fileName)
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
 	ofn.lpstrInitialDir = NULL;
-	ofn.Flags = 0;// OFN_PATHMUSTEXIST;// | OFN_FILEMUSTEXIST;
+	ofn.Flags = OFN_PATHMUSTEXIST;// | OFN_FILEMUSTEXIST;
 
 	if (GetOpenFileName(&ofn) == TRUE)
 	{
