@@ -3,17 +3,6 @@
 
 
 
-void populate_screen_data(void)
-{
-
-
-
-
-
-}
-
-
-
 
 
 // https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
@@ -374,8 +363,50 @@ screen retrieve_screen_everything(const string& db_name, size_t screen_id)
 			s.screen_id = sqlite3_column_int(stmt, 0);
 			s.nickname = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
 
-			// to do : handle zero bytes for each blob
+			// input image
+			int blob_size = sqlite3_column_bytes(stmt, 2);
 
+			if (blob_size > 0)
+			{
+				const void* blob = sqlite3_column_blob(stmt, 2);
+				std::vector<unsigned char> blobData((unsigned char*)blob, (unsigned char*)blob + blob_size);
+				s.input_image = blobData;
+			}
+
+			// input_light_image
+			blob_size = sqlite3_column_bytes(stmt, 3);
+
+			if (blob_size > 0)
+			{
+				const void* blob = sqlite3_column_blob(stmt, 3);
+				std::vector<unsigned char> blobData((unsigned char*)blob, (unsigned char*)blob + blob_size);
+				s.input_light_image = blobData;
+			}
+
+			// input_light_blocker_image
+			blob_size = sqlite3_column_bytes(stmt, 4);
+
+			if (blob_size > 0)
+			{
+				const void* blob = sqlite3_column_blob(stmt, 4);
+				std::vector<unsigned char> blobData((unsigned char*)blob, (unsigned char*)blob + blob_size);
+				s.input_light_blocker_image = blobData;
+			}
+
+			// input_traversable_image
+			blob_size = sqlite3_column_bytes(stmt, 5);
+
+			if (blob_size > 0)
+			{	
+				const void* blob = sqlite3_column_blob(stmt, 5);
+				std::vector<unsigned char> blobData((unsigned char*)blob, (unsigned char*)blob + blob_size);
+				s.input_traversable_image = blobData;
+			}
+
+			s.north_neighbour_id = sqlite3_column_int(stmt, 6);
+			s.east_neighbour_id = sqlite3_column_int(stmt, 7);
+			s.south_neighbour_id = sqlite3_column_int(stmt, 8);
+			s.west_neighbour_id = sqlite3_column_int(stmt, 9);
 
 			ret = s;
 			break;
