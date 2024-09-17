@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
 	//return 0;
 
-	
+
 
 	vector<pair<string, string>> table_name_code_pairs;
 
@@ -41,12 +41,12 @@ int main(int argc, char** argv)
 	s.second += "(\n";
 	s.second += "	screen_id INTEGER PRIMARY KEY NOT NULL,\n";
 	s.second += "\n";
+	s.second += "	nickname TEXT,\n";
+	s.second += "\n";
 	s.second += "	input_image BLOB,\n";
 	s.second += "	input_light_image BLOB,\n";
 	s.second += "	input_light_blocker_image BLOB,\n";
 	s.second += "	input_traversable_image BLOB,\n";
-	s.second += "\n";
-	s.second += "	nickname TEXT,\n";
 	s.second += "\n";
 	s.second += "	north_neighbour_id INTEGER,\n";
 	s.second += "	east_neighbour_id INTEGER,\n";
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 	// Create tables if necessary
 	for (size_t i = 0; i < table_name_code_pairs.size(); i++)
 	{
-		if(found_table_names.end() == find(found_table_names.begin(), found_table_names.end(), table_name_code_pairs[i].first))
+		if (found_table_names.end() == find(found_table_names.begin(), found_table_names.end(), table_name_code_pairs[i].first))
 			run_sql("test.db", table_name_code_pairs[i].second);
 	}
 
@@ -121,12 +121,16 @@ int main(int argc, char** argv)
 			cout << "Schema mismatch warning: " << table_name_code_pairs[i].first << endl;
 	}
 
-	vector<screen> vs = retrieve_screens("test.db");
+//	vector<screen> vs = retrieve_screens("test.db");
 
-	cout << vs.size() << endl;
+	//cout << vs.size() << endl;
 
+	//screen sc;
+	//sc.id = 0;
+	//sc.nickname = "test2";
 
-//	insert_screen("test.db", vs[0]);
+	////	if(vs.size() > 0)
+	//insert_screen("test.db", sc);
 
 
 
@@ -174,7 +178,7 @@ int main(int argc, char** argv)
 
 
 
-	
+
 
 
 
@@ -646,6 +650,8 @@ int main(int argc, char** argv)
 						sel_tab = screens_tab;
 
 						cout << "retrieving screens" << endl;
+
+						populate_screen_data();
 					}
 
 					vector<char*> vcharp(vs.size(), NULL);
@@ -658,7 +664,18 @@ int main(int argc, char** argv)
 					static int selected = 0;
 					if (ImGui::Combo("My Combo", &selected, &vcharp[0], vcharp.size()))
 					{
-						MessageBoxA(NULL, vcharp[selected], "", MB_OK);
+						//populate_screen_data();
+
+
+
+
+
+
+						//MessageBoxA(NULL, vcharp[selected], "", MB_OK);
+
+
+
+
 					}
 
 					ImGui::EndTabItem();
@@ -709,7 +726,7 @@ int main(int argc, char** argv)
 
 
 
-	//	ImGui::ShowDemoWindow();
+		//	ImGui::ShowDemoWindow();
 
 
 

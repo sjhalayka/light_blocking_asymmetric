@@ -2,6 +2,20 @@
 
 
 
+
+void populate_screen_data(void)
+{
+
+
+
+
+
+}
+
+
+
+
+
 // https://stackoverflow.com/questions/18092240/sqlite-blob-insertion-c
 int InsertFile(const string& db_name, const string& file_name)
 {
@@ -186,11 +200,21 @@ public:
 
 
 
+
+
+
+
+
+
+
+
+
+
 bool insert_screen(const string& db_name, const screen& s)
 {
 	sqlite3* db;
 	sqlite3_stmt* stmt;
-	string sql = "INSERT INTO SCREENS (nickname) VALUES ('New screen');";
+	string sql = "INSERT INTO SCREENS (nickname, input_image, input_light_image, input_light_blocker_image, input_traversable_image, north_neighbour_id, east_neighbour_id, south_neighbour_id, west_neighbour_id) VALUES ('" + s.nickname + "', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);";
 	int rc = sqlite3_open(db_name.c_str(), &db);
 
 	if (rc)
