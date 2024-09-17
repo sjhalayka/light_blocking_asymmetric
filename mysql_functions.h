@@ -374,6 +374,9 @@ screen retrieve_screen_everything(const string& db_name, size_t screen_id)
 			s.screen_id = sqlite3_column_int(stmt, 0);
 			s.nickname = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
 
+			// to do : handle zero bytes for each blob
+
+
 			ret = s;
 			break;
 		}
