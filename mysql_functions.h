@@ -194,8 +194,18 @@ string run_sql(const string& db_name, const string& sql)
 class screen
 {
 public:
-	int id;
+	size_t screen_id;
 	string nickname;
+
+	vector<unsigned char> input_image;
+	vector<unsigned char> input_light_image;
+	vector<unsigned char> input_light_blocker_image;
+	vector<unsigned char> input_traversable_image;
+	
+	size_t north_neighbour_id;
+	size_t east_neighbour_id;
+	size_t south_neighbour_id;
+	size_t west_neighbour_id;
 };
 
 
@@ -265,13 +275,13 @@ bool insert_screen(const string& db_name, const screen& s)
 
 
 
-vector<screen> retrieve_screens(const string& db_name)
+vector<screen> retrieve_screen_ids_and_nicknames(const string& db_name)
 {
 	vector<screen> ret;
 
 	sqlite3* db;
 	sqlite3_stmt* stmt;
-	string sql = "SELECT screen_id, nickname FROM screens;";
+	string sql = "SELECT screen_id, nickname FROM screens ORDER BY nickname;";
 	int rc = sqlite3_open(db_name.c_str(), &db);
 
 	if (rc)
@@ -298,7 +308,7 @@ vector<screen> retrieve_screens(const string& db_name)
 		case SQLITE_ROW:
 		{
 			screen s;
-			s.id = sqlite3_column_int(stmt, 0);
+			s.screen_id = sqlite3_column_int(stmt, 0);
 			s.nickname = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
 
 			ret.push_back(s);
@@ -327,6 +337,65 @@ vector<screen> retrieve_screens(const string& db_name)
 
 
 
+screen retrieve_screen_everything(const string& db_name, size_t screen_id)
+{
+	screen ret;
+
+	sqlite3* db;
+	sqlite3_stmt* stmt;
+	string sql = "SELECT screen_id, nickname, input_image, input_light_image, input_light_blocker_image, input_traversable_image, north_neighbour_id, east_neighbour_id, south_neighbour_id, west_neighbour_id FROM screens WHERE screen_id = " + to_string(screen_id) + ";";
+
+	int rc = sqlite3_open(db_name.c_str(), &db);
+
+	if (rc)
+	{
+		std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+		return ret;
+	}
+
+	rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+
+	if (rc != SQLITE_OK)
+	{
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		sqlite3_close(db);
+		return ret;
+	}
+
+	bool done = false;
+
+	while (!done)
+	{
+		switch (sqlite3_step(stmt))
+		{
+		case SQLITE_ROW:
+		{
+			screen s;
+			s.screen_id = sqlite3_column_int(stmt, 0);
+			s.nickname = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+
+			ret = s;
+			break;
+		}
+		case SQLITE_DONE:
+		{
+			done = true;
+			break;
+		}
+		default:
+		{
+			done = true;
+			cout << "Failure" << endl;
+			break;
+		}
+		}
+	}
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+
+	return ret;
+}
 
 
 

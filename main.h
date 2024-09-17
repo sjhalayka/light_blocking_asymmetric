@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <thread>
+#include <regex>
 using namespace std;
 
 #include <GL/glew.h>
@@ -51,6 +52,31 @@ using namespace cv;
 #include "mysql_functions.h"
 
 vertex_fragment_shader ortho_shader;
+
+
+
+vector<string> std_strtok(const string& s, const string& regex_s)
+{
+	vector<string> tokens;
+
+	regex r(regex_s);
+
+	sregex_token_iterator iter(s.begin(), s.end(), r, -1);
+	sregex_token_iterator end;
+
+	while (iter != end)
+	{
+		if (*iter != "")
+			tokens.push_back(*iter);
+
+		iter++;
+	}
+
+	return tokens;
+}
+
+
+
 
 
 bool openFileDialog(std::string& fileName)

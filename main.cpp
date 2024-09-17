@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 
 	//screen sc;
 	//sc.id = 0;
-	//sc.nickname = "test2";
+	//sc.nickname = "a test2";
 
 	////	if(vs.size() > 0)
 	//insert_screen("test.db", sc);
@@ -628,6 +628,8 @@ int main(int argc, char** argv)
 		enum selected_tab { no_tab, screens_tab, portals_tab, portal_pairs_tab };
 		static selected_tab sel_tab = no_tab;
 		static vector<screen> vs;
+		static int combo_selected = 0;
+
 
 		if (ImGui::BeginTabBar("##tabbar"), ImGuiTabBarFlags_::ImGuiTabBarFlags_NoTooltip)
 		{
@@ -639,19 +641,23 @@ int main(int argc, char** argv)
 				{
 					if (sel_tab != screens_tab)
 					{
-						vs = retrieve_screens("test.db");
+						vs = retrieve_screen_ids_and_nicknames("test.db");
 
 						for (size_t i = 0; i < vs.size(); i++)
 						{
-							vs[i].nickname += " ";
-							vs[i].nickname += to_string(i);
+							vs[i].nickname += " - ID: ";
+							vs[i].nickname += to_string(vs[i].screen_id);
 						}
 
 						sel_tab = screens_tab;
 
 						cout << "retrieving screens" << endl;
 
-						populate_screen_data();
+						vector<string> tokens = std_strtok(vs[combo_selected].nickname, "[ ]\\s*");
+
+						cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
+
+						screen s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
 					}
 
 					vector<char*> vcharp(vs.size(), NULL);
@@ -661,17 +667,18 @@ int main(int argc, char** argv)
 						vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
 					}
 
-					static int selected = 0;
-					if (ImGui::Combo("My Combo", &selected, &vcharp[0], vcharp.size()))
+					if (ImGui::Combo("My Combo", &combo_selected, &vcharp[0], vcharp.size()))
 					{
-						//populate_screen_data();
+						vector<string> tokens = std_strtok(vcharp[combo_selected], "[ ]\\s*");
+
+						screen s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
+						
+						//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
 
 
 
 
-
-
-						//MessageBoxA(NULL, vcharp[selected], "", MB_OK);
+						////MessageBoxA(NULL, vcharp[selected], "", MB_OK);
 
 
 
