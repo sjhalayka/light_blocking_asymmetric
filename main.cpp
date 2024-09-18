@@ -656,7 +656,7 @@ int main(int argc, char** argv)
 
 				s_id = to_string(s.screen_id);
 
-				//ImGui::InputText("ID: ", &s_id, ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputText("ID: ", &s_id, ImGuiInputTextFlags_ReadOnly);
 
 			//static char buf[100] = "test_buf";
 
