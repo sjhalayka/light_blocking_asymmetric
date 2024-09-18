@@ -270,7 +270,7 @@ vector<screen> retrieve_screen_ids_and_nicknames(const string& db_name)
 
 	sqlite3* db;
 	sqlite3_stmt* stmt;
-	string sql = "SELECT screen_id, nickname FROM screens ORDER BY nickname;";
+	string sql = "SELECT screen_id, nickname FROM screens;";
 	int rc = sqlite3_open(db_name.c_str(), &db);
 
 	if (rc)
@@ -558,6 +558,68 @@ int retrieve_file(const string& db_name, const string& file_name)
 	else
 	{
 		std::cerr << "Failed to step statement: " << sqlite3_errmsg(db) << std::endl;
+	}
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+int update_nickname(const string& db_name, int id, const string &new_nickname)
+{
+
+
+	sqlite3* db;
+	sqlite3_stmt* stmt;
+	string sql = "UPDATE screens SET nickname = '" + new_nickname + "' WHERE screen_id = '" + to_string(id) + "';";
+	int rc = sqlite3_open(db_name.c_str(), &db);
+
+	if (rc)
+	{
+		std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+		return rc;
+	}
+
+	rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+
+	if (rc != SQLITE_OK)
+	{
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		sqlite3_close(db);
+		return rc;
+	}
+
+	bool done = false;
+	unsigned char* text = 0;
+
+	while (!done)
+	{
+		switch (sqlite3_step(stmt))
+		{
+		case SQLITE_ROW:
+		{
+			break;
+		}
+		case SQLITE_DONE:
+		{
+			done = true;
+			break;
+		}
+		default:
+		{
+			done = true;
+			// failure
+			break;
+		}
+		}
 	}
 
 	sqlite3_finalize(stmt);

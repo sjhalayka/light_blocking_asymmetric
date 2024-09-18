@@ -656,20 +656,18 @@ int main(int argc, char** argv)
 
 				s_id = to_string(s.screen_id);
 
+
 				ImGui::InputText("ID: ", &s_id, ImGuiInputTextFlags_ReadOnly);
 
-			//static char buf[100] = "test_buf";
+				ImGui::InputText("Nickname: ", &s.nickname);
 
-			//	if (ImGui::InputText("nickname: ", buf, 100))
-			//	{
+				if (s_nickname != s.nickname)
+				{
+					s_nickname = s.nickname;
+					update_nickname("test.db", s.screen_id, s_nickname);
 
-			//		MessageBoxA(NULL, " ", " ", MB_OK);
-			//	}
-
-
-				ImGui::InputText("Text-A", &s_id);
-
-
+					sel_tab = no_tab;
+				}
 
 				ImGui::EndTabItem();
 			}
