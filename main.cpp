@@ -1,34 +1,10 @@
-#define _CRT_SECURE_NO_WARNINGS
 
 #include "main.h"
 
 
 
-
-
-
-
-
-
-
-
-
-
 int main(int argc, char** argv)
 {
-	//string filename = "";
-
-	//if(openFileDialog(filename))
-	//	cout << filename << endl;	
-
-	//InsertFile("test.db", "C:/temp/1.png");
-	//int x = retrieve_file("test.db", "C:/temp/1_out.png");
-
-	//cout << x << endl;
-
-	//return 0;
-
-
 
 	vector<pair<string, string>> table_name_code_pairs;
 
@@ -121,18 +97,16 @@ int main(int argc, char** argv)
 			cout << "Schema mismatch warning: " << table_name_code_pairs[i].first << endl;
 	}
 
-//	vector<screen> vs = retrieve_screens("test.db");
+	//	vector<screen> vs = retrieve_screens("test.db");
 
-	//cout << vs.size() << endl;
+		//cout << vs.size() << endl;
 
-	//screen sc;
-	//sc.id = 0;
-	//sc.nickname = "a test2";
+		//screen sc;
+		//sc.id = 0;
+		//sc.nickname = "a test2";
 
-	////	if(vs.size() > 0)
-	//insert_screen("test.db", sc);
-
-
+		////	if(vs.size() > 0)
+		//insert_screen("test.db", sc);
 
 
 
@@ -167,26 +141,33 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
+
+
+
+
+
+
+
 	SDL_GLContext gl_context = SDL_GL_CreateContext(window);
 	SDL_GL_MakeCurrent(window, gl_context);
 	SDL_GL_SetSwapInterval(1); // Enable vsync
 
 
 
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
 
-
-
-
-
-
-
-
-
-
-
-
-
+	// Setup Platform/Renderer backends
+	ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+	ImGui_ImplOpenGL3_Init(glsl_version);
 
 
 
@@ -429,56 +410,32 @@ int main(int argc, char** argv)
 	}
 
 
-	// Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	//ImGuiIO& io = ImGui::GetIO();
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	////io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	//io.WantCaptureMouse = true;
-
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
-	io.WantCaptureMouse = true;
-
-	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
-
-	// Setup Platform/Renderer backends
-	ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
-	ImGui_ImplOpenGL3_Init(glsl_version);
-
-	//SDL_CaptureMouse();
-
 
 
 	bool done = false;
 
-	while (false == done)
+
+
+
+	while (!done)
 	{
-		int window_w = 0, window_h = 0;
-		SDL_GetWindowSize(window, &window_w, &window_h);
-
-
-		auto start_time = std::chrono::high_resolution_clock::now();
-
 		SDL_Event event;
 
 		while (SDL_PollEvent(&event))
 		{
+			ImGui_ImplSDL2_ProcessEvent(&event);
+
 			if (event.type == SDL_QUIT)
-			{
 				done = true;
-			}
 
 			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-			{
 				done = true;
-			}
 		}
 
+		int window_w = 0, window_h = 0;
+		SDL_GetWindowSize(window, &window_w, &window_h);
+
+		auto start_time = std::chrono::high_resolution_clock::now();
 
 		vector<glm::vec3> dynamic_centres;
 		vector<glm::vec3> dynamic_colours;
@@ -573,29 +530,29 @@ int main(int argc, char** argv)
 
 
 
-		// Draw
-		glViewport(0, 0, window_w, window_h);
-		glClearColor(1.0, 0.5, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		//// Draw
+		//glViewport(0, 0, window_w, window_h);
+		//glClearColor(1.0, 0.5, 0.0, 1.0);
+		//glClear(GL_COLOR_BUFFER_BIT);
 
 
 
 
-		GLuint tex_uc_output = 0;
-		glGenTextures(1, &tex_uc_output);
+		//GLuint tex_uc_output = 0;
+		//glGenTextures(1, &tex_uc_output);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex_uc_output);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, uc_output.cols, uc_output.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
-		glBindImageTexture(0, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, tex_uc_output);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, uc_output.cols, uc_output.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
+		//glBindImageTexture(0, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
 
-		draw_full_screen_tex(0, tex_uc_output);
+		//draw_full_screen_tex(0, tex_uc_output);
 
-		glDeleteTextures(1, &tex_uc_output);
+	//	glDeleteTextures(1, &tex_uc_output);
 
 
 
@@ -614,11 +571,219 @@ int main(int argc, char** argv)
 		//cout << "Computing duration: " << elapsed.count() / 1000.0f << " seconds" << endl;
 
 
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::Begin("Debug");
+
+		static string x = "test";
+
+
+		enum selected_tab { no_tab, screens_tab, portals_tab, portal_pairs_tab };
+		static selected_tab sel_tab = no_tab;
+		static vector<screen> vs;
+		static int combo_selected = 0;
+
+		static screen s;
+		static string s_id;// to_string(s.screen_id);
+		static string s_nickname;
+
+
+
+
+		ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+
+		if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
+		{
+			if (ImGui::BeginTabItem("Screens"))
+			{
+				if (sel_tab != screens_tab)
+				{
+					vs = retrieve_screen_ids_and_nicknames("test.db");
+
+					for (size_t i = 0; i < vs.size(); i++)
+					{
+						vs[i].nickname += " - ID: ";
+						vs[i].nickname += to_string(vs[i].screen_id);
+					}
+
+					sel_tab = screens_tab;
+
+					//cout << "retrieving screens" << endl;
+
+					vector<string> tokens = std_strtok(vs[combo_selected].nickname, "[ ]\\s*");
+
+					//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
+
+					//cout << tokens[tokens.size() - 1].c_str() << endl;
+
+					s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
+				}
+
+				vector<char*> vcharp(vs.size(), NULL);
+
+				for (size_t i = 0; i < vs.size(); i++)
+				{
+					vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
+				}
+
+				if (ImGui::Combo("My Combo", &combo_selected, &vcharp[0], vcharp.size()))
+				{
+					vector<string> tokens = std_strtok(vcharp[combo_selected], "[ ]\\s*");
+
+					s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
+
+					//cout << s.screen_id << endl;
+
+
+
+
+					//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
+
+
+
+
+					////MessageBoxA(NULL, vcharp[selected], "", MB_OK);
+
+
+					ImGui::EndCombo();
+
+				}
+
+
+
+				s_id = to_string(s.screen_id);
+
+				//ImGui::InputText("ID: ", &s_id, ImGuiInputTextFlags_ReadOnly);
+
+			//static char buf[100] = "test_buf";
+
+			//	if (ImGui::InputText("nickname: ", buf, 100))
+			//	{
+
+			//		MessageBoxA(NULL, " ", " ", MB_OK);
+			//	}
+
+
+				ImGui::InputText("Text-A", &s_id);
+
+
+
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("Portals"))
+			{
+				sel_tab = portals_tab;
+				ImGui::Text("Portals tab");
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("Portal Pairs"))
+			{
+				sel_tab = portal_pairs_tab;
+				ImGui::Text("Portal pairs tab");
+				ImGui::EndTabItem();
+			}
+
+			//if (ImGui::BeginTabItem("Characters"))
+			//{
+			//	screens_tab_was_selected = false;
+
+			//	ImGui::Text("Characters tab");
+			//	ImGui::EndTabItem();
+			//}
+
+			//if (ImGui::BeginTabItem("Cinematics"))
+			//{
+			//	screens_tab_was_selected = false;
+			//	ImGui::Text("Cinematics");
+			//	ImGui::EndTabItem();
+			//}
+			//if (ImGui::BeginTabItem("Global booleans"))
+			//{
+			//	screens_tab_was_selected = false;
+			//	ImGui::Text("Global booleans");
+			//	ImGui::EndTabItem();
+			//}
+
+
+
+
+			ImGui::EndTabBar();
+
+		}
+
+		//		ImGui::InputText("test", &x);
+
+
+
+
+		ImGui::End();
+
+
+
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		glClearColor(1.0, 0.5, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		GLuint tex_uc_output = 0;
+		glGenTextures(1, &tex_uc_output);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex_uc_output);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, uc_output.cols, uc_output.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
+		glBindImageTexture(0, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
+
+		draw_full_screen_tex(0, tex_uc_output);
+
+		glDeleteTextures(1, &tex_uc_output);
+
+		// Rendering
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		SDL_GL_SwapWindow(window);
+	}
+
+
+	/*
+
+	while (false == done)
+	{
+		int window_w = 0, window_h = 0;
+		SDL_GetWindowSize(window, &window_w, &window_h);
+
+
+		auto start_time = std::chrono::high_resolution_clock::now();
+
+		SDL_Event event;
+
+		while (SDL_PollEvent(&event))
+		{
+			if (event.type == SDL_QUIT)
+			{
+				done = true;
+			}
+
+			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+			{
+				done = true;
+			}
+		}
+
+
+
+
 
 
 
 		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame(window);
+		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 
 		ImGui::Begin("Debug");
@@ -630,102 +795,18 @@ int main(int argc, char** argv)
 		static vector<screen> vs;
 		static int combo_selected = 0;
 
+		static screen s;
+		static string s_id;// to_string(s.screen_id);
+		static string s_nickname;
 
 		if (ImGui::BeginTabBar("##tabbar"), ImGuiTabBarFlags_::ImGuiTabBarFlags_NoTooltip)
 		{
-			ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
-
-			if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
-			{
-				if (ImGui::BeginTabItem("Screens"))
-				{
-					if (sel_tab != screens_tab)
-					{
-						vs = retrieve_screen_ids_and_nicknames("test.db");
-
-						for (size_t i = 0; i < vs.size(); i++)
-						{
-							vs[i].nickname += " - ID: ";
-							vs[i].nickname += to_string(vs[i].screen_id);
-						}
-
-						sel_tab = screens_tab;
-
-						cout << "retrieving screens" << endl;
-
-						vector<string> tokens = std_strtok(vs[combo_selected].nickname, "[ ]\\s*");
-
-						cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
-
-						screen s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
-					}
-
-					vector<char*> vcharp(vs.size(), NULL);
-
-					for (size_t i = 0; i < vs.size(); i++)
-					{
-						vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
-					}
-
-					if (ImGui::Combo("My Combo", &combo_selected, &vcharp[0], vcharp.size()))
-					{
-						vector<string> tokens = std_strtok(vcharp[combo_selected], "[ ]\\s*");
-
-						screen s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
-						
-						//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
 
 
 
-
-						////MessageBoxA(NULL, vcharp[selected], "", MB_OK);
-
-
-
-
-					}
-
-					ImGui::EndTabItem();
-				}
-				if (ImGui::BeginTabItem("Portals"))
-				{
-					sel_tab = portals_tab;
-					ImGui::Text("Portals tab");
-					ImGui::EndTabItem();
-				}
-				if (ImGui::BeginTabItem("Portal Pairs"))
-				{
-					sel_tab = portal_pairs_tab;
-					ImGui::Text("Portal pairs tab");
-					ImGui::EndTabItem();
-				}
-
-				//if (ImGui::BeginTabItem("Characters"))
-				//{
-				//	screens_tab_was_selected = false;
-
-				//	ImGui::Text("Characters tab");
-				//	ImGui::EndTabItem();
-				//}
-
-				//if (ImGui::BeginTabItem("Cinematics"))
-				//{
-				//	screens_tab_was_selected = false;
-				//	ImGui::Text("Cinematics");
-				//	ImGui::EndTabItem();
-				//}
-				//if (ImGui::BeginTabItem("Global booleans"))
-				//{
-				//	screens_tab_was_selected = false;
-				//	ImGui::Text("Global booleans");
-				//	ImGui::EndTabItem();
-				//}
-
-
-
-				ImGui::EndTabBar();
-			}
+			ImGui::EndTabBar();
 		}
+
 
 		ImGui::End();
 
@@ -733,7 +814,7 @@ int main(int argc, char** argv)
 
 
 
-		//	ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 
 
 
@@ -748,9 +829,15 @@ int main(int argc, char** argv)
 
 	}
 
-	// Clean up all memory
-	glDeleteProgram(compute_shader_program);
+	*/
 
+
+
+
+	glDeleteProgram(compute_shader_program);
+	glDeleteProgram(compute_shader_program2);
+
+	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
@@ -758,6 +845,9 @@ int main(int argc, char** argv)
 	SDL_GL_DeleteContext(gl_context);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+
+
+
 
 	return 0;
 }

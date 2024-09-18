@@ -30,10 +30,10 @@ using namespace cv;
 #include <SDL_opengl.h>
 
 
-#include "dear imgui/imgui.h"
-#include "dear imgui/imgui_impl_sdl.h"
-#include "dear imgui/imgui_impl_opengl3.h"
-// #include "dear imgui/imgui_stdlib.h"
+#include "imgui/imgui.h"
+#include "imgui/backends/imgui_impl_sdl2.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
+#include "imgui/misc/cpp/imgui_stdlib.h"
 
 
 
@@ -41,8 +41,9 @@ using namespace cv;
 #pragma comment(lib, "opencv_world4100")
 #pragma comment(lib, "freeglut")
 #pragma comment(lib, "glew32")
-#pragma comment(lib, "SDL2main")
+
 #pragma comment(lib, "SDL2")
+#pragma comment(lib, "SDL2main")
 #pragma comment(lib, "OpenGL32")
 #endif
 
@@ -986,9 +987,9 @@ bool init_gl(int argc, char** argv,
 	GLuint& compute_shader_program,
 	GLuint& compute_shader_program2)
 {
-	if (!(GLEW_OK == glewInit() &&
-		GLEW_VERSION_4_3))
+	if (GLEW_OK != glewInit())
 	{
+		cout << "glew failure" << endl;
 		return false;
 	}
 
