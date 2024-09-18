@@ -270,7 +270,7 @@ vector<screen> retrieve_screen_ids_and_nicknames(const string& db_name)
 
 	sqlite3* db;
 	sqlite3_stmt* stmt;
-	string sql = "SELECT screen_id, nickname FROM screens;";
+	string sql = "SELECT screen_id, nickname FROM screens ORDER BY nickname;";
 	int rc = sqlite3_open(db_name.c_str(), &db);
 
 	if (rc)

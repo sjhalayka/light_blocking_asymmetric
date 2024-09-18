@@ -629,6 +629,17 @@ int main(int argc, char** argv)
 					vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
 				}
 
+
+				if (ImGui::Button("New"))
+				{
+					screen sc;
+					sc.nickname = "New screen";
+
+					insert_screen("test.db", sc);
+
+					sel_tab = no_tab;
+				}
+
 				if (ImGui::Combo("My Combo", &combo_selected, &vcharp[0], vcharp.size()))
 				{
 					vector<string> tokens = std_strtok(vcharp[combo_selected], "[ ]\\s*");
@@ -651,7 +662,6 @@ int main(int argc, char** argv)
 					ImGui::EndCombo();
 
 				}
-
 
 
 				s_id = to_string(s.screen_id);
