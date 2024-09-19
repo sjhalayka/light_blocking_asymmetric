@@ -588,8 +588,7 @@ int main(int argc, char** argv)
 		static bool new_row = false;
 
 		static screen s;
-		static string s_id;// to_string(s.screen_id);
-		static string s_nickname;
+		static string prev_s_nickname;
 
 
 
@@ -610,23 +609,10 @@ int main(int argc, char** argv)
 						vs[i].nickname += to_string(vs[i].screen_id);
 					}
 
-					//sort(vs.begin(), vs.end());
-
-
-					//cout << "retrieving screens" << endl;
 					if (vs.size() > 0)
 					{
 						sel_tab = screens_tab;
-
-						vector<string> tokens = std_strtok(vs[combo_selected].nickname, "[ ]\\s*");
-
-						//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
-
-						//cout << tokens[tokens.size() - 1].c_str() << endl;
-
-							s = retrieve_screen_everything("test.db", vs[combo_selected].screen_id);
-
-					//	s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
+						s = retrieve_screen_everything("test.db", vs[combo_selected].screen_id);
 					}
 				}
 
@@ -640,66 +626,36 @@ int main(int argc, char** argv)
 
 				if (ImGui::Button("New"))
 				{
-					screen sc;
-					sc.nickname = "New screen";
-
-					insert_screen("test.db", sc);
-
+					screen new_screen;
+					new_screen.nickname = "New screen";
+					insert_screen("test.db", new_screen);
 					sel_tab = no_tab;
-
 					new_row = true;
 				}
 
 				if (new_row)
 				{
 					combo_selected = vcharp.size();
-
 					new_row = false;
 				}
 
 				if (ImGui::Combo("My Combo", &combo_selected, &vcharp[0], vcharp.size()))
 				{
-
-
 					if (vs.size() > 0)
-					{
-						//sel_tab = screens_tab;
-
-						//vector<string> tokens = std_strtok(vcharp[combo_selected], "[ ]\\s*");
-
 						s = retrieve_screen_everything("test.db", vs[combo_selected].screen_id);// atoi(tokens[tokens.size() - 1].c_str()));
-					}
-
-					//cout << s.screen_id << endl;
-
-
-
-
-					//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
-
-
-
-
-					////MessageBoxA(NULL, vcharp[selected], "", MB_OK);
-
 
 					ImGui::EndCombo();
-
 				}
 
-
-				s_id = to_string(s.screen_id);
-
-
-				ImGui::InputText("ID: ", &s_id, ImGuiInputTextFlags_ReadOnly);
+				//string s_id = to_string(s.screen_id);
+				//ImGui::InputText("ID: ", &s_id, ImGuiInputTextFlags_ReadOnly);
 
 				ImGui::InputText("Nickname: ", &s.nickname);
 
-				if (s_nickname != s.nickname)
+				if (prev_s_nickname != s.nickname)
 				{
-					s_nickname = s.nickname;
-					update_nickname("test.db", s.screen_id, s_nickname);
-
+					update_nickname("test.db", s.screen_id, s.nickname);
+					prev_s_nickname = s.nickname;
 					sel_tab = no_tab;
 				}
 
