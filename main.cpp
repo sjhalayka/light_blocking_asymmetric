@@ -585,7 +585,6 @@ int main(int argc, char** argv)
 		static selected_tab sel_tab = no_tab;
 		static vector<screen> vs;
 		static int combo_selected = 0;
-		static bool new_row = false;
 
 		static screen s;
 		static string prev_s_nickname;
@@ -611,9 +610,10 @@ int main(int argc, char** argv)
 
 					if (vs.size() > 0)
 					{
-						sel_tab = screens_tab;
 						s = retrieve_screen_everything("test.db", vs[combo_selected].screen_id);
 					}
+
+					sel_tab = screens_tab;
 				}
 
 				vector<char*> vcharp(vs.size(), NULL);
@@ -630,13 +630,7 @@ int main(int argc, char** argv)
 					new_screen.nickname = "New screen";
 					insert_screen("test.db", new_screen);
 					sel_tab = no_tab;
-					new_row = true;
-				}
-
-				if (new_row)
-				{
 					combo_selected = vcharp.size();
-					new_row = false;
 				}
 
 				if (ImGui::Combo("My Combo", &combo_selected, &vcharp[0], vcharp.size()))
