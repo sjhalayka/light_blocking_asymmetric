@@ -592,10 +592,13 @@ int main(int argc, char** argv)
 
 
 
+
 		ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
 
-		if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
+		if (ImGui::BeginTabBar("TabBar", tab_bar_flags))
 		{
+			static string last_id_string = "";
+
 			if (ImGui::BeginTabItem("Screens"))
 			{
 				if (sel_tab != screens_tab)
@@ -630,10 +633,29 @@ int main(int argc, char** argv)
 					new_screen.nickname = "New screen";
 					insert_screen("test.db", new_screen);
 					sel_tab = no_tab;
-					combo_selected = vcharp.size();
+					//combo_selected = vcharp.size();
 				}
 
-				if (ImGui::Combo("My Combo", &combo_selected, &vcharp[0], vcharp.size()))
+				//if (vs.size() > 0)
+				//{
+				//	if (last_id_string != vs[combo_selected].nickname)
+				//	{
+				//		for (size_t i = 0; i < vcharp.size(); i++)
+				//		{
+				//			if (last_id_string == vcharp[i])
+				//			{
+				//				combo_selected = i;
+				//				break;
+				//			}
+				//		}
+
+				//		last_id_string = vs[combo_selected].nickname;
+				//	}
+				//}
+
+
+
+				if (ImGui::Combo("Screens", &combo_selected, &vcharp[0], vcharp.size()))
 				{
 					if (vs.size() > 0)
 						s = retrieve_screen_everything("test.db", vs[combo_selected].screen_id);// atoi(tokens[tokens.size() - 1].c_str()));
@@ -644,14 +666,38 @@ int main(int argc, char** argv)
 				//string s_id = to_string(s.screen_id);
 				//ImGui::InputText("ID: ", &s_id, ImGuiInputTextFlags_ReadOnly);
 
-				ImGui::InputText("Nickname: ", &s.nickname);
+				ImGui::InputText("Nickname", &s.nickname);
 
 				if (prev_s_nickname != s.nickname)
 				{
 					update_nickname("test.db", s.screen_id, s.nickname);
-					prev_s_nickname = s.nickname;
-					sel_tab = no_tab;
+
+
+
+
+					//if (vs.size() > 0)
+					//{
+						if (prev_s_nickname != vs[combo_selected].nickname)
+						{
+							for (size_t i = 0; i < vcharp.size(); i++)
+							{
+								if (prev_s_nickname == vcharp[i])
+								{
+									combo_selected = i;
+									break;
+								}
+							}
+
+							last_id_string = vs[combo_selected].nickname;
+					
+						}
+					//}
+
+						prev_s_nickname = s.nickname;
+						sel_tab = no_tab;
+
 				}
+				;
 
 				ImGui::EndTabItem();
 			}

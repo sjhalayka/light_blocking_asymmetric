@@ -279,7 +279,7 @@ vector<screen> retrieve_screen_ids_and_nicknames(const string& db_name)
 
 	sqlite3* db;
 	sqlite3_stmt* stmt;
-	string sql = "SELECT screen_id, nickname FROM screens ORDER BY screen_id;";
+	string sql = "SELECT screen_id, nickname FROM screens ORDER BY nickname;";
 	int rc = sqlite3_open(db_name.c_str(), &db);
 
 	if (rc)
@@ -341,7 +341,7 @@ screen retrieve_screen_everything(const string& db_name, size_t screen_id)
 
 	sqlite3* db;
 	sqlite3_stmt* stmt;
-	string sql = "SELECT screen_id, nickname, input_image, input_light_image, input_light_blocker_image, input_traversable_image, north_neighbour_id, east_neighbour_id, south_neighbour_id, west_neighbour_id FROM screens WHERE screen_id = '" + to_string(screen_id) + "' ORDER BY screen_id;";
+	string sql = "SELECT screen_id, nickname, input_image, input_light_image, input_light_blocker_image, input_traversable_image, north_neighbour_id, east_neighbour_id, south_neighbour_id, west_neighbour_id FROM screens WHERE screen_id = '" + to_string(screen_id) + "' ORDER BY nickname;";
 
 	int rc = sqlite3_open(db_name.c_str(), &db);
 
