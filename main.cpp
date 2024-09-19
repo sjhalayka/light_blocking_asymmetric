@@ -585,6 +585,7 @@ int main(int argc, char** argv)
 		static selected_tab sel_tab = no_tab;
 		static vector<screen> vs;
 		static int combo_selected = 0;
+		static bool new_row = false;
 
 		static screen s;
 		static string s_id;// to_string(s.screen_id);
@@ -609,17 +610,24 @@ int main(int argc, char** argv)
 						vs[i].nickname += to_string(vs[i].screen_id);
 					}
 
-					sel_tab = screens_tab;
+					//sort(vs.begin(), vs.end());
+
 
 					//cout << "retrieving screens" << endl;
+					if (vs.size() > 0)
+					{
+						sel_tab = screens_tab;
 
-					vector<string> tokens = std_strtok(vs[combo_selected].nickname, "[ ]\\s*");
+						vector<string> tokens = std_strtok(vs[combo_selected].nickname, "[ ]\\s*");
 
-					//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
+						//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
 
-					//cout << tokens[tokens.size() - 1].c_str() << endl;
+						//cout << tokens[tokens.size() - 1].c_str() << endl;
 
-					s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
+							s = retrieve_screen_everything("test.db", vs[combo_selected].screen_id);
+
+					//	s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
+					}
 				}
 
 				vector<char*> vcharp(vs.size(), NULL);
@@ -638,13 +646,29 @@ int main(int argc, char** argv)
 					insert_screen("test.db", sc);
 
 					sel_tab = no_tab;
+
+					new_row = true;
+				}
+
+				if (new_row)
+				{
+					combo_selected = vcharp.size();
+
+					new_row = false;
 				}
 
 				if (ImGui::Combo("My Combo", &combo_selected, &vcharp[0], vcharp.size()))
 				{
-					vector<string> tokens = std_strtok(vcharp[combo_selected], "[ ]\\s*");
 
-					s = retrieve_screen_everything("test.db", atoi(tokens[tokens.size() - 1].c_str()));
+
+					if (vs.size() > 0)
+					{
+						//sel_tab = screens_tab;
+
+						//vector<string> tokens = std_strtok(vcharp[combo_selected], "[ ]\\s*");
+
+						s = retrieve_screen_everything("test.db", vs[combo_selected].screen_id);// atoi(tokens[tokens.size() - 1].c_str()));
+					}
 
 					//cout << s.screen_id << endl;
 
