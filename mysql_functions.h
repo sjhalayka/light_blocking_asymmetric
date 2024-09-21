@@ -192,6 +192,22 @@ public:
 		return false;
 	}
 
+	bool operator==(const screen& right)
+	{
+		if (nickname == right.nickname)
+			return true;
+
+		return false;
+	}
+
+	bool operator!=(const screen& right)
+	{
+		if (nickname != right.nickname)
+			return true;
+
+		return false;
+	}
+
 	size_t screen_id;
 	string nickname;
 

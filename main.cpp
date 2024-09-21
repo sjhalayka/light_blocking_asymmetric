@@ -578,22 +578,23 @@ int main(int argc, char** argv)
 
 		ImGui::Begin("Debug");
 
-		static string x = "test";
+
 
 
 		enum selected_tab { no_tab, screens_tab, portals_tab, portal_pairs_tab };
 		static selected_tab sel_tab = no_tab;
 		static vector<screen> vs;
+		static vector<screen> last_vs;
 		static int combo_selected = 0;
 
 		static screen s;
 		static string prev_s_nickname;
 
-
-
+		//static vector<char*> last_vcharp;
 
 
 		ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+
 
 		if (ImGui::BeginTabBar("TabBar", tab_bar_flags))
 		{
@@ -601,6 +602,8 @@ int main(int argc, char** argv)
 
 			if (ImGui::BeginTabItem("Screens"))
 			{
+				bool updated = false;
+
 				if (sel_tab != screens_tab)
 				{
 					vs = retrieve_screen_ids_and_nicknames("test.db");
@@ -617,6 +620,7 @@ int main(int argc, char** argv)
 					}
 
 					sel_tab = screens_tab;
+					updated = true;
 				}
 
 				vector<char*> vcharp(vs.size(), NULL);
@@ -625,6 +629,7 @@ int main(int argc, char** argv)
 				{
 					vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
 				}
+
 
 
 				if (ImGui::Button("New"))
@@ -636,21 +641,56 @@ int main(int argc, char** argv)
 					//combo_selected = vcharp.size();
 				}
 
-				//if (vs.size() > 0)
+
+
+				if (!vector_screen_equals(last_vs, vs))
+				{
+					cout << "vs mismatch" << endl;
+
+					const string id_string = vs[combo_selected].nickname;
+
+					if (last_id_string != id_string)
+					{
+						for (size_t i = 0; i < vs.size(); i++)
+						{
+							if (last_id_string == vs[i].nickname)
+							{
+								combo_selected = i;
+								break;
+							}
+						}
+
+						last_id_string = id_string;
+					}
+
+
+					last_vs = vs;
+				}
+
+				
+
+
+
+				//if (vs.size() > 0 && updated)
 				//{
-				//	if (last_id_string != vs[combo_selected].nickname)
+				//	updated = false;
+				//	cout << "updated" << endl;
+
+				//	const string id_string = vs[combo_selected].nickname;
+
+				//	if (last_id_string != id_string)
 				//	{
-				//		for (size_t i = 0; i < vcharp.size(); i++)
+				//		for (size_t i = 0; i < vs.size(); i++)
 				//		{
-				//			if (last_id_string == vcharp[i])
+				//			if (last_id_string == vs[i].nickname)
 				//			{
 				//				combo_selected = i;
 				//				break;
 				//			}
 				//		}
 
-				//		last_id_string = vs[combo_selected].nickname;
-				//	}
+				//		last_id_string = id_string;
+				//	}				
 				//}
 
 
@@ -663,6 +703,9 @@ int main(int argc, char** argv)
 					ImGui::EndCombo();
 				}
 
+
+
+
 				//string s_id = to_string(s.screen_id);
 				//ImGui::InputText("ID: ", &s_id, ImGuiInputTextFlags_ReadOnly);
 
@@ -672,32 +715,29 @@ int main(int argc, char** argv)
 				{
 					update_nickname("test.db", s.screen_id, s.nickname);
 
-
-
-
-					//if (vs.size() > 0)
-					//{
-						if (prev_s_nickname != vs[combo_selected].nickname)
-						{
-							for (size_t i = 0; i < vcharp.size(); i++)
-							{
-								if (prev_s_nickname == vcharp[i])
-								{
-									combo_selected = i;
-									break;
-								}
-							}
-
-							last_id_string = vs[combo_selected].nickname;
-					
-						}
-					//}
-
-						prev_s_nickname = s.nickname;
-						sel_tab = no_tab;
-
+					prev_s_nickname = s.nickname;
+					sel_tab = no_tab;
 				}
-				;
+
+				//if (updated && vs.size() > 0)
+				//{
+				//	if (1)//last_id_string != vcharp[combo_selected])
+				//	{
+				//		for (size_t i = 0; i < vcharp.size(); i++)
+				//		{
+				//			if (last_id_string == vcharp[i])
+				//			{
+				//				combo_selected = i;
+				//				break;
+				//			}
+				//		}
+
+				//		last_id_string = vcharp[combo_selected];
+				//	}
+				//}
+
+
+
 
 				ImGui::EndTabItem();
 			}

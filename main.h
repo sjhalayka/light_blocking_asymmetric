@@ -79,6 +79,22 @@ vector<string> std_strtok(const string& s, const string& regex_s)
 
 
 
+bool vector_screen_equals(const vector<screen>& a, const vector<screen>& b)
+{
+	if (a.size() != b.size())
+		return false;
+
+	for (size_t i = 0; i < a.size(); i++)
+	{
+		if (a[i].nickname != b[i].nickname)
+			return false;
+	}
+
+	return true;
+}
+
+
+
 
 bool openFileDialog(std::string& fileName)
 {
