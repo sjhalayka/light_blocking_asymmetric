@@ -81,6 +81,9 @@ vector<string> std_strtok(const string& s, const string& regex_s)
 
 bool vector_screen_equals(const vector<screen>& a, const vector<screen>& b)
 {
+	if (a.size() == 0 || b.size() == 0)
+		return false;
+
 	if (a.size() != b.size())
 		return false;
 

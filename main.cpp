@@ -530,36 +530,36 @@ int main(int argc, char** argv)
 
 
 
-		//// Draw
-		//glViewport(0, 0, window_w, window_h);
-		//glClearColor(1.0, 0.5, 0.0, 1.0);
-		//glClear(GL_COLOR_BUFFER_BIT);
 
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		glClearColor(1.0, 0.5, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
 
+		GLuint tex_uc_output = 0;
+		glGenTextures(1, &tex_uc_output);
 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex_uc_output);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, uc_output.cols, uc_output.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
+		glBindImageTexture(0, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
 
-		//GLuint tex_uc_output = 0;
-		//glGenTextures(1, &tex_uc_output);
+		draw_full_screen_tex(0, tex_uc_output);
 
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, tex_uc_output);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, uc_output.cols, uc_output.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
-		//glBindImageTexture(0, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
-
-		//draw_full_screen_tex(0, tex_uc_output);
-
-	//	glDeleteTextures(1, &tex_uc_output);
-
+		glDeleteTextures(1, &tex_uc_output);
 
 
 
 		size_t sentence_width = get_sentence_width(1, mimgs, "Test");
 
 		print_sentence(1.0f, mimgs, ortho_shader.get_program(), window_w, window_h, window_w / 2 - sentence_width / 2, window_h / 3, "Test");
+
+
+
+
 
 
 
@@ -589,8 +589,7 @@ int main(int argc, char** argv)
 
 		static screen s;
 		static string prev_s_nickname;
-
-		//static vector<char*> last_vcharp;
+		static string last_id_string = "";
 
 
 		ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
@@ -598,7 +597,7 @@ int main(int argc, char** argv)
 
 		if (ImGui::BeginTabBar("TabBar", tab_bar_flags))
 		{
-			static string last_id_string = "";
+
 
 			if (ImGui::BeginTabItem("Screens"))
 			{
@@ -623,12 +622,13 @@ int main(int argc, char** argv)
 					updated = true;
 				}
 
-				vector<char*> vcharp(vs.size(), NULL);
 
-				for (size_t i = 0; i < vs.size(); i++)
-				{
-					vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
-				}
+
+
+
+
+
+
 
 
 
@@ -643,60 +643,61 @@ int main(int argc, char** argv)
 
 
 
+
+
+
+
+
+
+				//vector<string> tokens = std_strtok(id_string, "[ ]\\s*");
+
+				//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
+
+
+				//vector<string> tokens2 = std_strtok(last_id_string, "[ ]\\s*");
+
+				//if(tokens2.size() > 0)
+				//cout << atoi(tokens2[tokens2.size() - 1].c_str()) << endl;
+
+				//cout << endl;
+
+
 				if (!vector_screen_equals(last_vs, vs))
 				{
-					cout << "vs mismatch" << endl;
+					const string new_id_string = vs[combo_selected].nickname;
 
-					const string id_string = vs[combo_selected].nickname;
+					cout << new_id_string << " " << last_id_string << endl;
 
-					if (last_id_string != id_string)
+					if (last_id_string != new_id_string)
 					{
 						for (size_t i = 0; i < vs.size(); i++)
 						{
-							if (last_id_string == vs[i].nickname)
+							if (new_id_string == vs[i].nickname)
 							{
+								cout << "found match" << endl;
 								combo_selected = i;
 								break;
 							}
 						}
-
-						last_id_string = id_string;
 					}
 
-
-					last_vs = vs;
+					last_id_string = new_id_string;
 				}
 
-				
+				last_vs = vs;
 
 
 
-				//if (vs.size() > 0 && updated)
-				//{
-				//	updated = false;
-				//	cout << "updated" << endl;
 
-				//	const string id_string = vs[combo_selected].nickname;
+				vector<char*> vcharp(vs.size(), NULL);
 
-				//	if (last_id_string != id_string)
-				//	{
-				//		for (size_t i = 0; i < vs.size(); i++)
-				//		{
-				//			if (last_id_string == vs[i].nickname)
-				//			{
-				//				combo_selected = i;
-				//				break;
-				//			}
-				//		}
-
-				//		last_id_string = id_string;
-				//	}				
-				//}
-
-
+				for (size_t i = 0; i < vs.size(); i++)
+					vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
 
 				if (ImGui::Combo("Screens", &combo_selected, &vcharp[0], vcharp.size()))
 				{
+					cout << combo_selected << endl;
+
 					if (vs.size() > 0)
 						s = retrieve_screen_everything("test.db", vs[combo_selected].screen_id);// atoi(tokens[tokens.size() - 1].c_str()));
 
@@ -719,22 +720,22 @@ int main(int argc, char** argv)
 					sel_tab = no_tab;
 				}
 
-				//if (updated && vs.size() > 0)
-				//{
-				//	if (1)//last_id_string != vcharp[combo_selected])
-				//	{
-				//		for (size_t i = 0; i < vcharp.size(); i++)
-				//		{
-				//			if (last_id_string == vcharp[i])
-				//			{
-				//				combo_selected = i;
-				//				break;
-				//			}
-				//		}
+	/*			if (updated && vs.size() > 0)
+				{
+					if (last_id_string != vcharp[combo_selected])
+					{
+						for (size_t i = 0; i < vcharp.size(); i++)
+						{
+							if (last_id_string == vcharp[i])
+							{
+								combo_selected = i + 1;
+								break;
+							}
+						}
 
-				//		last_id_string = vcharp[combo_selected];
-				//	}
-				//}
+						last_id_string = vcharp[combo_selected];
+					}
+				}*/
 
 
 
@@ -791,25 +792,7 @@ int main(int argc, char** argv)
 
 
 
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		glClearColor(1.0, 0.5, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
 
-		GLuint tex_uc_output = 0;
-		glGenTextures(1, &tex_uc_output);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex_uc_output);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, uc_output.cols, uc_output.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, &uc_output.data[0]);
-		glBindImageTexture(0, tex_uc_output, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA8);
-
-		draw_full_screen_tex(0, tex_uc_output);
-
-		glDeleteTextures(1, &tex_uc_output);
 
 		// Rendering
 		ImGui::Render();
@@ -817,88 +800,6 @@ int main(int argc, char** argv)
 
 		SDL_GL_SwapWindow(window);
 	}
-
-
-	/*
-
-	while (false == done)
-	{
-		int window_w = 0, window_h = 0;
-		SDL_GetWindowSize(window, &window_w, &window_h);
-
-
-		auto start_time = std::chrono::high_resolution_clock::now();
-
-		SDL_Event event;
-
-		while (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_QUIT)
-			{
-				done = true;
-			}
-
-			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-			{
-				done = true;
-			}
-		}
-
-
-
-
-
-
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
-
-		ImGui::Begin("Debug");
-
-
-
-		enum selected_tab { no_tab, screens_tab, portals_tab, portal_pairs_tab };
-		static selected_tab sel_tab = no_tab;
-		static vector<screen> vs;
-		static int combo_selected = 0;
-
-		static screen s;
-		static string s_id;// to_string(s.screen_id);
-		static string s_nickname;
-
-		if (ImGui::BeginTabBar("##tabbar"), ImGuiTabBarFlags_::ImGuiTabBarFlags_NoTooltip)
-		{
-
-
-
-			ImGui::EndTabBar();
-		}
-
-
-		ImGui::End();
-
-
-
-
-
-		//ImGui::ShowDemoWindow();
-
-
-
-
-
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-
-		SDL_GL_SwapWindow(window);
-
-
-	}
-
-	*/
-
 
 
 
