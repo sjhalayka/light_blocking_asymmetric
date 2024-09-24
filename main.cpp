@@ -586,23 +586,20 @@ int main(int argc, char** argv)
 		static vector<screen> vs;
 		static vector<screen> last_vs;
 		static int combo_selected = 0;
+		static int last_combo_selected = 0;
 
 		static screen s;
 		static string prev_s_nickname;
-		static string last_id_string = "";
+
 
 
 		ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
 
 
-		if (ImGui::BeginTabBar("TabBar", tab_bar_flags))
+		if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
 		{
-
-
 			if (ImGui::BeginTabItem("Screens"))
 			{
-				bool updated = false;
-
 				if (sel_tab != screens_tab)
 				{
 					vs = retrieve_screen_ids_and_nicknames("test.db");
@@ -619,13 +616,53 @@ int main(int argc, char** argv)
 					}
 
 					sel_tab = screens_tab;
-					updated = true;
+				}
+
+
+				//string new_id_string = "";
+				string last_id_string = "";
+
+				if (!vector_screen_equals(last_vs, vs))
+				{
+					//new_id_string = vs[combo_selected].nickname;
+
+					if (last_vs.size() > 0)
+						last_id_string = last_vs[last_combo_selected].nickname;
+
+					cout << "Last ID string: " << last_id_string << endl;
+					//cout << "New ID string:  " << new_id_string << endl;
+
+					vector<string> tokens = std_strtok(last_id_string, "[ ]\\s*");
+
+					//		cout << tokens[tokens.size() - 1] << endl;
+
+							//if (last_id_string != new_id_string)
+							//{
+					for (size_t i = 0; i < vs.size(); i++)
+					{
+						vector<string> tokens2 = std_strtok(vs[i].nickname, "[ ]\\s*");
+
+						cout << i << " ";
+						cout << tokens2[tokens2.size() - 1] << " ";
+
+						if (tokens.size() > 0 && tokens2.size() > 0 && (tokens[tokens.size() - 1] == tokens2[tokens2.size() - 1]))
+						{
+							cout << "found match " << i << endl;
+
+							combo_selected = i;
+							break;
+						}
+						else
+							cout << endl;
+					}
+					//}
+
 				}
 
 
 
-
-
+				last_vs = vs;
+				last_combo_selected = combo_selected;
 
 
 
@@ -649,44 +686,6 @@ int main(int argc, char** argv)
 
 
 
-				//vector<string> tokens = std_strtok(id_string, "[ ]\\s*");
-
-				//cout << atoi(tokens[tokens.size() - 1].c_str()) << endl;
-
-
-				//vector<string> tokens2 = std_strtok(last_id_string, "[ ]\\s*");
-
-				//if(tokens2.size() > 0)
-				//cout << atoi(tokens2[tokens2.size() - 1].c_str()) << endl;
-
-				//cout << endl;
-
-
-				if (!vector_screen_equals(last_vs, vs))
-				{
-					const string new_id_string = vs[combo_selected].nickname;
-
-					cout << new_id_string << " " << last_id_string << endl;
-
-					if (last_id_string != new_id_string)
-					{
-						for (size_t i = 0; i < vs.size(); i++)
-						{
-							if (new_id_string == vs[i].nickname)
-							{
-								cout << "found match" << endl;
-								combo_selected = i;
-								break;
-							}
-						}
-					}
-
-					last_id_string = new_id_string;
-				}
-
-				last_vs = vs;
-
-
 
 
 				vector<char*> vcharp(vs.size(), NULL);
@@ -694,15 +693,23 @@ int main(int argc, char** argv)
 				for (size_t i = 0; i < vs.size(); i++)
 					vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
 
+
+				
+	
+
+
 				if (ImGui::Combo("Screens", &combo_selected, &vcharp[0], vcharp.size()))
 				{
-					cout << combo_selected << endl;
-
 					if (vs.size() > 0)
 						s = retrieve_screen_everything("test.db", vs[combo_selected].screen_id);// atoi(tokens[tokens.size() - 1].c_str()));
 
 					ImGui::EndCombo();
 				}
+
+
+
+
+
 
 
 
@@ -719,23 +726,6 @@ int main(int argc, char** argv)
 					prev_s_nickname = s.nickname;
 					sel_tab = no_tab;
 				}
-
-	/*			if (updated && vs.size() > 0)
-				{
-					if (last_id_string != vcharp[combo_selected])
-					{
-						for (size_t i = 0; i < vcharp.size(); i++)
-						{
-							if (last_id_string == vcharp[i])
-							{
-								combo_selected = i + 1;
-								break;
-							}
-						}
-
-						last_id_string = vcharp[combo_selected];
-					}
-				}*/
 
 
 
