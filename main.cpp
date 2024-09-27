@@ -619,50 +619,52 @@ int main(int argc, char** argv)
 				}
 
 
-				//string new_id_string = "";
 				string last_id_string = "";
 
 				if (!vector_screen_equals(last_vs, vs))
 				{
-					//new_id_string = vs[combo_selected].nickname;
-
 					if (last_vs.size() > 0)
 						last_id_string = last_vs[last_combo_selected].nickname;
 
-					cout << "Last ID string: " << last_id_string << endl;
-					//cout << "New ID string:  " << new_id_string << endl;
-
 					vector<string> tokens = std_strtok(last_id_string, "[ ]\\s*");
 
-					//		cout << tokens[tokens.size() - 1] << endl;
-
-							//if (last_id_string != new_id_string)
-							//{
 					for (size_t i = 0; i < vs.size(); i++)
 					{
 						vector<string> tokens2 = std_strtok(vs[i].nickname, "[ ]\\s*");
 
-						cout << i << " ";
-						cout << tokens2[tokens2.size() - 1] << " ";
-
-						if (tokens.size() > 0 && tokens2.size() > 0 && (tokens[tokens.size() - 1] == tokens2[tokens2.size() - 1]))
+						if (tokens.size() > 0 &&
+							tokens2.size() > 0 &&
+							(tokens[tokens.size() - 1] == tokens2[tokens2.size() - 1]))
 						{
-							cout << "found match " << i << endl;
-
 							combo_selected = i;
 							break;
 						}
-						else
-							cout << endl;
 					}
-					//}
 
+					string new_nickname = "";
+
+					if (vs.size() > 0)
+					{
+						vector<string> tokens3;
+
+						tokens3 = std_strtok(vs[combo_selected].nickname, "[ ]\\s*");
+
+						for (size_t i = 0; i < tokens3.size() - 4; i++)
+						{
+							new_nickname += tokens3[i];
+							new_nickname += ' ';
+						}
+
+						new_nickname += tokens3[tokens3.size() - 4];
+
+						//update_nickname("test.db", vs[combo_selected].screen_id, new_nickname);
+						sel_tab = no_tab;
+					}
 				}
-
-
 
 				last_vs = vs;
 				last_combo_selected = combo_selected;
+	
 
 
 
@@ -693,11 +695,6 @@ int main(int argc, char** argv)
 				for (size_t i = 0; i < vs.size(); i++)
 					vcharp[i] = const_cast<char*>(vs[i].nickname.c_str());
 
-
-				
-	
-
-
 				if (ImGui::Combo("Screens", &combo_selected, &vcharp[0], vcharp.size()))
 				{
 					if (vs.size() > 0)
@@ -714,8 +711,7 @@ int main(int argc, char** argv)
 
 
 
-				//string s_id = to_string(s.screen_id);
-				//ImGui::InputText("ID: ", &s_id, ImGuiInputTextFlags_ReadOnly);
+
 
 				ImGui::InputText("Nickname", &s.nickname);
 
