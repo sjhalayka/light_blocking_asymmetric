@@ -649,15 +649,17 @@ int main(int argc, char** argv)
 
 						tokens3 = std_strtok(vs[combo_selected].nickname, "[ ]\\s*");
 
-						for (size_t i = 0; i < tokens3.size() - 4; i++)
+						if (tokens3.size() >= 4)
 						{
-							new_nickname += tokens3[i];
-							new_nickname += ' ';
+							for (size_t i = 0; i < tokens3.size() - 4; i++)
+							{
+								new_nickname += tokens3[i];
+								new_nickname += ' ';
+							}
+
+							new_nickname += tokens3[tokens3.size() - 4];
 						}
 
-						new_nickname += tokens3[tokens3.size() - 4];
-
-						//update_nickname("test.db", vs[combo_selected].screen_id, new_nickname);
 						sel_tab = no_tab;
 					}
 				}
